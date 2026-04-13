@@ -3365,10 +3365,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Expense Tracker Logic ---
     const btnAddExpense = document.getElementById('btn-add-expense');
     const expenseForm = document.getElementById('expense-form');
-    const expenseMainCatSelect = document.getElementById('expense-main-category');
-    const expenseSubCat1Select = document.getElementById('expense-sub-category1');
-    const expenseSubCat2Select = document.getElementById('expense-sub-category2');
-    const expenseVendorSelect = document.getElementById('expense-vendor');
+    const expenseMainCatSelect = document.getElementById('mainCategory');
+    const expenseSubCat1Select = document.getElementById('subCategory1');
+    const expenseSubCat2Select = document.getElementById('subCategory2');
+    const expenseVendorSelect = document.getElementById('vendor');
 
     // Fetch main categories from Supabase and populate dropdown
     async function populateExpenseCategories() {
@@ -3535,53 +3535,70 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ─── addExpense: INSERT expense into Supabase ───
+    async function addExpense() {
+        // 1. Read all form values by ID
+        const expenseData = {
+            main_category: document.getElementById('mainCategory').value || null,
+            sub_category1:  document.getElementById('subCategory1').value || null,
+            sub_category2:  document.getElementById('subCategory2').value || null,
+            quantity:       document.getElementById('quantity').value ? Number(document.getElementById('quantity').value) : null,
+            amount:         document.getElementById('amount').value   ? Number(document.getElementById('amount').value)   : null,
+            vendor:         document.getElementById('vendor').value || null,
+            gst_status:     document.getElementById('gstStatus').value || null,
+            payment_mode:   document.getElementById('paymentMode').value || null,
+            bank_account:   document.getElementById('bankAccount').value || null,
+            purchased_by:   document.getElementById('purchasedBy').value || null,
+            approved_by:    document.getElementById('approvedBy').value || null,
+            notes:          document.getElementById('notes').value || null
+        };
+
+        // 2. Validate required fields
+        if (!expenseData.main_category || !expenseData.amount) {
+            alert('Please fill in at least the Category and Amount.');
+            return;
+        }
+
+        // 3. Disable button to prevent double-click
+        const saveBtn = document.getElementById('btn-save-expense');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+        }
+
+        try {
+            // 4. Insert into Supabase
+            const { data, error } = await supabase
+                .from('expenses')
+                .insert([expenseData]);
+
+            if (error) throw error;
+
+            // 5. Success: alert + reset form
+            alert('Expense saved successfully');
+            if (expenseForm) expenseForm.reset();
+            if (expenseSubCat1Select) expenseSubCat1Select.disabled = true;
+            if (expenseSubCat2Select) expenseSubCat2Select.disabled = true;
+
+        } catch (err) {
+            // 6. Error handling
+            console.error('Supabase insert error:', err);
+            alert('Failed to save expense: ' + (err.message || 'Unknown error'));
+        } finally {
+            // 7. Re-enable button
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Expense';
+            }
+        }
+    }
+
+    // ─── Event Listener: Save Expense button click ───
     const btnSaveExpense = document.getElementById('btn-save-expense');
-    if (btnSaveExpense && expenseForm) {
-        btnSaveExpense.addEventListener('click', async () => {
-            const expenseData = {
-                main_category: expenseMainCatSelect.value,
-                sub_category1: expenseSubCat1Select.value,
-                sub_category2: expenseSubCat2Select.value,
-                quantity: document.getElementById('expense-quantity').value ? Number(document.getElementById('expense-quantity').value) : null,
-                amount: document.getElementById('expense-amount').value ? Number(document.getElementById('expense-amount').value) : null,
-                vendor: expenseVendorSelect.value || null,
-                gst_status: document.getElementById('expense-gst-status').value || null,
-                payment_mode: document.getElementById('expense-payment-mode').value || null,
-                bank_account: document.getElementById('expense-bank-account').value || null,
-                purchased_by: document.getElementById('expense-purchased-by').value || null,
-                approved_by: document.getElementById('expense-approved-by').value || null,
-                notes: document.getElementById('expense-notes').value || null
-            };
-
-            if (!expenseData.main_category || !expenseData.amount) {
-                showAlert("Please fill in at least the Category and Amount.");
-                return;
-            }
-
-            // Disable button to prevent double-click
-            btnSaveExpense.disabled = true;
-            btnSaveExpense.textContent = 'Saving...';
-
-            try {
-                const { data, error } = await supabase
-                    .from('expenses')
-                    .insert([expenseData]);
-
-                if (error) {
-                    throw error;
-                }
-
-                showToast('Expense saved successfully');
-                expenseForm.reset();
-                expenseSubCat1Select.disabled = true;
-                expenseSubCat2Select.disabled = true;
-            } catch (err) {
-                console.error('Supabase insert error:', err);
-                showToast('Failed to save expense: ' + (err.message || 'Unknown error'), '❌');
-            } finally {
-                btnSaveExpense.disabled = false;
-                btnSaveExpense.textContent = 'Save Expense';
-            }
+    if (btnSaveExpense) {
+        btnSaveExpense.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await addExpense();
         });
     }
 

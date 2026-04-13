@@ -137,9 +137,9 @@
 
     window.populateFinanceCategoryDropdowns = function() {
         const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {} };
-        const financeCat = document.getElementById('expense-main-category');
-        const financeSub1 = document.getElementById('expense-sub-category1');
-        const financeSub2 = document.getElementById('expense-sub-category2');
+        const financeCat = document.getElementById('mainCategory');
+        const financeSub1 = document.getElementById('subCategory1');
+        const financeSub2 = document.getElementById('subCategory2');
 
         if (!financeCat) return;
 
@@ -481,11 +481,11 @@
         });
 
         // Initial population of dropdowns in Expense Tracker form
-        const financeCat = document.getElementById('expense-main-category');
+        const financeCat = document.getElementById('mainCategory');
         if (financeCat) {
             financeCat.addEventListener('change', window.populateFinanceCategoryDropdowns);
         }
-        const financeSub1 = document.getElementById('expense-sub-category1');
+        const financeSub1 = document.getElementById('subCategory1');
         if (financeSub1) {
             financeSub1.addEventListener('change', window.populateFinanceCategoryDropdowns);
         }
