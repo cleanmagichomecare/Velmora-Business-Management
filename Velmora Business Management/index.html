@@ -1,0 +1,2852 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean Magic System Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=3">
+</head>
+
+<body>
+    <!-- Landing Page -->
+    <main id="landing-page" class="page active">
+        <div class="landing-content">
+            <h1 class="landing-title">Select Brand</h1>
+            <button id="brand-btn" class="brand-button">Clean Magic</button>
+        </div>
+    </main>
+
+    <!-- Dashboard Page -->
+    <main id="dashboard-page" class="page hidden">
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <button id="back-btn" class="sidebar-back-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Back
+                </button>
+                <div class="sidebar-brand-wrapper">
+                    <div class="brand-logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                        </svg>
+                    </div>
+                    <span class="brand-name">Clean Magic</span>
+                </div>
+
+                <div class="sidebar-scroll-area">
+                    <nav class="sidebar-nav">
+                        <button class="sidebar-item active-item" data-target="view-home">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                            </svg>
+                            Home
+                        </button>
+                        <button class="sidebar-item" data-target="view-task">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 11l3 3L22 4" />
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                            </svg>
+                            Task
+                        </button>
+                        <button class="sidebar-item" data-target="view-archive">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="20" height="8" x="2" y="3" rx="2" ry="2" />
+                                <rect width="16" height="10" x="4" y="11" rx="2" ry="2" />
+                                <path d="M10 15h4" />
+                            </svg>
+                            Archive
+                        </button>
+                        <button class="sidebar-item" data-target="view-settings">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                            </svg>
+                            Settings
+                        </button>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Expense Sub-Sidebar -->
+            <div class="sub-sidebar hidden" id="expenseSidebar">
+                <nav class="sub-sidebar-nav">
+                    <button class="sub-sidebar-item active" id="btn-expense-module">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                        Expense Tracker
+                    </button>
+                    <button class="sub-sidebar-item" id="btn-finance-category-module" data-navigate="view-finance-category">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                        Finance Category
+                    </button>
+                    <button class="sub-sidebar-item" id="btn-add-bill-module" data-navigate="view-add-bill">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        Add Bill
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Vendor Sub-Sidebar -->
+            <div class="sub-sidebar hidden" id="vendorSidebar">
+                <nav class="sub-sidebar-nav">
+                    <button class="sub-sidebar-item active" id="btn-vendor-module">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10V7l-8-4-8 4v3"/><path d="M4 10h16v11H4z"/><line x1="12" y1="10" x2="12" y2="21"/></svg>
+                        Vendor
+                    </button>
+                    <button class="sub-sidebar-item" id="btn-category-module" data-navigate="view-category">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                        Category
+                    </button>
+                </nav>
+            </div>
+
+            <section class="main-content">
+                <header class="top-bar">
+                    <div class="theme-toggle">
+                        <label class="switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </header>
+                <!-- Dynamic Content Views Container -->
+                <div id="content-views" class="content-container">
+                    <!-- Department Back Button (visible only in focused view) -->
+                    <button id="dept-back-btn" class="dept-back-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                        Back to Home
+                    </button>
+
+                    <!-- Home View -->
+                    <div id="view-home" class="content-view active-view">
+                        <div class="home-header">
+                            <h1 class="home-title">Home</h1>
+                            <p class="home-subtitle">Welcome back to Clean Magic Admin. Select a department to get started.</p>
+                        </div>
+                        <div class="home-grid">
+                            <div class="home-card" data-navigate="view-dashboard">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                </div>
+                                <div class="home-card-title">Dashboard</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-inventory">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                                </div>
+                                <div class="home-card-title">Inventory</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-sales">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                </div>
+                                <div class="home-card-title">Sales</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-document">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                                </div>
+                                <div class="home-card-title">Document Room</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-marketing">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"/><path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"/></svg>
+                                </div>
+                                <div class="home-card-title">Marketing</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-task">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                </div>
+                                <div class="home-card-title">Task Manager</div>
+                            </div>
+
+
+                            <div class="home-card" data-navigate="view-research">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg>
+                                </div>
+                                <div class="home-card-title">Research &amp; Development</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-hr">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </div>
+                                <div class="home-card-title">Human Resources</div>
+                            </div>
+                            <div class="home-card" data-navigate="">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7v10"/><path d="M6 5v14"/><rect width="12" height="18" x="10" y="3" rx="2"/></svg>
+                                </div>
+                                <div class="home-card-title">Brand Management</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-operations">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                </div>
+                                <div class="home-card-title">Operations</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-expense">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                                </div>
+                                <div class="home-card-title">Finance</div>
+                            </div>
+                            <div class="home-card" data-navigate="">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>
+                                </div>
+                                <div class="home-card-title">Tech</div>
+                            </div>
+                            <div class="home-card" data-navigate="">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="M14.5 4h-5l-2 16h5l2-16z"/></svg>
+                                </div>
+                                <div class="home-card-title">Legal &amp; Compliance</div>
+                            </div>
+                            <div class="home-card" data-navigate="">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1h8Z"/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/></svg>
+                                </div>
+                                <div class="home-card-title">Analytics</div>
+                            </div>
+                            <div class="home-card" data-navigate="">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#db2777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                </div>
+                                <div class="home-card-title">Customer Experience</div>
+                            </div>
+                            <div class="home-card" data-navigate="">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                                </div>
+                                <div class="home-card-title">Strategy</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard View (navigable from Home) -->
+                    <div id="view-dashboard" class="content-view hidden">
+                        <h1 class="dashboard-title">Dashboard Overview</h1>
+                        <p style="text-align: center; color: var(--text-muted);">Welcome back to Clean Magic Admin.</p>
+                    </div>
+
+
+                    <!-- Operations View -->
+                    <div id="view-operations" class="content-view hidden">
+                        <div class="logistics-header">
+                            <button class="dept-back-btn" onclick="document.querySelector('.dashboard-layout').classList.remove('department-view-active'); document.querySelectorAll('.content-view').forEach(v => {v.classList.remove('active-view'); v.classList.add('hidden');}); document.getElementById('view-home').classList.remove('hidden'); document.getElementById('view-home').classList.add('active-view');">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                                Back to Home
+                            </button>
+                            <div class="logistics-title-group">
+                                <h1 class="logistics-title">Operations</h1>
+                                <p class="logistics-subtitle">Manage operations, logistics, and procurement</p>
+                            </div>
+                        </div>
+                        <div class="home-grid" style="display: flex; gap: 20px;">
+                            <div class="home-card" data-navigate="view-logistics" style="min-width: 250px;">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                                </div>
+                                <div class="home-card-title">Logistics</div>
+                            </div>
+                            <div class="home-card" data-navigate="view-vendor" style="min-width: 250px;">
+                                <div class="home-card-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#84cc16" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                                </div>
+                                <div class="home-card-title">Procurement</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logistics View -->
+                    <div id="view-logistics" class="content-view hidden">
+                        <!-- Header -->
+                        <div class="logistics-header">
+                            <button class="dept-back-btn" id="dept-back-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                Back to Home
+                            </button>
+                            <div class="logistics-title-group">
+                                <h1 class="logistics-title">Logistics</h1>
+                                <p class="logistics-subtitle">Manage logistics operations and shipments</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div class="logistics-empty-container">
+                            <div class="logistics-empty-box">
+                                <div class="logistics-empty-icon">
+                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>
+                                    </svg>
+                                </div>
+                                <h2 class="logistics-empty-title">No Data Yet</h2>
+                                <p class="logistics-empty-subtitle">Start managing your logistics here</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings View -->
+                    <div id="view-settings" class="content-view hidden">
+                        <h2 style="margin:0 0 20px 0; font-size: 20px; font-weight: 600; color: var(--text-main);">Settings</h2>
+                        <div class="vendor-empty-state">
+                            <div class="vendor-empty-icon">⚙️</div>
+                            <h3>Settings</h3>
+                            <p>Application settings will appear here.</p>
+                        </div>
+                    </div>
+
+                    <!-- Task Manager View -->
+                    <div id="view-task" class="content-view hidden">
+                        <div class="task-header-actions"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-primary" id="btn-add-new-task">+ Add New Task</button>
+                                <button class="btn-secondary" id="btn-view-created-task">View Created Task</button>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-primary" id="btn-add-sub-task">+ Add Main Task</button>
+                                <button class="btn-secondary" id="btn-view-sub-task">View Main Task</button>
+                                <button class="btn-primary" id="btn-add-category">+ Add Task Category</button>
+                            </div>
+                        </div>
+
+                        <!-- Add New Task Form -->
+                        <div id="new-task-form-container" class="vendor-form-container hidden"
+                            style="margin-bottom: 20px;">
+                            <div class="form-header">Add New Task</div>
+                            <form id="new-task-form" class="campaign-form">
+                                <div class="form-section">
+                                    <div class="section-heading">Task Details</div>
+
+                                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+                                        <div class="form-group">
+                                            <label>Department <span style="color:red">*</span></label>
+                                            <select id="task-category" required>
+                                                <option value="">Select Category</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>📅 Date <span style="color:red">*</span></label>
+                                            <input type="date" id="task-date" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>⏰ Time <span style="color:red">*</span></label>
+                                            <input type="time" id="task-time" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2" style="margin-top: 15px;">
+                                        <div class="form-group">
+                                            <label>Sub Category 1</label>
+                                            <select id="task-sub-category1" disabled>
+                                                <option value="">Select Sub Category 1</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Sub Category 2</label>
+                                            <select id="task-sub-category2" disabled>
+                                                <option value="">Select Sub Category 2</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2" style="margin-top: 15px;">
+                                        <div class="form-group" style="grid-column: span 2;">
+                                            <label>Task Title <span style="color:red">*</span></label>
+                                            <input type="text" id="task-title" placeholder="Enter Task Title" required
+                                                autofocus>
+                                        </div>
+                                        <div class="form-group" style="grid-column: span 2;">
+                                            <label>Task Description</label>
+                                            <textarea id="task-description" rows="3"
+                                                placeholder="Enter task description..."></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2" style="margin-top: 15px;">
+                                        <div class="form-group">
+                                            <label>Assigned By</label>
+                                            <select id="task-assigned-by">
+                                                <option value="">Select Assigner</option>
+                                                <option value="Jack">Jack</option>
+                                                <option value="Thomos">Thomos</option>
+                                                <option value="Dave">Dave</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Assigned To</label>
+                                            <select id="task-assigned-to">
+                                                <option value="">Select Assignee</option>
+                                                <option value="Inventory">Inventory</option>
+                                                <option value="Sales">Sales</option>
+                                                <option value="Document Room">Document Room</option>
+                                                <option value="Marketing">Marketing</option>
+                                                <option value="Task Manager">Task Manager</option>
+                                                <option value="Expense Tracker">Expense Tracker</option>
+                                                <option value="Vendor Management">Vendor Management</option>
+                                                <option value="Category">Category</option>
+                                                <option value="Research & Development">Research & Development</option>
+                                                <option value="Human Resources">Human Resources</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-2" style="margin-top: 15px;">
+                                        <div class="form-group">
+                                            <label>Priority <span style="color:red">*</span></label>
+                                            <select id="task-priority" required>
+                                                <option value="">Select Priority</option>
+                                                <option value="Low">Low</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="High">High</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Add Task</label>
+                                            <select id="task-sub-task-title">
+                                                <option value="">Select Task</option>
+                                                <!-- Dynamically populated from subTaskGroups titles -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Auto-display selected sub tasks -->
+                                    <div id="selected-sub-tasks-display" class="hidden"
+                                        style="margin-top: 15px; background: var(--input-bg, #1a1a2e); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; max-height: 180px; overflow-y: auto;">
+                                        <label
+                                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px; display: block;">Selected
+                                            Sub Tasks</label>
+                                        <ul id="selected-sub-tasks-list"
+                                            style="list-style-type: disc; padding-left: 20px; margin: 0;">
+                                            <!-- Dynamically populated -->
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                    <button type="submit" id="btn-save-task" class="btn-submit">Create Task</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Add Sub Task Form -->
+                        <div id="new-sub-task-form-container" class="vendor-form-container hidden"
+                            style="margin-bottom: 20px;">
+                            <div class="form-header">Add Main Task</div>
+                            <form id="new-sub-task-form" class="campaign-form">
+                                <div class="form-section">
+                                    <div class="form-group" style="margin-bottom: 15px;">
+                                        <label>Main Task Title <span style="color:red">*</span></label>
+                                        <input type="text" id="sub-task-group-title"
+                                            placeholder="Enter Title (e.g. Planning Phase)" required>
+                                    </div>
+
+                                    <div id="sub-task-inputs-wrapper"
+                                        style="display: flex; flex-direction: column; gap: 12px;">
+                                        <!-- Default first input -->
+                                        <div class="sub-task-input-group"
+                                            style="display: flex; align-items: flex-end; gap: 10px; width: 100%;">
+                                            <div class="form-group" style="flex-grow: 1; margin: 0;">
+                                                <label class="sub-task-label"
+                                                    style="display:block; margin-bottom:5px;">Sub Task 1 <span
+                                                        style="color:red">*</span></label>
+                                                <input type="text" class="sub-task-item-input"
+                                                    placeholder="Enter sub task details" required style="width: 100%;">
+                                            </div>
+                                            <!-- Space for a potential remove button, but single element is required initially -->
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top: 15px;">
+                                        <button type="button" id="btn-add-more-sub-task" class="btn-secondary"
+                                            style="border: 1px dashed var(--border-color); background: transparent; width: 100%; padding: 10px;">
+                                            + Add
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                    <button type="submit" id="btn-save-sub-task" class="btn-submit">Save</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- View Sub Tasks Container -->
+                        <!-- View Created Tasks Container -->
+                        <div id="created-tasks-list-container" class="vendor-form-container hidden"
+                            style="margin-bottom: 20px; background: transparent; padding: 0; box-shadow: none;">
+                            <div class="form-header"
+                                style="margin-bottom: 20px; background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <span>Created Tasks</span>
+                                <span id="created-tasks-count" style="font-size: 13px; color: var(--text-muted); font-weight: 400;"></span>
+                            </div>
+                            <div id="created-tasks-grid"
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
+                                <!-- Dynamically populated task cards go here -->
+                            </div>
+                        </div>
+
+                        <div id="sub-tasks-list-container" class="vendor-form-container hidden"
+                            style="margin-bottom: 20px; background: transparent; padding: 0; box-shadow: none;">
+                            <div class="form-header"
+                                style="margin-bottom: 20px; background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <span>Saved Sub Task Groups</span>
+                            </div>
+                            <div id="sub-tasks-grid"
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                                <!-- Dynamically populated cards go here -->
+                            </div>
+                        </div>
+
+                        <div id="task-content-area" class="task-content-area"
+                            style="background: transparent; border-radius: 8px; padding: 0; min-height: 400px;">
+                            <div id="task-default-state" class="vendor-empty-state"
+                                style="text-align: center; color: var(--text-muted); padding-top: 100px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
+                                <div class="vendor-empty-icon" style="font-size: 48px; margin-bottom: 20px;">✓</div>
+                                <h3>Task Management</h3>
+                                <p>Select an action from the top menu to get started.</p>
+                            </div>
+                            <div id="dashboard-tasks-container" class="hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                                <!-- Dynamically populated dashboard task cards go here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Tracker View -->
+                    <div id="view-expense" class="content-view hidden">
+                        <div class="expense-top-bar">
+                            <h2 class="expense-view-title">Expense Tracker</h2>
+                            <div class="expense-top-actions">
+                                <button type="button" class="btn-primary btn-dept-task-route" data-dept="Expense Tracker" style="font-size: 14px; padding: 8px 16px;">Task</button>
+                                <button class="btn-primary" id="btn-add-expense">+ Add Expense</button>
+                            </div>
+                        </div>
+                        <div id="expense-form-container" class="vendor-form-container hidden">
+
+                            <form id="expense-form" class="campaign-form">
+                                <!-- Section 1: Categorization -->
+                                <div class="form-section">
+                                    <div class="section-heading">Categorization</div>
+                                    <div class="grid-3">
+                                        <div class="form-group">
+                                            <label>Main Category</label>
+                                            <select id="expense-main-category">
+                                                <option value="">Select Main Category</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Sub Category 1</label>
+                                            <select id="expense-sub-category1" disabled>
+                                                <option value="">Select Sub Category 1</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Sub Category 2</label>
+                                            <select id="expense-sub-category2" disabled>
+                                                <option value="">Select Sub Category 2</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section 2: Expense Details -->
+                                <div class="form-section">
+                                    <div class="section-heading">Expense Details</div>
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label>Quantity</label>
+                                            <input type="number" id="expense-quantity" placeholder="Enter quantity">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Amount</label>
+                                            <input type="number" id="expense-amount" placeholder="Enter amount">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Vendor</label>
+                                            <select id="expense-vendor">
+                                                <option value="">Select Vendor</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>GST Status</label>
+                                            <select id="expense-gst-status">
+                                                <option value="With GST">With GST</option>
+                                                <option value="Without GST">Without GST</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section 3: Payment & Approval -->
+                                <div class="form-section">
+                                    <div class="section-heading">Payment & Approval</div>
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label>Mode of Payment</label>
+                                            <select id="expense-payment-mode">
+                                                <option value="">Select Mode</option>
+                                                <option value="Cash">Cash</option>
+                                                <option value="UPI/Digital">UPI / Digital</option>
+                                                <option value="Bank Transfer">Bank Transfer</option>
+                                                <option value="Credit/Debit Card">Credit/Debit Card</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Which Bank Account</label>
+                                            <input type="text" id="expense-bank-account"
+                                                placeholder="Enter bank account">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Purchased by</label>
+                                            <input type="text" id="expense-purchased-by" placeholder="Enter name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Approved by</label>
+                                            <input type="text" id="expense-approved-by" placeholder="Enter name">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section 4: Additional Info -->
+                                <div class="form-section">
+                                    <div class="section-heading">Additional Info</div>
+                                    <div class="grid-2">
+                                        <div class="form-group">
+                                            <label>Upload Bills</label>
+                                            <input type="file" id="expense-bill-upload" class="file-upload">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Notes</label>
+                                            <textarea id="expense-notes" rows="3"
+                                                placeholder="Additional notes..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="btn-save-expense" class="btn-submit">Save Expense</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Finance Category View -->
+                    <div id="view-finance-category" class="content-view hidden">
+                        <div class="finance-category-header" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <button class="btn-primary" id="btn-add-finance-main-category">+ Add Finance Category</button>
+                            <button class="btn-primary" id="btn-add-finance-sub-category-1">+ Add Sub Category 1</button>
+                            <button class="btn-primary" id="btn-add-finance-sub-category-2">+ Add Sub Category 2</button>
+                            <button class="btn-secondary" id="btn-view-finance-category-list">View Saved Category</button>
+                        </div>
+
+                        <div id="finance-category-forms-container">
+                            <!-- Main Category Form -->
+                            <div id="financeMainCategoryForm" class="vendor-form-container hidden">
+                                <div class="form-header">Add Finance Main Category</div>
+                                <div class="form-section">
+                                    <div id="financeCategoryInputs" class="category-inputs-list">
+                                        <input type="text" placeholder="Enter Category Name" class="category-input-field" />
+                                    </div>
+                                    <button type="button" id="addFinanceCategoryInput" class="btn-secondary" style="margin-top: 10px;">+ Add Another</button>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                    <button type="button" id="saveFinanceCategory" class="btn-submit">Save Categories</button>
+                                </div>
+                            </div>
+
+                            <!-- Sub Category 1 Form -->
+                            <div id="financeSubCategory1Form" class="vendor-form-container hidden">
+                                <div class="form-header">Add Finance Sub Category 1</div>
+                                <div class="form-section">
+                                    <div class="form-group">
+                                        <label>Select Main Category</label>
+                                        <select id="financeMainCategorySelect">
+                                            <option value="">Select Main Category</option>
+                                        </select>
+                                    </div>
+                                    <div id="financeSub1Inputs" class="category-inputs-list" style="margin-top: 15px;">
+                                        <input type="text" placeholder="Enter Sub Category 1 Name" class="category-input-field" />
+                                    </div>
+                                    <button type="button" id="addFinanceSub1Input" class="btn-secondary" style="margin-top: 10px;">+ Add Another</button>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                    <button type="button" id="saveFinanceSub1" class="btn-submit">Save Sub Categories</button>
+                                </div>
+                            </div>
+
+                            <!-- Sub Category 2 Form -->
+                            <div id="financeSubCategory2Form" class="vendor-form-container hidden">
+                                <div class="form-header">Add Finance Sub Category 2</div>
+                                <div class="form-section">
+                                    <div class="form-group">
+                                        <label>Select Sub Category 1</label>
+                                        <select id="financeSubCategory1Select">
+                                            <option value="">Select Sub Category 1</option>
+                                        </select>
+                                    </div>
+                                    <div id="financeSub2Inputs" class="category-inputs-list" style="margin-top: 15px;">
+                                        <input type="text" placeholder="Enter Sub Category 2 Name" class="category-input-field" />
+                                    </div>
+                                    <button type="button" id="addFinanceSub2Input" class="btn-secondary" style="margin-top: 10px;">+ Add Another</button>
+                                </div>
+                                <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                    <button type="button" id="saveFinanceSub2" class="btn-submit">Save Sub Categories</button>
+                                </div>
+                            </div>
+
+                            <!-- List View -->
+                            <div id="financeCategoryListView" class="vendor-form-container hidden">
+                                <div class="form-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Saved Finance Categories</span>
+                                    <button class="btn-secondary" id="btn-refresh-finance-category-list">Refresh</button>
+                                </div>
+                                <div id="financeCategoryListContent" style="margin-top: 20px;">
+                                    <!-- Table will be rendered here -->
+                                </div>
+                            </div>
+
+                            <!-- Default State -->
+                            <div id="finance-category-default-state" class="vendor-empty-state">
+                                <div class="vendor-empty-icon">📊</div>
+                                <h3>Finance Categories</h3>
+                                <p>Select an action to manage finance categories.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Bill View -->
+                    <div id="view-add-bill" class="content-view hidden">
+                        <div class="expense-top-bar">
+                            <h2 class="expense-view-title">Bills Management</h2>
+                            <div class="expense-top-actions">
+                                <button class="btn-primary" id="btn-show-add-bill-form">+ Add Bill</button>
+                                <button class="btn-secondary" id="btn-view-bills-list">View Bill</button>
+                            </div>
+                        </div>
+
+                        <div id="add-bill-content-area">
+                            <!-- Add Bill Form -->
+                            <div id="add-bill-form-container" class="vendor-form-container hidden">
+                                <div class="form-header">Add New Bill</div>
+                                <form id="add-bill-form" class="campaign-form">
+                                    <!-- Section 1: Categorization -->
+                                    <div class="form-section">
+                                        <div class="section-heading">Categorization</div>
+                                        <div class="grid-3">
+                                            <div class="form-group">
+                                                <label>Main Category</label>
+                                                <select id="bill-main-category">
+                                                    <option value="">Select Main Category</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Sub Category 1</label>
+                                                <select id="bill-sub-category1" disabled>
+                                                    <option value="">Select Sub Category 1</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Sub Category 2</label>
+                                                <select id="bill-sub-category2" disabled>
+                                                    <option value="">Select Sub Category 2</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 2: Bill Details -->
+                                    <div class="form-section">
+                                        <div class="section-heading">Bill Details</div>
+                                        <div class="grid-2">
+                                            <div class="form-group">
+                                                <label>Amount</label>
+                                                <input type="number" id="bill-amount" placeholder="Enter amount">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Due Date</label>
+                                                <input type="date" id="bill-due-date">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 3: Billing Setup -->
+                                    <div class="form-section">
+                                        <div class="section-heading">Billing Setup</div>
+                                        <div class="grid-2">
+                                            <div class="form-group">
+                                                <label>Billing Cycle</label>
+                                                <select id="bill-cycle">
+                                                    <option value="Monthly">Monthly</option>
+                                                    <option value="Yearly">Yearly</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Payment Type</label>
+                                                <div style="display: flex; gap: 20px; margin-top: 10px;">
+                                                    <label class="custom-radio">
+                                                        <input type="radio" name="bill-payment-type" value="Manual" checked>
+                                                        <span>Manual</span>
+                                                    </label>
+                                                    <label class="custom-radio">
+                                                        <input type="radio" name="bill-payment-type" value="Autopay">
+                                                        <span>Autopay</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-2" style="margin-top: 15px;">
+                                            <div class="form-group">
+                                                <label>Mode of Pay</label>
+                                                <select id="bill-pay-mode" class="input-field">
+                                                    <option value="GPay">GPay</option>
+                                                    <option value="Account Transfer">Account Transfer</option>
+                                                    <option value="Cash">Cash</option>
+                                                    <option value="Card">Card</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Which Account</label>
+                                                <input type="text" id="bill-account" placeholder="Enter account details" class="input-field">
+                                            </div>
+                                            <!-- NEW FIELD -->
+                                            <div class="form-group">
+                                                <label>Email</label>
+                                                <input type="email" id="bill-email" placeholder="Enter email address" class="input-field">
+                                            </div>
+                                            <!-- Spacer -->
+                                            <div class="form-group"></div>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Section 4: Notes -->
+                                    <div class="form-section">
+                                        <div class="form-group">
+                                            <label>Notes (Optional)</label>
+                                            <textarea id="bill-notes" rows="3" placeholder="Additional notes..."></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                                        <button type="button" id="btn-cancel-bill" class="btn-secondary">Cancel</button>
+                                        <button type="button" id="btn-save-bill" class="btn-submit">Save Bill</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Bill List -->
+                            <div id="bill-list-container" class="vendor-form-container hidden">
+                                <div class="form-header">Saved Bills</div>
+                                <div id="bill-list-content" style="margin-top: 20px;">
+                                    <!-- Table rendered here -->
+                                </div>
+                            </div>
+
+                            <!-- Default State -->
+                            <div id="bill-default-state" class="vendor-empty-state">
+                                <div class="vendor-empty-icon">💸</div>
+                                <h3>Bills Management</h3>
+                                <p>Select an action to manage your bills.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vendor Management View -->
+                    <div id="view-vendor" class="content-view hidden">
+                        <div class="expense-top-bar">
+                            <h2 class="expense-view-title">Vendor Management</h2>
+                            <div class="expense-top-actions">
+                                <button type="button" class="btn-primary btn-dept-task-route" data-dept="Vendor Management" style="font-size: 14px; padding: 8px 16px;">Task</button>
+                                <button class="btn-primary" id="btn-add-vendor">+ Vendor</button>
+                                <button class="btn-secondary" id="btn-vendor-list">Vendor List</button>
+                            </div>
+                        </div>
+                        <div id="vendor-form-container" class="vendor-form-container hidden">
+                            <div class="form-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Add Vendor</span>
+                                <button type="button" class="btn-primary btn-dept-task-route" data-dept="Vendor Management" style="font-size: 14px; padding: 6px 12px;">Task</button>
+                            </div>
+
+                            <form id="vendor-form" class="campaign-form">
+                                <!-- Section 1: Vendor Classification -->
+                                <div class="form-section">
+                                    <div class="section-heading">Vendor Classification</div>
+
+                                    <!-- Row 1 -->
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label>Vendor Type 1</label>
+                                            <select id="vendor-type1">
+                                                <option value="">Select Type</option>
+                                                <option value="Trader">Trader</option>
+                                                <option value="Manufacturer">Manufacturer</option>
+                                                <option value="Service Provider">Service Provider</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Vendor Type 2</label>
+                                            <select id="vendor-type2">
+                                                <option value="">Select Type</option>
+                                                <option value="Vendor 1">Vendor 1</option>
+                                                <option value="Vendor 2">Vendor 2</option>
+                                                <option value="Vendor 3">Vendor 3</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Vendor Category</label>
+                                            <select id="vendor-category">
+                                                <option value="">Select Category</option>
+                                                <option value="Product">Product</option>
+                                                <option value="Operations">Operations</option>
+                                                <option value="Marketing">Marketing</option>
+                                                <option value="Logistics">Logistics</option>
+                                                <option value="Financial">Financial</option>
+                                                <option value="Software">Software</option>
+                                                <option value="Compliance">Compliance</option>
+                                                <option value="Assets">Assets</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label id="vendor-sub-category-label">Sub Category</label>
+                                            <select id="vendor-sub-category" disabled>
+                                                <option value="">Select Category First</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Row 2 -->
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label id="vendor-sub-sub-label">Sub-Sub Category</label>
+                                            <select id="vendor-sub-sub-category" disabled>
+                                                <option value="">Select Sub Category</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>MOQ</label>
+                                            <input type="number" id="vendor-moq" placeholder="Enter MOQ">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Price per Unit</label>
+                                            <input type="number" id="vendor-price-per-unit" placeholder="Enter price">
+                                        </div>
+                                        <div class="form-group vendor-gst-group">
+                                            <label>GST Applicable</label>
+                                            <label class="custom-checkbox" style="margin-top: 8px;">
+                                                <input type="checkbox" id="vendor-gst">
+                                                <span>GST Included</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Row 3 -->
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label>Batch Size</label>
+                                            <input type="number" id="vendor-batch-size" placeholder="Enter batch size">
+                                        </div>
+                                    </div>
+
+                                    <!-- Used In -->
+                                    <div class="section-heading">Used In</div>
+                                    <div class="grid-checkboxes">
+                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                                value="Magic Detergent Gel"><span>Magic Detergent Gel</span></label>
+                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                                value="Magic Dishwash Gel"><span>Magic Dishwash Gel</span></label>
+                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                                value="Magic Kitchen Cleaner"><span>Magic Kitchen Cleaner</span></label>
+                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                                value="Magic Limescale Remover"><span>Magic Limescale
+                                                Remover</span></label>
+                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                                value="Magic BBC Cleaner"><span>Magic BBC Cleaner</span></label>
+                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                                value="Magic Floor Cleaner"><span>Magic Floor Cleaner</span></label>
+                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                                value="Magic Sponge"><span>Magic Sponge</span></label>
+                                    </div>
+                                </div>
+
+                                <!-- Section 2: Vendor Details -->
+                                <div class="form-section">
+                                    <div class="section-heading">Vendor Details</div>
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label>Vendor Name</label>
+                                            <input type="text" id="vendor-name" placeholder="Enter vendor name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Company Name</label>
+                                            <input type="text" id="vendor-company" placeholder="Enter company name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Phone Number</label>
+                                            <input type="tel" id="vendor-phone" placeholder="Enter phone number">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Email</label>
+                                            <input type="email" id="vendor-email" placeholder="Enter email">
+                                        </div>
+                                    </div>
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label>Address</label>
+                                            <input type="text" id="vendor-address" placeholder="Enter address">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>City</label>
+                                            <input type="text" id="vendor-city" placeholder="Enter city">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Delivery Time</label>
+                                            <input type="text" id="vendor-delivery-time" placeholder="e.g. 3-5 days">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>GST Number</label>
+                                            <input type="text" id="vendor-gst-number" placeholder="Enter GST number">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Section 3: Bank Details -->
+                                <div class="form-section">
+                                    <div class="section-heading">Bank Details</div>
+                                    <div class="grid-4">
+                                        <div class="form-group">
+                                            <label>Account Holder Name</label>
+                                            <input type="text" id="vendor-account-holder"
+                                                placeholder="Enter account holder name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Account Number</label>
+                                            <input type="text" id="vendor-account-number"
+                                                placeholder="Enter account number">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>IFSC Code</label>
+                                            <input type="text" id="vendor-ifsc" placeholder="Enter IFSC code">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>UPI ID</label>
+                                            <input type="text" id="vendor-upi" placeholder="Enter UPI ID">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="btn-save-vendor" class="btn-submit">Save Vendor</button>
+                            </form>
+                        </div>
+
+                        <!-- Vendor List Section -->
+                        <div id="vendor-list-container" class="vendor-list-container hidden">
+                            <div class="vendor-list-header">
+                                <h2 class="vendor-list-title">Vendor List</h2>
+                                <div class="vendor-list-controls">
+                                    <div class="vendor-search-wrapper">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <path d="m21 21-4.3-4.3"></path>
+                                        </svg>
+                                        <input type="text" id="vendor-search" placeholder="Search vendors..."
+                                            class="vendor-search-input">
+                                    </div>
+                                    <select id="vendor-filter-category" class="vendor-filter-select">
+                                        <option value="">All Categories</option>
+                                        <option value="Product">Product</option>
+                                        <option value="Operations">Operations</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Logistics">Logistics</option>
+                                        <option value="Financial">Financial</option>
+                                        <option value="Software">Software</option>
+                                        <option value="Compliance">Compliance</option>
+                                        <option value="Assets">Assets</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="vendor-table-wrapper">
+                                <table class="vendor-table" id="vendor-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Vendor Name</th>
+                                            <th>Company</th>
+                                            <th>Category</th>
+                                            <th>Sub Category</th>
+                                            <th>Phone</th>
+                                            <th>City</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vendor-table-body">
+                                        <!-- Vendor rows dynamically injected here -->
+                                    </tbody>
+                                </table>
+                                <div id="vendor-empty-state" class="vendor-empty-state">
+                                    <div class="vendor-empty-icon">🏪</div>
+                                    <h3>No vendors yet</h3>
+                                    <p>Click "+ Vendor" in the sidebar to add your first vendor.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Management View -->
+                    <div id="view-category" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Category Management</h2>
+                            <button type="button" class="btn-primary btn-dept-task-route" data-dept="Category" style="font-size: 14px; padding: 6px 12px;">Task</button>
+                        </div>
+                        <div class="category-header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-primary" id="btn-add-main-category">+ Add Main Category</button>
+                                <button class="btn-primary" id="btn-add-sub-category-1">+ Add Sub Category 1</button>
+                                <button class="btn-primary" id="btn-add-sub-category-2">+ Add Sub Category 2</button>
+                                <button class="btn-secondary" id="btn-view-category-list">View Saved Category</button>
+                            </div>
+                        </div>
+                        <div id="category-content-area" class="category-content-area">
+                            <div id="mainCategoryForm" class="hidden">
+                                <h2 class="form-section-title">Add Main Category</h2>
+
+                                <div id="categoryInputs" class="category-inputs-grid">
+                                    <input type="text" placeholder="Enter Category Name" class="category-input-field" />
+                                </div>
+
+                                <div class="category-form-actions">
+                                    <button id="addCategoryInput" class="btn-secondary">+ Add</button>
+                                    <button id="saveCategory" class="btn-primary">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="subCategory1Form" class="hidden">
+                                <h2 class="form-section-title">Add Sub Category 1</h2>
+
+                                <div class="form-group mb-20" style="max-width: 300px;">
+                                    <label>Select Main Category</label>
+                                    <select id="mainCategorySelect" class="category-input-field">
+                                        <option value="">Select Main Category</option>
+                                    </select>
+                                </div>
+
+                                <div id="sub1Inputs" class="category-inputs-grid">
+                                    <input type="text" placeholder="Enter Sub Category 1 Name"
+                                        class="category-input-field" />
+                                </div>
+
+                                <div class="category-form-actions">
+                                    <button id="addSub1Input" class="btn-secondary">+ Add</button>
+                                    <button id="saveSub1" class="btn-primary">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="subCategory2Form" class="hidden">
+                                <h2 class="form-section-title">Add Sub Category 2</h2>
+
+                                <div class="form-group mb-20" style="max-width: 300px;">
+                                    <label>Select Sub Category 1</label>
+                                    <select id="subCategory1Select" class="category-input-field">
+                                        <option value="">Select Sub Category 1</option>
+                                    </select>
+                                </div>
+
+                                <div id="sub2Inputs" class="category-inputs-grid">
+                                    <input type="text" placeholder="Enter Sub Category 2 Name"
+                                        class="category-input-field" />
+                                </div>
+
+                                <div class="category-form-actions">
+                                    <button id="addSub2Input" class="btn-secondary">+ Add</button>
+                                    <button id="saveSub2" class="btn-primary">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="subCategory3Form" class="hidden">
+                                <h2 class="form-section-title">Add Sub Category 3</h2>
+
+                                <div class="form-group mb-20" style="max-width: 300px;">
+                                    <label>Select Sub Category 2</label>
+                                    <select id="subCategory2Select" class="category-input-field">
+                                        <option value="">Select Sub Category 2</option>
+                                    </select>
+                                </div>
+
+                                <div id="sub3Inputs" class="category-inputs-grid">
+                                    <input type="text" placeholder="Enter Sub Category 3 Name"
+                                        class="category-input-field" />
+                                </div>
+
+                                <div class="category-form-actions">
+                                    <button id="addSub3Input" class="btn-secondary">+ Add</button>
+                                    <button id="saveSub3" class="btn-primary">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="categoryListView" class="hidden" style="width: 100%;">
+                                <div class="flex-between mb-20">
+                                    <h2 class="form-section-title" style="margin: 0;">Category Hierarchy View</h2>
+                                    <button class="btn-primary" id="btn-refresh-category-list">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" style="margin-right: 8px;">
+                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                                            <path d="M21 3v5h-5"></path>
+                                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                                            <path d="M11 16H3v5"></path>
+                                        </svg>
+                                        Refresh
+                                    </button>
+                                </div>
+                                <div id="categoryListContent" class="vendor-table-wrapper">
+                                    <!-- Table will be injected here -->
+                                </div>
+                            </div>
+
+                            <div id="category-default-state" class="vendor-empty-state">
+                                <div class="vendor-empty-icon">📂</div>
+                                <h3>Category Management</h3>
+                                <p>Select an action from the top menu to get started.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Category View -->
+                    <div id="view-task-category" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Task Category</h2>
+                            <button type="button" class="btn-primary btn-dept-task-route" data-dept="Task Manager" style="font-size: 14px; padding: 6px 12px;">Task</button>
+                        </div>
+                        <div class="category-header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-primary" id="btn-add-task-main-category">+ Add Department</button>
+                                <button class="btn-primary" id="btn-add-task-sub-category-1">+ Add Sub Category 1</button>
+                                <button class="btn-primary" id="btn-add-task-sub-category-2">+ Add Sub Category 2</button>
+                                <button class="btn-secondary" id="btn-view-task-category-list">View Saved Category</button>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-secondary" id="btn-back-from-task-category">Back to Task Manager</button>
+                            </div>
+                        </div>
+                        <div id="task-category-content-area" class="category-content-area">
+                            <div id="taskMainCategoryForm" class="hidden">
+                                <h2 class="form-section-title">Add Main Category</h2>
+
+                                <div id="taskCategoryInputs" class="category-inputs-grid">
+                                    <input type="text" placeholder="Enter Category Name" class="category-input-field" />
+                                </div>
+
+                                <div class="category-form-actions">
+                                    <button id="addTaskCategoryInput" class="btn-secondary">+ Add</button>
+                                    <button id="saveTaskCategory" class="btn-primary">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="taskSubCategory1Form" class="hidden">
+                                <h2 class="form-section-title">Add Sub Category 1</h2>
+
+                                <div class="form-group mb-20" style="max-width: 300px;">
+                                    <label>Select Main Category</label>
+                                    <select id="taskMainCategorySelect" class="category-input-field">
+                                        <option value="">Select Main Category</option>
+                                    </select>
+                                </div>
+
+                                <div id="taskSub1Inputs" class="category-inputs-grid">
+                                    <input type="text" placeholder="Enter Sub Category 1 Name"
+                                        class="category-input-field" />
+                                </div>
+
+                                <div class="category-form-actions">
+                                    <button id="addTaskSub1Input" class="btn-secondary">+ Add</button>
+                                    <button id="saveTaskSub1" class="btn-primary">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="taskSubCategory2Form" class="hidden">
+                                <h2 class="form-section-title">Add Sub Category 2</h2>
+
+                                <div class="form-group mb-20" style="max-width: 300px;">
+                                    <label>Select Sub Category 1</label>
+                                    <select id="taskSubCategory1Select" class="category-input-field">
+                                        <option value="">Select Sub Category 1</option>
+                                    </select>
+                                </div>
+
+                                <div id="taskSub2Inputs" class="category-inputs-grid">
+                                    <input type="text" placeholder="Enter Sub Category 2 Name"
+                                        class="category-input-field" />
+                                </div>
+
+                                <div class="category-form-actions">
+                                    <button id="addTaskSub2Input" class="btn-secondary">+ Add</button>
+                                    <button id="saveTaskSub2" class="btn-primary">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="taskCategoryListView" class="hidden" style="width: 100%;">
+                                <div class="flex-between mb-20">
+                                    <h2 class="form-section-title" style="margin: 0;">Task Category Hierarchy View</h2>
+                                    <button class="btn-primary" id="btn-refresh-task-category-list">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" style="margin-right: 8px;">
+                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                                            <path d="M21 3v5h-5"></path>
+                                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                                            <path d="M11 16H3v5"></path>
+                                        </svg>
+                                        Refresh
+                                    </button>
+                                </div>
+                                <div id="taskCategoryListContent" class="vendor-table-wrapper">
+                                    <!-- Table will be injected here -->
+                                </div>
+                            </div>
+
+                            <div id="task-category-default-state" class="vendor-empty-state">
+                                <div class="vendor-empty-icon">📂</div>
+                                <h3>Task Category</h3>
+                                <p>Select an action from the top menu to get started.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory View -->
+                    <div id="view-inventory" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Inventory</h2>
+                            <button class="btn-primary btn-dept-task-toggle" data-dept="Inventory">Task</button>
+                        </div>
+                        <div class="dept-default-content">
+                            <div class="vendor-empty-state">
+                                <div class="vendor-empty-icon">📦</div>
+                                <h3>Inventory Workspace</h3>
+                                <p>Select an action or manage tasks for this department.</p>
+                            </div>
+                        </div>
+                        <div class="dept-task-container hidden" data-dept="Inventory"></div>
+                    </div>
+
+                    <!-- Sales View -->
+                    <div id="view-sales" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Sales</h2>
+                            <button class="btn-primary btn-dept-task-toggle" data-dept="Sales">Task</button>
+                        </div>
+                        <div class="dept-default-content">
+                            <div class="vendor-empty-state">
+                                <div class="vendor-empty-icon">📈</div>
+                                <h3>Sales Workspace</h3>
+                                <p>Select an action or manage tasks for this department.</p>
+                            </div>
+                        </div>
+                        <div class="dept-task-container hidden" data-dept="Sales"></div>
+                    </div>
+
+                    <!-- Document Room View -->
+                    <div id="view-document" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Document Room</h2>
+                            <button class="btn-primary btn-dept-task-toggle" data-dept="Document Room">Task</button>
+                        </div>
+                        <div class="dept-default-content">
+                            <div class="vendor-empty-state">
+                                <div class="vendor-empty-icon">📄</div>
+                                <h3>Document Room Workspace</h3>
+                                <p>Select an action or manage tasks for this department.</p>
+                            </div>
+                        </div>
+                        <div class="dept-task-container hidden" data-dept="Document Room"></div>
+                    </div>
+
+                    <!-- Research & Development View -->
+                    <div id="view-research" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Research & Development</h2>
+                            <button class="btn-primary btn-dept-task-toggle" data-dept="Research &amp; Development">Task</button>
+                        </div>
+                        <div class="dept-default-content">
+                            <div class="vendor-empty-state">
+                                <div class="vendor-empty-icon">🧪</div>
+                                <h3>R&D Workspace</h3>
+                                <p>Select an action or manage tasks for this department.</p>
+                            </div>
+                        </div>
+                        <div class="dept-task-container hidden" data-dept="Research &amp; Development"></div>
+                    </div>
+
+                    <!-- Human Resources View -->
+                    <div id="view-hr" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Human Resources</h2>
+                            <button class="btn-primary btn-dept-task-toggle" data-dept="Human Resources">Task</button>
+                        </div>
+                        <div class="dept-default-content">
+                            <div class="vendor-empty-state">
+                                <div class="vendor-empty-icon">👥</div>
+                                <h3>Human Resources Workspace</h3>
+                                <p>Select an action or manage tasks for this department.</p>
+                            </div>
+                        </div>
+                        <div class="dept-task-container hidden" data-dept="Human Resources"></div>
+                    </div>
+
+                    <!-- Archive View -->
+                    <div id="view-archive" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Archive</h2>
+                            <button class="btn-primary btn-dept-task-toggle" data-dept="Archive">Task</button>
+                        </div>
+                        <div class="dept-default-content">
+                            <div class="vendor-empty-state">
+                                <div class="vendor-empty-icon">🗄️</div>
+                                <h3>Archive Workspace</h3>
+                                <p>Select an action or manage tasks for this department.</p>
+                            </div>
+                        </div>
+                        <div class="dept-task-container hidden" data-dept="Archive"></div>
+                    </div>
+
+                    <!-- Marketing Sub View -->
+                    <div id="view-marketing" class="content-view hidden">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Marketing</h2>
+                            <button type="button" class="btn-primary btn-dept-task-toggle" data-dept="Marketing" style="font-size: 14px; padding: 6px 12px;">Task</button>
+                        </div>
+                        <div class="dept-default-content">
+                        <div id="marketing-options" class="marketing-options-container">
+                            <button id="btn-influencer-dashboard" class="option-card">Clean Magic Influencers</button>
+                            <button class="option-card">Own Content</button>
+                            <button id="btn-influencer-db" class="option-card">Influence Data Base</button>
+                        </div>
+
+                        <!-- Influencer Marketing Dashboard -->
+                        <div id="influencer-dashboard" class="influencer-dashboard-container hidden">
+                            <!-- Left Panel -->
+                            <div class="influencer-left-panel">
+                                <div class="influencer-header">
+                                    Influencer Marketing
+                                </div>
+                                <button class="btn-create-campaign">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14" />
+                                        <path d="M12 5v14" />
+                                    </svg>
+                                    Create Campaign
+                                </button>
+
+                                <div class="created-campaigns-section">
+                                    <div class="section-title">Created Campaigns</div>
+                                    <div class="empty-campaign-list">
+                                        <!-- Campaign list will appear here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Panel -->
+                            <div class="influencer-right-panel">
+                                <div id="content-viewer-placeholder" class="content-viewer-placeholder">
+                                    Select something to view
+                                </div>
+
+                                <!-- Campaign Creation Form -->
+                                <div id="campaign-form-container" class="campaign-form-container hidden">
+                                    <div class="form-header">
+                                        Create Influencer Campaign
+                                    </div>
+
+                                    <form id="campaign-form" class="campaign-form">
+                                        <!-- Section 1 -->
+                                        <div class="form-section">
+                                            <div class="section-heading">Basic Campaign Info</div>
+                                            <div class="grid-2">
+                                                <div class="form-group">
+                                                    <label>Campaign Name</label>
+                                                    <input type="text" id="campaign-name-input" name="campaign_name"
+                                                        placeholder="Enter campaign name">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Campaign Type</label>
+                                                    <select name="campaign_type">
+                                                        <option value="">Select Type</option>
+                                                        <option value="Product Launch">Product Launch</option>
+                                                        <option value="Brand Awareness">Brand Awareness</option>
+                                                        <option value="Conversion">Conversion</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 2 -->
+                                        <div class="form-section">
+                                            <div class="section-heading">Budget & Planning</div>
+                                            <div class="grid-2">
+                                                <div class="form-group">
+                                                    <label>Total Budget</label>
+                                                    <input type="number" name="total_budget" placeholder="$0.00">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Expected No. of Influencers</label>
+                                                    <input type="number" name="expected_influencers" placeholder="0">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Expected Total Videos</label>
+                                                    <input type="number" name="expected_videos" placeholder="0">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Avg Per Video Cost</label>
+                                                    <input type="number" name="avg_video_cost" placeholder="$0.00">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 3 -->
+                                        <div class="form-section">
+                                            <div class="section-heading">Target Language</div>
+                                            <div class="grid-checkboxes">
+                                                <label class="custom-checkbox"><input type="checkbox"
+                                                        name="target_language" value="Tamil"><span>Tamil</span></label>
+                                                <label class="custom-checkbox"><input type="checkbox"
+                                                        name="target_language"
+                                                        value="English"><span>English</span></label>
+                                                <label class="custom-checkbox"><input type="checkbox"
+                                                        name="target_language" value="Hindi"><span>Hindi</span></label>
+                                                <label class="custom-checkbox"><input type="checkbox"
+                                                        name="target_language"
+                                                        value="Telugu"><span>Telugu</span></label>
+                                                <label class="custom-checkbox"><input type="checkbox"
+                                                        name="target_language"
+                                                        value="Kannada"><span>Kannada</span></label>
+                                                <label class="custom-checkbox"><input type="checkbox"
+                                                        name="target_language"
+                                                        value="Malayalam"><span>Malayalam</span></label>
+                                                <label class="custom-checkbox"><input type="checkbox"
+                                                        name="target_language"
+                                                        value="Multi-Language"><span>Multi-Language</span></label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 4 (Combined Details) -->
+                                        <div class="form-section">
+                                            <div class="section-heading">Campaign Details</div>
+                                            <div class="grid-3">
+                                                <div class="form-group">
+                                                    <label>Campaign Goal</label>
+                                                    <select name="campaign_goal">
+                                                        <option value="">Select Goal</option>
+                                                        <option value="Increase Sales">Increase Sales</option>
+                                                        <option value="Drive Website Traffic">Drive Website Traffic
+                                                        </option>
+                                                        <option value="Social Media Growth">Social Media Growth</option>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Start Date</label>
+                                                    <input type="date" name="start_date" class="date-field">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>End Date</label>
+                                                    <input type="date" name="end_date" class="date-field">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="btn-submit">
+                                            Create Campaign
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Campaign Dashboard View -->
+                                <div id="campaign-dashboard-view" class="campaign-dashboard-view hidden">
+                                    <div class="campaign-dashboard-header">
+                                        <h2 id="campaign-dashboard-title" class="dashboard-title">Campaign Name</h2>
+                                        <hr class="header-divider">
+                                        <div class="campaign-actions">
+                                            <button id="btn-add-influencer" class="btn-primary">+ Add
+                                                Influencer</button>
+                                            <button id="btn-influencer-list" class="btn-secondary">Influencer
+                                                List</button>
+                                            <button id="btn-campaign-dispatch" class="btn-secondary">Dispatched
+                                                List</button>
+                                            <button id="btn-status-tracking" class="btn-status-tracking">Status
+                                                Tracking</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add Influencer View -->
+                                <div id="add-influencer-view" class="add-influencer-view hidden">
+                                    <div class="add-influencer-header-card">
+                                        <div class="form-header">
+                                            Add Influencer
+                                        </div>
+                                        <div class="tabs-nav">
+                                            <button class="tab-btn active" data-tab="tab-basic-info">Basic Info</button>
+                                            <button class="tab-btn" data-tab="tab-platform-details">Platform
+                                                Details</button>
+                                            <button class="tab-btn" data-tab="tab-pricing-info">Pricing Info</button>
+                                            <button class="tab-btn" data-tab="tab-brand-performance">Brand
+                                                Performance</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="tabs-content">
+                                        <!-- Basic Info Tab -->
+                                        <div id="tab-basic-info" class="tab-pane">
+                                            <form class="influencer-form">
+                                                <div class="grid-2">
+                                                    <div class="form-group">
+                                                        <label>Name</label>
+                                                        <input type="text" placeholder="Enter name">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Influencer Name</label>
+                                                        <input type="text" placeholder="Enter influencer name">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Phone Number</label>
+                                                        <input type="tel" placeholder="Enter phone number">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Alternative Number</label>
+                                                        <input type="tel" placeholder="Enter alternative number">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>UPI Number</label>
+                                                        <input type="text" placeholder="Enter UPI number">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>City</label>
+                                                        <input type="text" placeholder="Enter city">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Complete Address</label>
+                                                        <input type="text" placeholder="Enter address">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>State</label>
+                                                        <input type="text" placeholder="Enter state">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Language</label>
+                                                        <select>
+                                                            <option value="">Select Language</option>
+                                                            <option value="English">English</option>
+                                                            <option value="Hindi">Hindi</option>
+                                                            <option value="Tamil">Tamil</option>
+                                                            <option value="Telugu">Telugu</option>
+                                                            <option value="Kannada">Kannada</option>
+                                                            <option value="Malayalam">Malayalam</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Upload File</label>
+                                                        <input type="file" class="file-upload">
+                                                    </div>
+                                                </div>
+                                                <div class="form-footer">
+                                                    <button type="button" class="btn-next">Next &rarr;</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Platform Details Tab -->
+                                        <div id="tab-platform-details" class="tab-pane hidden">
+                                            <form class="influencer-form">
+                                                <div class="grid-2">
+                                                    <div class="form-group">
+                                                        <label>Platform Availability</label>
+                                                        <select id="platform-availability-select"
+                                                            class="platform-availability-select">
+                                                            <option value="All">All</option>
+                                                            <option value="Instagram">Instagram</option>
+                                                            <option value="Youtube">Youtube</option>
+                                                            <option value="Facebook">Facebook</option>
+                                                            <option value="Instagram and Youtube">Instagram and Youtube
+                                                            </option>
+                                                            <option value="Instagram and Facebook">Instagram and
+                                                                Facebook</option>
+                                                            <option value="Youtube and Facebook">Youtube and Facebook
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Platform Agreed</label>
+                                                        <select id="platform-agreed-select">
+                                                            <option value="All">All</option>
+                                                            <option value="Instagram">Instagram</option>
+                                                            <option value="Youtube">Youtube</option>
+                                                            <option value="Facebook">Facebook</option>
+                                                            <option value="Instagram and Youtube">Instagram and Youtube
+                                                            </option>
+                                                            <option value="Instagram and Facebook">Instagram and
+                                                                Facebook</option>
+                                                            <option value="Youtube and Facebook">Youtube and Facebook
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div id="platform-forms-container" class="platform-forms-container">
+                                                    <!-- Dynamic Platform Forms (Insta/YT/FB) injected via JS -->
+                                                </div>
+
+                                                <div class="form-footer">
+                                                    <button type="button" class="btn-next">Next &rarr;</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Pricing Info Tab -->
+                                        <div id="tab-pricing-info" class="tab-pane hidden">
+                                            <form class="influencer-form">
+                                                <div class="grid-2">
+                                                    <div class="form-group">
+                                                        <label>Final Price</label>
+                                                        <input type="number" id="pricing-final-price"
+                                                            placeholder="Enter final price">
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Total Videos</label>
+                                                        <input type="number" id="pricing-total-videos"
+                                                            placeholder="Enter total videos">
+                                                    </div>
+                                                </div>
+
+                                                <div class="pricing-bargain-section">
+                                                    <h3>Bargain History</h3>
+                                                    <div id="bargain-history-container"
+                                                        class="bargain-history-container">
+                                                        <!-- First default bargain row -->
+                                                        <div class="bargain-row popup-card">
+                                                            <div class="form-group">
+                                                                <label>Creator Request</label>
+                                                                <input type="number" class="creator-request-input"
+                                                                    placeholder="Amount">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Brand Request</label>
+                                                                <input type="number" class="brand-request-input"
+                                                                    placeholder="Amount">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button"
+                                                        class="btn-add-bargain-set btn-secondary mt-10">+ Add
+                                                        Set</button>
+                                                </div>
+
+                                                <div class="form-footer">
+                                                    <button type="button" class="btn-next">Next &rarr;</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <!-- Brand Performance Tab -->
+                                        <div id="tab-brand-performance" class="tab-pane hidden">
+                                            <form class="influencer-form" id="form-brand-performance">
+                                                <div id="brand-performance-container"
+                                                    class="brand-performance-container">
+                                                    <!-- First default brand performance card -->
+                                                    <div class="performance-card popup-card">
+                                                        <div class="grid-2 mb-15">
+                                                            <div class="form-group">
+                                                                <label>Which Brand</label>
+                                                                <input type="text" class="perf-brand-input"
+                                                                    placeholder="Enter brand name">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Which Product</label>
+                                                                <input type="text" class="perf-product-input"
+                                                                    placeholder="Enter product name">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Views</label>
+                                                                <input type="number" class="perf-views-input"
+                                                                    placeholder="Enter total views">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Uploaded Platforms</label>
+                                                                <select class="perf-platform-select">
+                                                                    <option value="All">All</option>
+                                                                    <option value="Instagram">Instagram</option>
+                                                                    <option value="Youtube">Youtube</option>
+                                                                    <option value="Facebook">Facebook</option>
+                                                                    <option value="Instagram and Youtube">Instagram and
+                                                                        Youtube</option>
+                                                                    <option value="Instagram and Facebook">Instagram and
+                                                                        Facebook</option>
+                                                                    <option value="Youtube and Facebook">Youtube and
+                                                                        Facebook</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="links-section">
+                                                            <h4 class="mb-10 text-muted">Links</h4>
+                                                            <div class="grid-3 mb-10">
+                                                                <div class="form-group">
+                                                                    <label>Instagram Link</label>
+                                                                    <input type="url" class="perf-ig-link"
+                                                                        placeholder="https://instagram.com/...">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label>Youtube Link</label>
+                                                                    <input type="url" class="perf-yt-link"
+                                                                        placeholder="https://youtube.com/...">
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label>Facebook Link</label>
+                                                                    <input type="url" class="perf-fb-link"
+                                                                        placeholder="https://facebook.com/...">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <button type="button"
+                                                    class="btn-add-performance btn-secondary mt-10 mb-20">+ Add
+                                                    Performance</button>
+
+                                                <div class="form-footer">
+                                                    <button type="button" id="btn-save-influencer"
+                                                        class="btn-primary">Save Influencer</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Influencer List View -->
+                                <div id="influencer-list-view" class="influencer-list-view hidden">
+                                    <div class="content-header flex-between mb-20">
+                                        <h2 class="dashboard-title">Influencer List</h2>
+                                        <button class="btn-primary" id="btn-back-to-add-influencer">+ Add
+                                            Influencer</button>
+                                    </div>
+                                    <div id="influencer-list-container" class="influencer-list-container">
+                                        <!-- Profile cards dynamically injected here -->
+                                    </div>
+                                </div>
+
+                                <!-- Dispatched List View -->
+                                <div id="view-dispatched-list" class="dispatched-list-view hidden">
+                                    <div class="content-header flex-between mb-20" style="width: 100%;">
+                                        <div>
+                                            <h2 class="dashboard-title"
+                                                style="text-align: left; margin-bottom: 0.5rem;">Dispatched List</h2>
+                                            <div id="dispatched-breadcrumb" class="breadcrumb text-muted">Campaign
+                                                Dispatched List</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Influencer Grid -->
+                                    <div id="dispatched-influencers-container" class="influencer-list-container hidden"
+                                        style="width: 100%;">
+                                        <!-- Influencer cards will be injected here -->
+                                    </div>
+                                </div>
+
+                                <!-- Status Tracking View -->
+                                <div id="view-status-tracking" class="status-tracking-view hidden">
+                                    <div class="content-header flex-between mb-20" style="width: 100%;">
+                                        <div>
+                                            <h2 class="dashboard-title"
+                                                style="text-align: left; margin-bottom: 0.5rem;">Status Tracking</h2>
+                                            <div id="st-breadcrumb" class="breadcrumb text-muted">Campaign Status
+                                                Tracking</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Cards Container for Multi-Influencer Tracking -->
+                                    <div id="st-cards-container" class="st-cards-container">
+                                        <!-- Unified cards will be injected here by JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div> <!-- close dept-default-content for marketing -->
+                        <div class="dept-task-container hidden" data-dept="Marketing"></div>
+                    </div>
+
+                    <!-- Influence Data Base View -->
+                    <div id="view-influence-db" class="content-view hidden">
+                        <div class="expense-top-bar">
+                            <h2 class="expense-view-title">Influence Data Base</h2>
+                            <div class="expense-top-actions">
+                                <button class="btn-secondary" id="btn-back-to-marketing">Back to Marketing</button>
+                                <button class="btn-primary" id="btn-show-influencer-form">+ Add Influencer</button>
+                                <button class="btn-secondary" id="btn-view-influencer-list">Influencer List</button>
+                            </div>
+                        </div>
+
+                        <div id="influencer-db-content-area">
+                            <!-- Add Influencer Form -->
+                            <div id="influencer-form-container" class="vendor-form-container hidden">
+                                <div class="form-header">Add New Influencer</div>
+                                <form id="influencer-db-form" class="campaign-form">
+                                    <!-- Section 1: Basic Details -->
+                                    <div class="form-section">
+                                        <div class="section-heading">Basic Details</div>
+                                        <div class="grid-2">
+                                            <div class="form-group">
+                                                <label>Name</label>
+                                                <input type="text" id="inf-name" placeholder="Enter name">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Influencer Name</label>
+                                                <input type="text" id="inf-handle" placeholder="Enter handle/name">
+                                            </div>
+                                        </div>
+                                        <div class="grid-3" style="margin-top: 15px;">
+                                            <div class="form-group">
+                                                <label>Payment Agreed</label>
+                                                <input type="number" id="inf-payment" placeholder="Enter amount">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Brand</label>
+                                                <select id="inf-brand">
+                                                    <option value="">Select Brand</option>
+                                                    <option value="Better Magic">Better Magic</option>
+                                                    <option value="Neat Magic">Neat Magic</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Product</label>
+                                                <select id="inf-product" disabled>
+                                                    <option value="">Select Brand First</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 2: Contact Details -->
+                                    <div class="form-section">
+                                        <div class="section-heading">Contact Details</div>
+                                        <div class="grid-3">
+                                            <div class="form-group">
+                                                <label>Phone Number</label>
+                                                <input type="tel" id="inf-phone" placeholder="Enter phone">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Alternative Number</label>
+                                                <input type="tel" id="inf-alt-phone" placeholder="Enter alt phone">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>UPI Number</label>
+                                                <input type="text" id="inf-upi" placeholder="Enter UPI">
+                                            </div>
+                                        </div>
+                                        <div class="grid-3" style="margin-top: 15px;">
+                                            <div class="form-group">
+                                                <label>City</label>
+                                                <input type="text" id="inf-city" placeholder="Enter city">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>State</label>
+                                                <input type="text" id="inf-state" placeholder="Enter state">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Language</label>
+                                                <input type="text" id="inf-language" placeholder="Enter language">
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-top: 15px;">
+                                            <label>Complete Address</label>
+                                            <textarea id="inf-address" rows="2" placeholder="Enter full address" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: #fff; padding: 12px;"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-top: 15px;">
+                                            <label>Upload File</label>
+                                            <input type="file" id="inf-file" class="file-upload">
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 3: Platform Availability -->
+                                    <div class="form-section">
+                                        <div class="section-heading">Platform Availability (Followers)</div>
+                                        <div class="form-group" style="max-width: 400px; margin-bottom: 20px;">
+                                            <label>Selected Platforms</label>
+                                            <select id="inf-platform-avail">
+                                                <option value="">Select Platforms</option>
+                                                <option value="All">All</option>
+                                                <option value="Instagram">Instagram</option>
+                                                <option value="Youtube">Youtube</option>
+                                                <option value="Facebook">Facebook</option>
+                                                <option value="Instagram and Youtube">Instagram and Youtube</option>
+                                                <option value="Instagram and Facebook">Instagram and Facebook</option>
+                                                <option value="Youtube and Facebook">Youtube and Facebook</option>
+                                            </select>
+                                        </div>
+                                        <div id="inf-avail-containers" style="display: flex; flex-direction: column; gap: 20px;">
+                                            <!-- Dynamic forms injected here -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 4: Posted In Performance -->
+                                    <div class="form-section">
+                                        <div class="section-heading">Posted In (Views)</div>
+                                        <div class="form-group" style="max-width: 400px; margin-bottom: 20px;">
+                                            <label>Selected Platforms</label>
+                                            <select id="inf-posted-in">
+                                                <option value="">Select Platforms</option>
+                                                <option value="All">All</option>
+                                                <option value="Instagram">Instagram</option>
+                                                <option value="Youtube">Youtube</option>
+                                                <option value="Facebook">Facebook</option>
+                                                <option value="Instagram and Youtube">Instagram and Youtube</option>
+                                                <option value="Instagram and Facebook">Instagram and Facebook</option>
+                                                <option value="Youtube and Facebook">Youtube and Facebook</option>
+                                            </select>
+                                        </div>
+                                        <div id="inf-posted-containers" style="display: flex; flex-direction: column; gap: 20px;">
+                                            <!-- Dynamic forms injected here -->
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                                        <button type="button" id="btn-cancel-influencer" class="btn-secondary">Cancel</button>
+                                        <button type="button" id="btn-save-influencer" class="btn-submit">Save Influencer</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Influencer List -->
+                            <div id="influencer-list-container" class="vendor-form-container hidden">
+                                <div class="form-header">Saved Influencers</div>
+                                <div id="influencer-list-content" style="margin-top: 20px;">
+                                    <!-- Table rendered here -->
+                                </div>
+                            </div>
+
+                            <!-- Default State -->
+                            <div id="influencer-db-default" class="vendor-empty-state">
+                                <div class="vendor-empty-icon">🤝</div>
+                                <h3>Influence Data Base</h3>
+                                <p>Select an action to manage influencer records.</p>
+                            </div>
+                        </div>
+                    </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Dispatch Modal Container -->
+    <div id="dispatch-modal" class="modal hidden">
+        <div class="modal-content modal-lg">
+            <div class="modal-header flex-between">
+                <h2>Dispatch Influencer</h2>
+                <button class="btn-close-modal" id="btn-close-dispatch">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="dispatch-form" class="campaign-form">
+
+                    <!-- Section 1 -->
+                    <div class="form-section">
+                        <div class="section-heading">Campaign & Influencer</div>
+                        <div class="form-group mb-15">
+                            <label>Creator Name</label>
+                            <input type="text" id="dispatch-creator-name" placeholder="Creator Name" disabled>
+                        </div>
+                        <div class="grid-2 mb-15">
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="dispatch-phone" placeholder="Phone Number">
+                            </div>
+                            <div class="form-group">
+                                <label>Alternative Phone Number</label>
+                                <input type="tel" id="dispatch-alt-phone" placeholder="Alternative Phone Number">
+                            </div>
+                        </div>
+                        <div class="grid-2 mb-15">
+                            <div class="form-group">
+                                <label>Address</label>
+                                <input type="text" id="dispatch-address" placeholder="Address">
+                            </div>
+                            <div class="form-group">
+                                <label>State</label>
+                                <input type="text" id="dispatch-state" placeholder="State">
+                            </div>
+                        </div>
+                        <div class="grid-3 mb-15">
+                            <div class="form-group">
+                                <label>Campaign Name</label>
+                                <input type="text" id="dispatch-campaign" placeholder="Campaign Name" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Product Name</label>
+                                <input type="text" id="dispatch-product" placeholder="Product Name">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section: Campaign Products -->
+                    <div class="form-section">
+                        <div class="section-heading">Campaign Products</div>
+                        <div class="grid-2 product-selection-grid mb-15">
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox" data-product="Magic Detergent Gel">
+                                    Magic Detergent Gel
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox" data-product="Magic Dishwash Gel">
+                                    Magic Dishwash Gel
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox" data-product="Magic Sponge">
+                                    Magic Sponge
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox" data-product="Magic BBC Cleaner">
+                                    Magic BBC Cleaner
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox"
+                                        data-product="Magic Tap & Limescale Cleaner">
+                                    Magic Tap & Limescale Cleaner
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox"
+                                        data-product="Magic Kitchen Cleaner">
+                                    Magic Kitchen Cleaner
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox" data-product="Magic Floor Cleaner">
+                                    Magic Floor Cleaner
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox"
+                                        data-product="Magic Bamboo Kitchen Towel">
+                                    Magic Bamboo Kitchen Towel
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                            <!-- Product Item -->
+                            <div class="product-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" class="product-checkbox"
+                                        data-product="Magic Coconut Scrubber">
+                                    Magic Coconut Scrubber
+                                </label>
+                                <div class="product-qty-wrapper">
+                                    <label>Qty</label>
+                                    <input type="number" class="product-quantity-input" placeholder="0" min="0"
+                                        max="100" step="1" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <div class="form-section">
+                        <div class="section-heading">Pack Products</div>
+                        <div class="grid-3 mb-15">
+                            <div class="form-group">
+                                <label>Total Products</label>
+                                <input type="number" id="dispatch-total-products" placeholder="0" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Total Product Value</label>
+                                <input type="number" id="dispatch-total-value" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Total Weight</label>
+                                <input type="text" id="dispatch-total-weight" placeholder="e.g. 5kg">
+                            </div>
+                        </div>
+                        <div class="grid-2 mb-15">
+                            <div class="form-group">
+                                <label>Upload Product Photo</label>
+                                <div class="upload-preview-wrapper">
+                                    <label class="btn-secondary"
+                                        style="display:inline-block; cursor:pointer; text-align:center;">
+                                        Upload Photo
+                                        <input type="file" id="dispatch-pack-photo" class="hidden-file-input"
+                                            style="display:none;" accept="image/*">
+                                    </label>
+                                    <div class="image-preview-box" id="preview-pack-photo">
+                                        <span>No Image</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <!-- Adjusted to a 2 column grid with only product photo -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3 -->
+                    <div class="form-section">
+                        <div class="section-heading">Dispatch Details</div>
+                        <div class="grid-2 mb-15">
+                            <div class="form-group">
+                                <label>Upload Dispatch Photo</label>
+                                <div class="upload-preview-wrapper">
+                                    <label class="btn-secondary"
+                                        style="display:inline-block; cursor:pointer; text-align:center;">
+                                        Upload Photo
+                                        <input type="file" id="dispatch-final-photo" class="hidden-file-input"
+                                            style="display:none;" accept="image/*">
+                                    </label>
+                                    <div class="image-preview-box" id="preview-final-photo">
+                                        <span>No Image</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Courier Partner</label>
+                                <input type="text" id="dispatch-courier" placeholder="Courier Name">
+                            </div>
+                        </div>
+                        <div class="grid-2 mb-15">
+                            <div class="form-group">
+                                <!-- Empty space to match layout if needed, or track ID can go here -->
+                                <label>Track ID</label>
+                                <input type="text" id="dispatch-track-id" placeholder="Enter tracking ID">
+                            </div>
+                        </div>
+                        <div class="grid-2 mb-15">
+                            <div class="form-group">
+                                <label>Dispatch Date</label>
+                                <input type="date" id="dispatch-date">
+                            </div>
+                            <div class="form-group">
+                                <label>Expected Delivery Date</label>
+                                <input type="date" id="dispatch-delivery-date">
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-submit-dispatch btn-primary" id="btn-submit-dispatch">Dispatch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Zoom Modal -->
+    <div id="photo-zoom-modal" class="photo-zoom-modal" style="display: none;">
+        <span class="close-zoom" id="btn-close-zoom">&times;</span>
+        <img class="zoom-modal-content" id="zoomed-image">
+    </div>
+
+    <!-- Video Zoom Modal -->
+    <div id="video-zoom-modal" class="video-zoom-modal" style="display: none;">
+        <span class="close-video-zoom" id="btn-close-video-zoom">&times;</span>
+        <video class="video-modal-content" id="zoomed-video" controls></video>
+    </div>
+
+    <!-- Department Alert Toast -->
+    <div id="dept-alert-toast" class="dept-alert-toast hidden">
+        <div class="dept-toast-content">
+            <div class="dept-toast-icon">✨</div>
+            <div class="dept-toast-text">
+                <h4>New Tasks Assigned</h4>
+                <p id="dept-alert-message">You have new tasks!</p>
+            </div>
+        </div>
+        <div class="dept-toast-actions">
+            <button id="btn-dept-view-tasks" class="btn-dept-toast-view">View Tasks</button>
+            <button id="btn-dept-close" class="btn-dept-toast-close">Close</button>
+        </div>
+    </div>
+
+    <!-- Task-Specific Vendor Modal -->
+    <div id="task-vendor-modal" class="task-modal-overlay hidden">
+        <div class="task-modal-content">
+            <div class="task-modal-header">
+                <h3>Add Vendor (Task)</h3>
+                <button type="button" class="btn-close-task-modal" id="btn-close-task-vendor">&times;</button>
+            </div>
+            <form id="task-vendor-form">
+                <input type="hidden" id="task-vendor-task-id">
+                <input type="hidden" id="task-vendor-subtask-idx">
+                
+                <div class="form-group">
+                    <label>Vendor Name</label>
+                    <input type="text" id="task-vendor-name" required placeholder="Enter vendor name">
+                </div>
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="task-vendor-platform" required>
+                        <option value="">Select Platform...</option>
+                        <option value="TradeIndia">TradeIndia</option>
+                        <option value="IndiaMART">IndiaMART</option>
+                        <option value="ExportersIndia">ExportersIndia</option>
+                        <option value="Google">Google</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>GST Number</label>
+                    <input type="text" id="task-vendor-gst" placeholder="Enter GST number">
+                </div>
+                <div class="form-group">
+                    <label>Contact Number</label>
+                    <input type="tel" id="task-vendor-contact" required placeholder="Enter contact number">
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="task-vendor-city" required placeholder="Enter city name">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="task-vendor-notes" rows="3" placeholder="Additional notes about this vendor..."></textarea>
+                </div>
+                
+                <div class="form-actions" style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn-secondary" id="btn-cancel-task-vendor">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Vendor Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task-Specific Call & Enquiry Modal -->
+    <div id="task-call-modal" class="task-modal-overlay hidden">
+        <div class="task-modal-content call-modal-content">
+            <div class="task-modal-header">
+                <h3 style="font-size: 20px; font-weight: 700;">Call & Enquiry (Task)</h3>
+                <button type="button" class="btn-close-task-modal" id="btn-close-task-call">&times;</button>
+            </div>
+            <form id="task-call-form" class="call-form-container">
+                <input type="hidden" id="task-call-task-id">
+                <input type="hidden" id="task-call-subtask-idx">
+                
+                <div class="call-form-grid">
+                    <!-- LEFT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Vendor Name</label>
+                            <input type="text" id="task-call-vendor" required placeholder="Enter vendor name">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Rate</label>
+                            <input type="number" id="task-call-rate" placeholder="Enter rate">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Availability</label>
+                            <div class="call-inline-group">
+                                <label><input type="checkbox" name="callAvailability" value="In Stock"> In Stock</label>
+                                <label><input type="checkbox" name="callAvailability" value="Made to Order"> Made to Order</label>
+                                <label><input type="checkbox" name="callAvailability" value="Not Available"> Not Available</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Contact Status</label>
+                            <div class="call-inline-group">
+                                <label><input type="checkbox" name="callContactStatus" value="Connected"> Connected</label>
+                                <label><input type="checkbox" name="callContactStatus" value="Not Reachable"> Not Reachable</label>
+                                <label><input type="checkbox" name="callContactStatus" value="Wrong Number"> Wrong Number</label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>MOQ</label>
+                            <input type="number" id="task-call-moq" placeholder="Enter Minimum Order Qty">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Catalog Received</label>
+                            <div class="call-inline-group">
+                                <label><input type="radio" name="callCatalog" value="Yes" required> Yes</label>
+                                <label><input type="radio" name="callCatalog" value="No" required> No</label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group hidden" id="task-call-upload-wrapper">
+                            <label>Upload Photo</label>
+                            <input type="file" id="task-call-photo" accept="image/*">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Lead Time (Days)</label>
+                            <input type="number" id="task-call-lead" placeholder="e.g. 7">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FULL WIDTH -->
+                <div class="call-group call-full-width">
+                    <label>Notes</label>
+                    <textarea id="task-call-notes" placeholder="Additional remarks..."></textarea>
+                </div>
+                
+                <div class="call-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancel-task-call">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Enquiry Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task-Specific Pay For Sample Modal -->
+    <div id="task-payment-modal" class="task-modal-overlay hidden">
+        <div class="task-modal-content call-modal-content">
+            <div class="task-modal-header">
+                <h3 style="font-size: 20px; font-weight: 700;">Pay For Sample (Task)</h3>
+                <button type="button" class="btn-close-task-modal" id="btn-close-task-payment">&times;</button>
+            </div>
+            <form id="task-payment-form" class="call-form-container">
+                <input type="hidden" id="task-payment-task-id">
+                <input type="hidden" id="task-payment-subtask-idx">
+                
+                <div class="call-form-grid">
+                    <!-- LEFT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Vendor Name</label>
+                            <input type="text" id="task-payment-vendor" required placeholder="Enter vendor name">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Sample Cost</label>
+                            <input type="number" id="task-payment-cost" required placeholder="Enter cost amount">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Payment Method</label>
+                            <select id="task-payment-method" required>
+                                <option value="">Select Method...</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Payment Status</label>
+                            <div class="call-inline-group">
+                                <label><input type="checkbox" name="paymentStatus" value="Paid"> Paid</label>
+                                <label><input type="checkbox" name="paymentStatus" value="Pending"> Pending</label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Upload Payment Receipt</label>
+                            <input type="file" id="task-payment-receipt" accept="image/*,.pdf">
+                        </div>
+                        
+                        <div class="call-group" style="flex: 1;">
+                            <label>Delivery Address</label>
+                            <textarea id="task-payment-address" placeholder="Enter full delivery address..." style="height: 100%; min-height: 80px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="call-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancel-task-payment">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Payment Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task-Specific Dispatch Details Modal -->
+    <div id="task-dispatch-modal" class="task-modal-overlay hidden">
+        <div class="task-modal-content call-modal-content">
+            <div class="task-modal-header">
+                <h3 style="font-size: 20px; font-weight: 700;">Dispatch Details (Task)</h3>
+                <button type="button" class="btn-close-task-modal" id="btn-close-task-dispatch">&times;</button>
+            </div>
+            <form id="task-dispatch-form" class="call-form-container">
+                <input type="hidden" id="task-dispatch-task-id">
+                <input type="hidden" id="task-dispatch-subtask-idx">
+                
+                <div class="call-form-grid">
+                    <!-- LEFT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Vendor Name</label>
+                            <input type="text" id="task-dispatch-vendor" required placeholder="Enter vendor name">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Courier Service</label>
+                            <input type="text" id="task-dispatch-courier" placeholder="e.g. Blue Dart, FedEx">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Tracking Number</label>
+                            <input type="text" id="task-dispatch-tracking" required placeholder="Enter tracking AWB number">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Dispatch Date</label>
+                            <input type="date" id="task-dispatch-date" required>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Expected Delivery Date</label>
+                            <input type="date" id="task-dispatch-delivery-date">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Dispatch Status</label>
+                            <div class="call-inline-group">
+                                <label><input type="checkbox" name="dispatchStatus" value="Dispatched"> Dispatched</label>
+                                <label><input type="checkbox" name="dispatchStatus" value="In Transit"> In Transit</label>
+                                <label><input type="checkbox" name="dispatchStatus" value="Delivered"> Delivered</label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Courier Company Contact</label>
+                            <input type="tel" id="task-dispatch-contact" placeholder="Enter contact number">
+                        </div>
+                        
+                        <div class="call-group" style="flex: 1;">
+                            <label>Delivery Address</label>
+                            <textarea id="task-dispatch-address" placeholder="Enter full delivery address..." style="height: 100%; min-height: 80px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FULL WIDTH -->
+                <div class="call-group call-full-width">
+                    <label>Notes</label>
+                    <textarea id="task-dispatch-notes" placeholder="Additional remarks..."></textarea>
+                </div>
+                
+                <div class="call-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancel-task-dispatch">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Dispatch Details</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task-Specific Receive Sample Modal -->
+    <div id="task-receive-modal" class="task-modal-overlay hidden">
+        <div class="task-modal-content call-modal-content">
+            <div class="task-modal-header">
+                <h3 style="font-size: 20px; font-weight: 700;">Receive Sample (Task)</h3>
+                <button type="button" class="btn-close-task-modal" id="btn-close-task-receive">&times;</button>
+            </div>
+            <form id="task-receive-form" class="call-form-container">
+                <input type="hidden" id="task-receive-task-id">
+                <input type="hidden" id="task-receive-subtask-idx">
+                
+                <div class="call-form-grid">
+                    <!-- LEFT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Vendor Name</label>
+                            <input type="text" id="task-receive-vendor" required placeholder="Enter vendor name">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Tracking Status</label>
+                            <div class="call-inline-group">
+                                <label><input type="checkbox" name="receiveTrackingStatus" value="In Transit"> In Transit</label>
+                                <label><input type="checkbox" name="receiveTrackingStatus" value="Delivered"> Delivered</label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Delivery Date</label>
+                            <input type="date" id="task-receive-date">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Received By</label>
+                            <input type="text" id="task-receive-person" placeholder="Name of recipient">
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Packing Condition</label>
+                            <div class="call-inline-group">
+                                <label><input type="checkbox" name="receiveCondition" value="Good Condition"> Good</label>
+                                <label><input type="checkbox" name="receiveCondition" value="Damaged"> Damaged</label>
+                                <label><input type="checkbox" name="receiveCondition" value="Tampered"> Tampered</label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Upload Photo of Package</label>
+                            <input type="file" id="task-receive-photo" accept="image/*">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Quantity Received</label>
+                            <input type="number" id="task-receive-quantity" required placeholder="Enter number of items">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FULL WIDTH -->
+                <div class="call-group call-full-width">
+                    <label>Notes</label>
+                    <textarea id="task-receive-notes" placeholder="Condition remarks, issues..."></textarea>
+                </div>
+                
+                <div class="call-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancel-task-receive">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Receive Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task-Specific Evaluate Sample Modal -->
+    <div id="task-evaluate-modal" class="task-modal-overlay hidden">
+        <div class="task-modal-content call-modal-content">
+            <div class="task-modal-header">
+                <h3 style="font-size: 20px; font-weight: 700;">Evaluate Sample (Task)</h3>
+                <button type="button" class="btn-close-task-modal" id="btn-close-task-evaluate">&times;</button>
+            </div>
+            <form id="task-evaluate-form" class="call-form-container">
+                <input type="hidden" id="task-evaluate-task-id">
+                <input type="hidden" id="task-evaluate-subtask-idx">
+                <input type="hidden" id="task-evaluate-rating-value" value="0">
+                
+                <div class="call-form-grid">
+                    <!-- LEFT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Vendor Name</label>
+                            <input type="text" id="task-evaluate-vendor" required placeholder="Enter vendor name">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Sample Name</label>
+                            <input type="text" id="task-evaluate-sample" placeholder="e.g. Leather Jacket V2">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Received Quantity</label>
+                            <input type="number" id="task-evaluate-quantity" placeholder="Number of items tested">
+                        </div>
+                        
+                        <div class="call-group" style="margin-top: 8px;">
+                            <label style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px;">Testing Parameters</label>
+                            <div id="testing-parameters-container" style="display: flex; flex-direction: column; gap: 8px;">
+                                <input type="text" class="eval-param-input" placeholder="e.g. Fabric Durability" required>
+                            </div>
+                            <button type="button" id="btn-add-parameter" class="btn-secondary" style="margin-top: 10px; width: fit-content; font-size: 12px; padding: 6px 12px;">+ Add Parameter</button>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN -->
+                    <div class="call-col" style="border-left: 1px solid rgba(255,255,255,0.05); padding-left: 16px;">
+                        <div class="call-group">
+                            <label style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px;">Test Result</label>
+                            <textarea id="task-evaluate-summary" placeholder="Summary of test results..." style="min-height: 60px;"></textarea>
+                        </div>
+                        
+                        <div class="call-group">
+                            <div class="call-inline-group" style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <label><input type="radio" name="evaluateResult" value="Pass" required> ✅ Pass</label>
+                                <label style="margin-left: 16px;"><input type="radio" name="evaluateResult" value="Fail" required> ❌ Fail</label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Upload Testing Photos / Reports</label>
+                            <input type="file" id="task-evaluate-file" accept="image/*,.pdf,.doc,.docx" multiple>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Tested By</label>
+                            <input type="text" id="task-evaluate-tester" placeholder="Name of evaluator">
+                        </div>
+                        
+                        <div class="call-group" style="margin-top: 8px;">
+                            <label style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px;">Rating & Comments</label>
+                            <div class="star-rating-container" id="evaluate-stars" style="font-size: 28px; cursor: pointer; color: var(--border-color); display: flex; gap: 8px; margin-bottom: 10px; transition: color 0.2s;">
+                                <span class="star" data-value="1">★</span>
+                                <span class="star" data-value="2">★</span>
+                                <span class="star" data-value="3">★</span>
+                                <span class="star" data-value="4">★</span>
+                                <span class="star" data-value="5">★</span>
+                            </div>
+                            <textarea id="task-evaluate-comment" placeholder="Overall quality comment..." style="min-height: 60px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FULL WIDTH -->
+                <div class="call-group call-full-width">
+                    <label>Additional Notes</label>
+                    <textarea id="task-evaluate-notes" placeholder="Optional notes..."></textarea>
+                </div>
+                
+                <div class="call-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancel-task-evaluate">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Evaluation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task-Specific Vendor Research Final Decision Modal -->
+    <div id="task-final-decision-modal" class="task-modal-overlay hidden">
+        <div class="task-modal-content call-modal-content">
+            <div class="task-modal-header">
+                <h3 style="font-size: 20px; font-weight: 700;">Vendor Research Final Decision</h3>
+                <button type="button" class="btn-close-task-modal" id="btn-close-task-final-decision">&times;</button>
+            </div>
+            <form id="task-final-decision-form" class="call-form-container">
+                <input type="hidden" id="task-fd-task-id">
+                <input type="hidden" id="task-fd-subtask-idx">
+                
+                <div class="call-form-grid">
+                    <!-- LEFT COLUMN -->
+                    <div class="call-col">
+                        <div class="call-group">
+                            <label>Vendor Name <span style="color:#ef4444;">*</span></label>
+                            <input type="text" id="task-fd-vendor-name" required placeholder="Enter vendor name">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Contact</label>
+                            <input type="text" id="task-fd-contact" placeholder="Enter contact details">
+                        </div>
+                        
+                        <div class="call-group" style="flex: 1;">
+                            <label>Sample Evaluation</label>
+                            <textarea id="task-fd-sample-eval" placeholder="Summary of sample evaluation..." style="height: 100%; min-height: 100px;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- RIGHT COLUMN -->
+                    <div class="call-col" style="border-left: 1px solid rgba(255,255,255,0.05); padding-left: 16px;">
+                        <div class="call-group">
+                            <label style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 12px;">Final Decision <span style="color:#ef4444;">*</span></label>
+                            <div class="fd-decision-group">
+                                <label class="fd-decision-option fd-approve">
+                                    <input type="radio" name="finalDecision" value="Approve" required>
+                                    <span class="fd-decision-label">✅ Approve Vendor</span>
+                                </label>
+                                <label class="fd-decision-option fd-reject">
+                                    <input type="radio" name="finalDecision" value="Reject" required>
+                                    <span class="fd-decision-label">❌ Reject Vendor</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Status</label>
+                            <input type="text" id="task-fd-status" readonly placeholder="Auto-filled based on decision" style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+                        
+                        <div class="call-group">
+                            <label>Start Date</label>
+                            <input type="date" id="task-fd-start-date">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="call-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancel-task-final-decision">Cancel</button>
+                    <button type="submit" class="btn-primary">Confirm & Finish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="category.js?v=2"></script>
+    <script src="task-category.js?v=2"></script>
+    <script src="finance-category.js?v=2"></script>
+    <script src="finance-bills.js?v=2"></script>
+    <script src="influencer-db.js?v=2"></script>
+    <script src="script.js?v=6"></script>
+
+</body>
+
+</html>
