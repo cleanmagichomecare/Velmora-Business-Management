@@ -203,14 +203,14 @@
         // Header Buttons
         const btnMainShow = document.getElementById('btn-add-finance-main-category');
         const btnSub1Show = document.getElementById('btn-add-finance-sub-category-1');
-        const btnSub2Show = document.getElementById('btn-add-finance-sub-category-2');
+        const btnSub2Show = document.getElementById('addSubCategory2Btn');
         const btnViewShow = document.getElementById('btn-view-finance-category-list');
         const btnRefreshList = document.getElementById('btn-refresh-finance-category-list');
         
         // Forms / Containers
         const mainForm = document.getElementById('financeMainCategoryForm');
         const sub1Form = document.getElementById('financeSubCategory1Form');
-        const sub2Form = document.getElementById('financeSubCategory2Form');
+        const sub2Form = document.getElementById('subCategory2Form');
         const listView = document.getElementById('financeCategoryListView');
         const categoryDefaultState = document.getElementById('finance-category-default-state');
 
@@ -377,12 +377,18 @@
             if (sub1Form) sub1Form.classList.remove('hidden');
         });
 
-        if (btnSub2Show) btnSub2Show.addEventListener('click', () => {
+        function showSubCategory2Form() {
+            console.log("Sub Category 2 button clicked");
             hideAllCategoryForms();
             loadSubCategory1();
             resetFormInputs(sub2InputsContainer, 'Enter Sub Category 2 Name');
-            if (sub2Form) sub2Form.classList.remove('hidden');
-        });
+            if (sub2Form) {
+                sub2Form.classList.remove('hidden');
+                sub2Form.style.display = 'block'; // ensure display block if hidden
+            }
+        }
+
+        if (btnSub2Show) btnSub2Show.addEventListener('click', showSubCategory2Form);
 
         if (btnViewShow) btnViewShow.addEventListener('click', async () => {
             hideAllCategoryForms();

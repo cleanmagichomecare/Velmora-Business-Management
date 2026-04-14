@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const vendorFormContainer = document.getElementById('vendor-form-container');
     const vendorForm = document.getElementById('vendor-form');
     const vendorListContainer = document.getElementById('vendor-list-container');
-    const vendorCategorySelect = document.getElementById('vendor-category');
-    const vendorSubCategorySelect = document.getElementById('vendor-sub-category');
-    const vendorSubSubCategorySelect = document.getElementById('vendor-sub-sub-category');
+    const vendorCategorySelect = document.getElementById('vendorCategory');
+    const vendorSubCategorySelect = document.getElementById('subCategory');
+    const vendorSubSubCategorySelect = document.getElementById('subSubCategory');
     const vendorSubCategoryLabel = document.getElementById('vendor-sub-category-label');
     const vendorSubSubLabel = document.getElementById('vendor-sub-sub-label');
 
@@ -39,6 +39,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // Load Vendor Main Categories dynamically from Supabase
+    async function loadVendorCategories() {
+        if (!vendorCategorySelect) return;
+        
+        vendorCategorySelect.innerHTML = '<option value="">Loading...</option>';
+        
+        try {
+            const { data, error } = await supabase
+                .from('finance_categories')
+                .select('main');
+                
+            if (error) throw error;
+            
+            vendorCategorySelect.innerHTML = '<option value="">Select Category</option>';
+            
+            const uniqueMains = [...new Set(data.map(row => row.main).filter(Boolean).map(v => v.trim()).filter(v => v !== '-'))];
+            
+            uniqueMains.forEach(main => {
+                const opt = document.createElement('option');
+                opt.value = main;
+                opt.textContent = main;
+                vendorCategorySelect.appendChild(opt);
+            });
+            
+        } catch (err) {
+            console.error("Failed to load vendor categories", err);
+            vendorCategorySelect.innerHTML = '<option value="">Select Category</option>';
+        }
+    }
+    
+    loadVendorCategories();
 
     // Navigation functions
     function showDashboard() {
