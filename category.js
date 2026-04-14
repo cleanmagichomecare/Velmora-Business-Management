@@ -438,19 +438,19 @@ function showSubCategory2Form() {
         return;
     }
 
-    // Hide all other forms
-    document.querySelectorAll('.vendor-form-container, .hidden').forEach(el => {
-        // We only want to target forms within the category-content-area
-        if (el.id && el.id.includes('Form')) {
-            el.classList.add('hidden');
-        }
+    // Hide all other forms explicitly
+    const formsToHide = [
+        'mainCategoryForm',
+        'subCategory1Form',
+        'subCategory3Form',
+        'categoryListView',
+        'category-default-state'
+    ];
+    
+    formsToHide.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
     });
-
-    const categoryListView = document.getElementById('categoryListView');
-    if(categoryListView) categoryListView.classList.add('hidden');
-
-    const categoryDefaultState = document.getElementById('category-default-state');
-    if(categoryDefaultState) categoryDefaultState.classList.add('hidden');
 
     // Show correct form
     form.classList.remove('hidden');

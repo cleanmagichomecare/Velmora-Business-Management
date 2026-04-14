@@ -210,7 +210,7 @@
         // Forms / Containers
         const mainForm = document.getElementById('financeMainCategoryForm');
         const sub1Form = document.getElementById('financeSubCategory1Form');
-        const sub2Form = document.getElementById('subCategory2Form');
+        const sub2Form = document.getElementById('financeSubCategory2Form');
         const listView = document.getElementById('financeCategoryListView');
         const categoryDefaultState = document.getElementById('finance-category-default-state');
 
