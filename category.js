@@ -89,7 +89,7 @@ console.log('category.js Loading...');
         // Header Buttons
         const btnMainShow = document.getElementById('btn-add-main-category');
         const btnSub1Show = document.getElementById('btn-add-sub-category-1');
-        const btnSub2Show = document.getElementById('btn-add-sub-category-2');
+        const btnSub2Show = document.getElementById('addSubCategory2Btn');
         const btnSub3Show = document.getElementById('btn-add-sub-category-3');
         const btnViewShow = document.getElementById('btn-view-category-list');
         const btnRefreshList = document.getElementById('btn-refresh-category-list');
@@ -286,7 +286,12 @@ console.log('category.js Loading...');
             if (sub1Form) sub1Form.classList.remove('hidden');
         });
 
-        // Removed internal listener for Sub Category 2 as per user request to handle it externally for debugging and timing overrides.
+        if (btnSub2Show) btnSub2Show.addEventListener('click', () => {
+            hideAllCategoryForms();
+            loadSubCategory1();
+            resetFormInputs(sub2InputsContainer, 'Enter Sub Category 2 Name');
+            if (sub2Form) sub2Form.classList.remove('hidden');
+        });
 
         if (btnSub3Show) btnSub3Show.addEventListener('click', () => {
             hideAllCategoryForms();
@@ -416,67 +421,3 @@ console.log('category.js Loading...');
         initCategoryLogic();
     }
 })();
-
-// --- Debug & External Event Handler for Sub Category 2 Button ---
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('addSubCategory2Btn');
-    if (btn) {
-        btn.addEventListener('click', showSubCategory2Form);
-    } else {
-        console.error("Button not found");
-    }
-});
-
-function showSubCategory2Form() {
-    console.log("Sub Category 2 button clicked");
-
-    const form = document.getElementById('subCategory2Form');
-    console.log("Form element:", form);
-
-    if (!form) {
-        console.error("Form not found");
-        return;
-    }
-
-    // Hide all other forms explicitly
-    const formsToHide = [
-        'mainCategoryForm',
-        'subCategory1Form',
-        'subCategory3Form',
-        'categoryListView',
-        'category-default-state'
-    ];
-    
-    formsToHide.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-    });
-
-    // Show correct form
-    form.classList.remove('hidden');
-
-    // Restore required inner functionality
-    if (typeof window.subCategory1 !== 'undefined') {
-        const allSubs = [];
-        for (const main in window.subCategory1) {
-            window.subCategory1[main].forEach(sub => {
-                if (!allSubs.includes(sub)) allSubs.push(sub);
-            });
-        }
-        const select = document.getElementById('subCategory1Select');
-        if (select) {
-            select.innerHTML = '<option value="">Select Sub Category 1</option>';
-            allSubs.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item;
-                opt.textContent = item;
-                select.appendChild(opt);
-            });
-        }
-    }
-    
-    const sub2InputsContainer = document.getElementById('sub2Inputs');
-    if (sub2InputsContainer) {
-        sub2InputsContainer.innerHTML = '<input type="text" placeholder="Enter Sub Category 2 Name" class="category-input-field" />';
-    }
-}
