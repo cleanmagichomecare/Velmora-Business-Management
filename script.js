@@ -785,9 +785,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentEditVendorId = null;
 
     function validateVendorForm() {
-        const vendorName = document.getElementById('vendor-name').value;
-        const vendorCategory = document.getElementById('vendor-category').value;
-        const subCategory = document.getElementById('vendor-sub-category').value;
+        const vendorName = document.getElementById('vendorName').value;
+        const vendorCategory = document.getElementById('vendorCategory').value;
+        const subCategory = document.getElementById('subCategory').value;
 
         if (!vendorName || !vendorCategory || !subCategory) {
             showAlert("Please fill all required fields before saving the vendor.");
@@ -796,81 +796,194 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
     }
 
-    function collectVendorFormData() {
-        const usedInCheckboxes = document.querySelectorAll('input[name="vendor_used_in"]:checked');
-        const usedIn = Array.from(usedInCheckboxes).map(cb => cb.value);
+    // ─── addVendor: INSERT vendor into Supabase ───
+    async function addVendor() {
+        if (!validateVendorForm()) return;
 
-        return {
-            id: Date.now(),
-            type1: document.getElementById('vendor-type1').value,
-            type2: document.getElementById('vendor-type2').value,
-            category: document.getElementById('vendor-category').value,
-            subCategory: document.getElementById('vendor-sub-category').value,
-            subSubCategory: document.getElementById('vendor-sub-sub-category').value,
-            moq: document.getElementById('vendor-moq').value,
-            pricePerUnit: document.getElementById('vendor-price-per-unit').value,
-            gstApplicable: document.getElementById('vendor-gst').checked,
-            batchSize: document.getElementById('vendor-batch-size').value,
-            usedIn: usedIn,
-            name: document.getElementById('vendor-name').value,
-            company: document.getElementById('vendor-company').value,
-            phone: document.getElementById('vendor-phone').value,
-            email: document.getElementById('vendor-email').value,
-            address: document.getElementById('vendor-address').value,
-            city: document.getElementById('vendor-city').value,
-            deliveryTime: document.getElementById('vendor-delivery-time').value,
-            gstNumber: document.getElementById('vendor-gst-number').value,
-            accountHolder: document.getElementById('vendor-account-holder').value,
-            accountNumber: document.getElementById('vendor-account-number').value,
-            ifsc: document.getElementById('vendor-ifsc').value,
-            upi: document.getElementById('vendor-upi').value,
+        const saveBtn = document.getElementById('btn-save-vendor');
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+        }
+
+        // Collect Used In checkboxes
+        const usedInCheckboxes = document.querySelectorAll('input[name="usedIn"]:checked');
+        const usedInArray = Array.from(usedInCheckboxes).map(cb => cb.value);
+
+        // Collect all values & convert types
+        const vendorData = {
+            vendor_type1: document.getElementById('vendorType1').value || null,
+            vendor_type2: document.getElementById('vendorType2').value || null,
+            vendor_category: document.getElementById('vendorCategory').value || null,
+            sub_category: document.getElementById('subCategory').value || null,
+            sub_sub_category: document.getElementById('subSubCategory').value || null,
+            
+            moq: document.getElementById('moq').value ? Number(document.getElementById('moq').value) : null,
+            price_per_unit: document.getElementById('pricePerUnit').value ? Number(document.getElementById('pricePerUnit').value) : null,
+            gst_applicable: document.getElementById('gstApplicable').checked,
+            batch_size: document.getElementById('batchSize').value || null,
+            
+            used_in: usedInArray,
+            
+            vendor_name: document.getElementById('vendorName').value || null,
+            company_name: document.getElementById('companyName').value || null,
+            phone: document.getElementById('phone').value || null,
+            email: document.getElementById('email').value || null,
+            address: document.getElementById('address').value || null,
+            city: document.getElementById('city').value || null,
+            delivery_time: document.getElementById('deliveryTime').value || null,
+            gst_number: document.getElementById('gstNumber').value || null,
+            
+            account_holder: document.getElementById('accountHolder').value || null,
+            account_number: document.getElementById('accountNumber').value || null,
+            ifsc_code: document.getElementById('ifscCode').value || null,
+            upi_id: document.getElementById('upiId').value || null,
+            
             status: 'active'
         };
+
+        try {
+            const { data, error } = await supabase
+                .from('vendors')
+                .insert([vendorData]);
+
+            if (error) throw error;
+
+            alert("Vendor saved successfully");
+            
+            // Reset form and mode
+            if (vendorForm) vendorForm.reset();
+            resetVendorFormMode();
+            
+            if (vendorFormContainer) vendorFormContainer.classList.add('hidden');
+            if (vendorListContainer) vendorListContainer.classList.remove('hidden');
+            
+            // Optional: refresh local listed data if implemented
+            if (typeof renderVendorList === 'function') renderVendorList();
+            
+        } catch (err) {
+            console.error('Supabase vendor insert error:', err);
+            alert('Failed to save vendor: ' + (err.message || 'Unknown error'));
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Vendor';
+            }
+        }
     }
 
     function loadVendorIntoForm(vendor) {
-        document.getElementById('vendor-type1').value = vendor.type1 || '';
-        document.getElementById('vendor-type2').value = vendor.type2 || '';
-        document.getElementById('vendor-category').value = vendor.category || '';
+        document.getElementById('vendorType1').value = vendor.vendorType1 || '';
+        document.getElementById('vendorType2').value = vendor.vendorType2 || '';
+        document.getElementById('vendorCategory').value = vendor.vendorCategory || '';
 
         // Trigger category change to populate sub-category options
         const catEvent = new Event('change', { bubbles: true });
-        document.getElementById('vendor-category').dispatchEvent(catEvent);
+        document.getElementById('vendorCategory').dispatchEvent(catEvent);
 
         // Set sub-category after options are populated
         setTimeout(() => {
-            document.getElementById('vendor-sub-category').value = vendor.subCategory || '';
+            document.getElementById('subCategory').value = vendor.subCategory || '';
             // Trigger sub-category change for sub-sub-category
             const subEvent = new Event('change', { bubbles: true });
-            document.getElementById('vendor-sub-category').dispatchEvent(subEvent);
+            document.getElementById('subCategory').dispatchEvent(subEvent);
 
             setTimeout(() => {
-                document.getElementById('vendor-sub-sub-category').value = vendor.subSubCategory || '';
+                document.getElementById('subSubCategory').value = vendor.subSubCategory || '';
             }, 50);
         }, 50);
 
-        document.getElementById('vendor-moq').value = vendor.moq || '';
-        document.getElementById('vendor-price-per-unit').value = vendor.pricePerUnit || '';
-        document.getElementById('vendor-gst').checked = vendor.gstApplicable || false;
-        document.getElementById('vendor-batch-size').value = vendor.batchSize || '';
+        document.getElementById('moq').value = vendor.moq || '';
+        document.getElementById('pricePerUnit').value = vendor.pricePerUnit || '';
+        document.getElementById('gstApplicable').checked = vendor.gstApplicable || false;
+        document.getElementById('batchSize').value = vendor.batchSize || '';
 
-        // Used In checkboxes
-        document.querySelectorAll('input[name="vendor_used_in"]').forEach(cb => {
-            cb.checked = vendor.usedIn && vendor.usedIn.includes(cb.value);
+        document.getElementById('vendorName').value = vendor.vendorName || '';
+        document.getElementById('companyName').value = vendor.companyName || '';
+        document.getElementById('phone').value = vendor.phone || '';
+        document.getElementById('email').value = vendor.email || '';
+        document.getElementById('address').value = vendor.address || '';
+        document.getElementById('city').value = vendor.city || '';
+        document.getElementById('deliveryTime').value = vendor.deliveryTime || '';
+        document.getElementById('gstNumber').value = vendor.gstNumber || '';
+
+        document.getElementById('accountHolder').value = vendor.accountHolder || '';
+        document.getElementById('accountNumber').value = vendor.accountNumber || '';
+        document.getElementById('ifscCode').value = vendor.ifscCode || '';
+        document.getElementById('upiId').value = vendor.upiId || '';
+    }
+
+    function editVendor(id) {
+        // Will need migrating to Supabase GET in the future
+        const vendor = vendors.find(v => v.id === id);
+        if (!vendor) return;
+
+        currentEditVendorId = id;
+
+        // Show form
+        if (vendorFormContainer) vendorFormContainer.classList.remove('hidden');
+
+        // Update form header and button
+        if (vendorFormHeader) vendorFormHeader.textContent = 'Update Vendor';
+        if (btnSaveVendor) btnSaveVendor.textContent = 'Update Vendor';
+
+        // Populate form with vendor data
+        loadVendorIntoForm(vendor);
+
+        // Scroll to form
+        if (vendorFormContainer) {
+            vendorFormContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function archiveVendor(id) {
+        // Will need migrating to Supabase UPDATE in the future
+        const vendor = vendors.find(v => v.id === id);
+        if (!vendor) return;
+        vendor.status = 'archived';
+        renderVendorList();
+        showToast('Vendor archived successfully');
+    }
+
+    function resetVendorFormMode() {
+        currentEditVendorId = null;
+        if (vendorFormHeader) vendorFormHeader.textContent = 'Add Vendor';
+        if (btnSaveVendor) btnSaveVendor.textContent = 'Save Vendor';
+    }
+
+    // Save Vendor Form Submit Event Listener
+    if (btnSaveVendor && vendorForm) {
+        btnSaveVendor.addEventListener('click', async (e) => {
+            e.preventDefault();
+            // Assuming for now they only want insertions based on requirements
+            // (Updates to existing records require a separate PR usually)
+            await addVendor();
         });
+    }
 
-        document.getElementById('vendor-name').value = vendor.name || '';
-        document.getElementById('vendor-company').value = vendor.company || '';
-        document.getElementById('vendor-phone').value = vendor.phone || '';
-        document.getElementById('vendor-email').value = vendor.email || '';
-        document.getElementById('vendor-address').value = vendor.address || '';
-        document.getElementById('vendor-city').value = vendor.city || '';
-        document.getElementById('vendor-delivery-time').value = vendor.deliveryTime || '';
-        document.getElementById('vendor-gst-number').value = vendor.gstNumber || '';
-        document.getElementById('vendor-account-holder').value = vendor.accountHolder || '';
-        document.getElementById('vendor-account-number').value = vendor.accountNumber || '';
-        document.getElementById('vendor-ifsc').value = vendor.ifsc || '';
-        document.getElementById('vendor-upi').value = vendor.upi || '';
+    // Delegate Edit/Archive clicks on table rows
+    if (vendorTableBody) {
+        vendorTableBody.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.btn-vendor-edit');
+            const archiveBtn = e.target.closest('.btn-vendor-archive');
+
+            if (editBtn) {
+                const id = parseInt(editBtn.getAttribute('data-id'), 10);
+                editVendor(id);
+            }
+            if (archiveBtn) {
+                const id = parseInt(archiveBtn.getAttribute('data-id'), 10);
+                archiveVendor(id);
+            }
+        });
+    }
+
+    // Search & Filter listeners
+    if (vendorSearchInput) {
+        vendorSearchInput.addEventListener('input', () => renderVendorList());
+    }
+    if (vendorFilterCategory) {
+        vendorFilterCategory.addEventListener('change', () => renderVendorList());
     }
 
     function renderVendorList() {

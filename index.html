@@ -885,7 +885,7 @@
                                     <div class="grid-4">
                                         <div class="form-group">
                                             <label>Vendor Type 1</label>
-                                            <select id="vendor-type1">
+                                            <select id="vendorType1">
                                                 <option value="">Select Type</option>
                                                 <option value="Trader">Trader</option>
                                                 <option value="Manufacturer">Manufacturer</option>
@@ -894,7 +894,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label>Vendor Type 2</label>
-                                            <select id="vendor-type2">
+                                            <select id="vendorType2">
                                                 <option value="">Select Type</option>
                                                 <option value="Vendor 1">Vendor 1</option>
                                                 <option value="Vendor 2">Vendor 2</option>
@@ -903,7 +903,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label>Vendor Category</label>
-                                            <select id="vendor-category">
+                                            <select id="vendorCategory">
                                                 <option value="">Select Category</option>
                                                 <option value="Product">Product</option>
                                                 <option value="Operations">Operations</option>
@@ -917,7 +917,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label id="vendor-sub-category-label">Sub Category</label>
-                                            <select id="vendor-sub-category" disabled>
+                                            <select id="subCategory" disabled>
                                                 <option value="">Select Category First</option>
                                             </select>
                                         </div>
@@ -927,22 +927,22 @@
                                     <div class="grid-4">
                                         <div class="form-group">
                                             <label id="vendor-sub-sub-label">Sub-Sub Category</label>
-                                            <select id="vendor-sub-sub-category" disabled>
+                                            <select id="subSubCategory" disabled>
                                                 <option value="">Select Sub Category</option>
                                             </select>
                                         </div>
                                         <div class="form-group">
                                             <label>MOQ</label>
-                                            <input type="number" id="vendor-moq" placeholder="Enter MOQ">
+                                            <input type="number" id="moq" placeholder="Enter MOQ">
                                         </div>
                                         <div class="form-group">
                                             <label>Price per Unit</label>
-                                            <input type="number" id="vendor-price-per-unit" placeholder="Enter price">
+                                            <input type="number" id="pricePerUnit" placeholder="Enter price">
                                         </div>
                                         <div class="form-group vendor-gst-group">
                                             <label>GST Applicable</label>
                                             <label class="custom-checkbox" style="margin-top: 8px;">
-                                                <input type="checkbox" id="vendor-gst">
+                                                <input type="checkbox" id="gstApplicable">
                                                 <span>GST Included</span>
                                             </label>
                                         </div>
@@ -952,27 +952,27 @@
                                     <div class="grid-4">
                                         <div class="form-group">
                                             <label>Batch Size</label>
-                                            <input type="number" id="vendor-batch-size" placeholder="Enter batch size">
+                                            <input type="number" id="batchSize" placeholder="Enter batch size">
                                         </div>
                                     </div>
 
                                     <!-- Used In -->
                                     <div class="section-heading">Used In</div>
                                     <div class="grid-checkboxes">
-                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                        <label class="custom-checkbox"><input type="checkbox" name="usedIn"
                                                 value="Magic Detergent Gel"><span>Magic Detergent Gel</span></label>
-                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                        <label class="custom-checkbox"><input type="checkbox" name="usedIn"
                                                 value="Magic Dishwash Gel"><span>Magic Dishwash Gel</span></label>
-                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                        <label class="custom-checkbox"><input type="checkbox" name="usedIn"
                                                 value="Magic Kitchen Cleaner"><span>Magic Kitchen Cleaner</span></label>
-                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                        <label class="custom-checkbox"><input type="checkbox" name="usedIn"
                                                 value="Magic Limescale Remover"><span>Magic Limescale
                                                 Remover</span></label>
-                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                        <label class="custom-checkbox"><input type="checkbox" name="usedIn"
                                                 value="Magic BBC Cleaner"><span>Magic BBC Cleaner</span></label>
-                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                        <label class="custom-checkbox"><input type="checkbox" name="usedIn"
                                                 value="Magic Floor Cleaner"><span>Magic Floor Cleaner</span></label>
-                                        <label class="custom-checkbox"><input type="checkbox" name="vendor_used_in"
+                                        <label class="custom-checkbox"><input type="checkbox" name="usedIn"
                                                 value="Magic Sponge"><span>Magic Sponge</span></label>
                                     </div>
                                 </div>
@@ -983,37 +983,37 @@
                                     <div class="grid-4">
                                         <div class="form-group">
                                             <label>Vendor Name</label>
-                                            <input type="text" id="vendor-name" placeholder="Enter vendor name">
+                                            <input type="text" id="vendorName" placeholder="Enter vendor name">
                                         </div>
                                         <div class="form-group">
                                             <label>Company Name</label>
-                                            <input type="text" id="vendor-company" placeholder="Enter company name">
+                                            <input type="text" id="companyName" placeholder="Enter company name">
                                         </div>
                                         <div class="form-group">
                                             <label>Phone Number</label>
-                                            <input type="tel" id="vendor-phone" placeholder="Enter phone number">
+                                            <input type="tel" id="phone" placeholder="Enter phone number">
                                         </div>
                                         <div class="form-group">
                                             <label>Email</label>
-                                            <input type="email" id="vendor-email" placeholder="Enter email">
+                                            <input type="email" id="email" placeholder="Enter email">
                                         </div>
                                     </div>
                                     <div class="grid-4">
                                         <div class="form-group">
                                             <label>Address</label>
-                                            <input type="text" id="vendor-address" placeholder="Enter address">
+                                            <input type="text" id="address" placeholder="Enter address">
                                         </div>
                                         <div class="form-group">
                                             <label>City</label>
-                                            <input type="text" id="vendor-city" placeholder="Enter city">
+                                            <input type="text" id="city" placeholder="Enter city">
                                         </div>
                                         <div class="form-group">
                                             <label>Delivery Time</label>
-                                            <input type="text" id="vendor-delivery-time" placeholder="e.g. 3-5 days">
+                                            <input type="text" id="deliveryTime" placeholder="e.g. 3-5 days">
                                         </div>
                                         <div class="form-group">
                                             <label>GST Number</label>
-                                            <input type="text" id="vendor-gst-number" placeholder="Enter GST number">
+                                            <input type="text" id="gstNumber" placeholder="Enter GST number">
                                         </div>
                                     </div>
                                 </div>
@@ -1024,21 +1024,21 @@
                                     <div class="grid-4">
                                         <div class="form-group">
                                             <label>Account Holder Name</label>
-                                            <input type="text" id="vendor-account-holder"
+                                            <input type="text" id="accountHolder"
                                                 placeholder="Enter account holder name">
                                         </div>
                                         <div class="form-group">
                                             <label>Account Number</label>
-                                            <input type="text" id="vendor-account-number"
+                                            <input type="text" id="accountNumber"
                                                 placeholder="Enter account number">
                                         </div>
                                         <div class="form-group">
                                             <label>IFSC Code</label>
-                                            <input type="text" id="vendor-ifsc" placeholder="Enter IFSC code">
+                                            <input type="text" id="ifscCode" placeholder="Enter IFSC code">
                                         </div>
                                         <div class="form-group">
                                             <label>UPI ID</label>
-                                            <input type="text" id="vendor-upi" placeholder="Enter UPI ID">
+                                            <input type="text" id="upiId" placeholder="Enter UPI ID">
                                         </div>
                                     </div>
                                 </div>
