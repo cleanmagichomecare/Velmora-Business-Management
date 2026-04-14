@@ -3421,7 +3421,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (error) throw error;
 
-                const uniqueSubs = [...new Set(data.map(row => row.sub1).filter(Boolean).filter(v => v !== '-'))];
+                // Clear dropdown before inserting to prevent duplicates from overlapping synchronous listeners
+                expenseSubCat1Select.innerHTML = '<option value="">Select Sub Category 1</option>';
+
+                // Remove duplicates at JavaScript level using Set() and trim()
+                const uniqueSubs = [...new Set(data.map(row => row.sub1).filter(Boolean).map(v => v.trim()).filter(v => v !== '-'))];
 
                 uniqueSubs.forEach(sub => {
                     const opt = document.createElement('option');
@@ -3438,24 +3442,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // When Sub Category 1 changes → fetch Sub Category 2 from Supabase
     if (expenseSubCat1Select) {
         expenseSubCat1Select.addEventListener('change', async () => {
+            const mainCat = expenseMainCatSelect ? expenseMainCatSelect.value : null;
             const subCat1 = expenseSubCat1Select.value;
+            
             expenseSubCat2Select.innerHTML = '<option value="">Select Sub Category 2</option>';
             expenseSubCat2Select.disabled = !subCat1;
 
-            if (!subCat1) return;
+            if (!subCat1 || !mainCat) return;
 
             try {
+                // Ensure filtering logic: Sub Category 2 depends on selected main and sub1
                 const { data, error } = await supabase
                     .from('finance_categories')
                     .select('sub2')
+                    .eq('main', mainCat)
                     .eq('sub1', subCat1)
                     .neq('status', 'archived');
 
                 if (error) throw error;
 
-                const uniqueSubs = [...new Set(data.map(row => row.sub2).filter(Boolean).filter(v => v !== '-'))];
+                // Clear dropdown before inserting to prevent duplicate appends
+                expenseSubCat2Select.innerHTML = '<option value="">Select Sub Category 2</option>';
+
+                // Remove duplicates at JavaScript level using Set() and filter valid values
+                const uniqueSubs = [...new Set(data.map(row => row.sub2).filter(Boolean).map(v => v.trim()).filter(v => v !== '-'))];
 
                 uniqueSubs.forEach(sub => {
+                    // Do not add duplicate <option> elements (Set already guarantees uniqueness)
                     const opt = document.createElement('option');
                     opt.value = sub;
                     opt.textContent = sub;
