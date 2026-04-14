@@ -286,12 +286,7 @@ console.log('category.js Loading...');
             if (sub1Form) sub1Form.classList.remove('hidden');
         });
 
-        if (btnSub2Show) btnSub2Show.addEventListener('click', () => {
-            hideAllCategoryForms();
-            loadSubCategory1();
-            resetFormInputs(sub2InputsContainer, 'Enter Sub Category 2 Name');
-            if (sub2Form) sub2Form.classList.remove('hidden');
-        });
+        // The btnSub2Show logic has been externalized via event delegation for absolute reliability.
 
         if (btnSub3Show) btnSub3Show.addEventListener('click', () => {
             hideAllCategoryForms();
@@ -421,3 +416,46 @@ console.log('category.js Loading...');
         initCategoryLogic();
     }
 })();
+
+// --- Bombproof Global Delegated Listener for Add Sub Category 2 ---
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'addSubCategory2Btn') {
+        console.log("Delegated click caught for Sub Category 2");
+        const sub2Form = document.getElementById('subCategory2Form');
+        
+        // Ensure visibility is stripped strictly
+        ['mainCategoryForm', 'subCategory1Form', 'subCategory3Form', 'categoryListView', 'category-default-state'].forEach(formId => {
+            const el = document.getElementById(formId);
+            if (el) el.classList.add('hidden');
+        });
+        
+        if (sub2Form) sub2Form.classList.remove('hidden');
+
+        // Robustly populate Dropdown directly from source data
+        const select = document.getElementById('subCategory1Select');
+        if (select) {
+            let uniqueSub1s = new Set();
+            if (window.categories && Array.isArray(window.categories)) {
+                window.categories.forEach(cat => {
+                    if (cat.status !== 'archived' && cat.sub1 && cat.sub1 !== '-') {
+                        uniqueSub1s.add(cat.sub1);
+                    }
+                });
+            }
+            
+            select.innerHTML = '<option value="">Select Sub Category 1</option>';
+            Array.from(uniqueSub1s).forEach(sub1Name => {
+                const opt = document.createElement('option');
+                opt.value = sub1Name;
+                opt.textContent = sub1Name;
+                select.appendChild(opt);
+            });
+        }
+
+        // Reset text input box
+        const container = document.getElementById('sub2Inputs');
+        if (container) {
+            container.innerHTML = '<input type="text" placeholder="Enter Sub Category 2 Name" class="category-input-field" />';
+        }
+    }
+});
