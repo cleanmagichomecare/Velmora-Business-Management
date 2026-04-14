@@ -377,18 +377,7 @@
             if (sub1Form) sub1Form.classList.remove('hidden');
         });
 
-        function showSubCategory2Form() {
-            console.log("Sub Category 2 button clicked");
-            hideAllCategoryForms();
-            loadSubCategory1();
-            resetFormInputs(sub2InputsContainer, 'Enter Sub Category 2 Name');
-            if (sub2Form) {
-                sub2Form.classList.remove('hidden');
-                sub2Form.style.display = 'block'; // ensure display block if hidden
-            }
-        }
-
-        if (btnSub2Show) btnSub2Show.addEventListener('click', showSubCategory2Form);
+        // Removed btnSub2Show listener here - moved outside to fix timing issue
 
         if (btnViewShow) btnViewShow.addEventListener('click', async () => {
             hideAllCategoryForms();
@@ -501,5 +490,35 @@
         document.addEventListener('DOMContentLoaded', initFinanceCategoryLogic);
     } else {
         initFinanceCategoryLogic();
+    }
+
+    // ─── DOM EVENT BINDINGS (Decoupled from init logic for reliable execution) ───
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('addSubCategory2Btn');
+        if (btn) {
+            btn.addEventListener('click', showSubCategory2Form);
+        } else {
+            console.error("Button not found");
+        }
+    });
+
+    function showSubCategory2Form() {
+        console.log("Sub Category 2 button clicked");
+
+        const form = document.getElementById('subCategory2Form');
+        console.log("Form element:", form);
+
+        if (!form) {
+            console.error("Form not found");
+            return;
+        }
+
+        // Hide all other forms explicitly to ensure one is visible
+        document.querySelectorAll('.vendor-form-container').forEach(el => {
+            el.classList.add('hidden');
+        });
+
+        // Show correct form cleanly using standard CSS classing
+        form.classList.remove('hidden');
     }
 })();
