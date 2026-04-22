@@ -148,42 +148,7 @@ console.log('category.js Loading...');
             `;
         }
 
-        function updateDropdown(selectId, data, placeholder) {
-            const select = document.getElementById(selectId);
-            if (!select) return;
-            select.innerHTML = `<option value="">Select ${placeholder}</option>`;
-            data.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item;
-                opt.textContent = item;
-                select.appendChild(opt);
-            });
-        }
-
-        function loadMainCategories() {
-            updateDropdown('mainCategorySelect', window.mainCategories, 'Main Category');
-        }
-
-        function loadSubCategory1() {
-            const allSubs = [];
-            for (const main in window.subCategory1) {
-                window.subCategory1[main].forEach(sub => {
-                    if (!allSubs.includes(sub)) allSubs.push(sub);
-                });
-            }
-            updateDropdown('subCategory1Select', allSubs, 'Sub Category 1');
-        }
-
-        function loadSubCategory2() {
-            const allSubs = [];
-            for (const sub1 in window.subCategory2) {
-                window.subCategory2[sub1].forEach(sub => {
-                    if (!allSubs.includes(sub)) allSubs.push(sub);
-                });
-            }
-            updateDropdown('subCategory2Select', allSubs, 'Sub Category 2');
-        }
-
+        // Legacy loaders removed as per strict dependency rules.
         // --- List Rendering ---
         function renderCategoryTable() {
             const container = document.getElementById('categoryListContent');
@@ -603,40 +568,46 @@ window.loadVendorMainCategories = async function(dropdownId) {
 
 window.loadVendorSubCategories = async function(category, dropdownId) {
     const dropdown = document.getElementById(dropdownId);
-    if (dropdown) {
-        dropdown.innerHTML = '<option value="">Select Sub Category</option>';
-    }
+    if (!dropdown) return;
 
-    if (!category) return [];
+    dropdown.innerHTML = '<option value="">Select Sub Category 1</option>';
+
+    if (!category) {
+        console.log("Missing Main Category. Cannot load Sub Category 1.");
+        return;
+    }
 
     try {
         const { data, error } = await window.supabase
             .from('vendor_categories')
             .select('sub_category')
-            .eq('category', category);
+            .eq('category', category)
+            .not('sub_category', 'is', null);
             
-        if (error) throw error;
+        console.log(`Supabase fetched data for Sub Category 1 (Category: ${category}):`, data, error);
 
-        const uniqueSubCategories = new Set();
-        if (data) {
-            data.forEach(row => {
-                if (row.sub_category) uniqueSubCategories.add(row.sub_category);
-            });
+        if (error) {
+            console.error("Query issue:", error);
+            return;
         }
 
-        if (dropdown) {
-            uniqueSubCategories.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub;
-                opt.textContent = sub;
-                dropdown.appendChild(opt);
-            });
-        }
-        
-        return Array.from(uniqueSubCategories);
+        const unique = [...new Set(
+            data
+                .map(item => item.sub_category)
+                .filter(Boolean)
+                .map(v => v.trim())
+        )];
+
+        console.log("Unique sub category 1 to append:", unique);
+
+        unique.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub;
+            opt.textContent = sub;
+            dropdown.appendChild(opt);
+        });
     } catch (e) {
         console.error('Error loading vendor sub categories:', e);
-        return [];
     }
 };
 
@@ -694,10 +665,21 @@ document.addEventListener('DOMContentLoaded', () => {
         window.loadVendorMainCategories('mainCategorySelect');
     }
     
+    const mainCatDropdown = document.getElementById('mainCategorySelect');
+    if (mainCatDropdown) {
+        mainCatDropdown.addEventListener('change', () => {
+            console.log("Main Category changed to:", mainCatDropdown.value);
+            if (window.loadVendorSubCategories) {
+                window.loadVendorSubCategories(mainCatDropdown.value, 'subCategory1Select');
+            }
+        });
+    }
+
     const subCat1Dropdown = document.getElementById('subCategory1Select');
     if (subCat1Dropdown) {
         subCat1Dropdown.addEventListener('change', () => {
-            const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : null;
+            const mainCat = mainCatDropdown ? mainCatDropdown.value : null;
+            console.log("Sub Category 1 changed to:", subCat1Dropdown.value);
             if (window.loadVendorSubSubCategories) {
                 window.loadVendorSubSubCategories(mainCat, subCat1Dropdown.value, 'subCategory2Select');
             }
