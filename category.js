@@ -281,7 +281,7 @@ console.log('category.js Loading...');
 
         if (btnSub1Show) btnSub1Show.addEventListener('click', () => {
             hideAllCategoryForms();
-            loadMainCategories();
+            if (window.loadVendorMainCategories) window.loadVendorMainCategories('mainCategoryDropdown');
             resetFormInputs(sub1InputsContainer, 'Enter Sub Category 1 Name');
             if (sub1Form) sub1Form.classList.remove('hidden');
         });
@@ -377,7 +377,8 @@ console.log('category.js Loading...');
         });
 
         if (saveSub1Btn) saveSub1Btn.addEventListener('click', async () => {
-            const parent = mainCategorySelect ? mainCategorySelect.value : '';
+            const dropdown = document.getElementById('mainCategoryDropdown');
+            const parent = dropdown ? dropdown.value : '';
             if (!parent) { alert("Category required"); return; }
             
             const inputs = document.querySelectorAll('#sub1Inputs input');
@@ -558,40 +559,36 @@ window.insertSubSubCategory = async function(category, subCategory, subSubCatego
     }
 };
 
-window.loadVendorCategories = async function(dropdownId) {
+window.loadVendorMainCategories = async function(dropdownId) {
     const dropdown = document.getElementById(dropdownId);
-    if (dropdown) {
-        dropdown.innerHTML = '<option value="">Select Category</option>';
+    if (!dropdown) return;
+
+    // Reset dropdown
+    dropdown.innerHTML = '<option value="">Select Main Category</option>';
+
+    const { data, error } = await window.supabase
+        .from('vendor_categories')
+        .select('category');
+
+    if (error) {
+        console.error(error);
+        return;
     }
 
-    try {
-        const { data, error } = await window.supabase
-            .from('vendor_categories')
-            .select('category');
-            
-        if (error) throw error;
+    // Remove null + duplicates
+    const unique = [...new Set(
+        data
+            .map(item => item.category)
+            .filter(Boolean)
+            .map(v => v.trim())
+    )];
 
-        const uniqueCategories = new Set();
-        if (data) {
-            data.forEach(row => {
-                if (row.category) uniqueCategories.add(row.category);
-            });
-        }
-
-        if (dropdown) {
-            uniqueCategories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat;
-                opt.textContent = cat;
-                dropdown.appendChild(opt);
-            });
-        }
-        
-        return Array.from(uniqueCategories);
-    } catch (e) {
-        console.error('Error loading vendor categories:', e);
-        return [];
-    }
+    unique.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        dropdown.appendChild(option);
+    });
 };
 
 window.loadVendorSubCategories = async function(category, dropdownId) {
@@ -672,3 +669,9 @@ window.loadVendorSubSubCategories = async function(category, subCategory, dropdo
         return [];
     }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.loadVendorMainCategories) {
+        window.loadVendorMainCategories('mainCategoryDropdown');
+    }
+});
