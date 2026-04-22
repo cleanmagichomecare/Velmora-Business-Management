@@ -4293,171 +4293,263 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function renderSubTaskGroups() {
+    async function renderSubTaskGroups() {
         if (!subTasksGrid) return;
-        subTasksGrid.innerHTML = '';
+        subTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Loading tasks...</div>';
 
-        if (!window.subTaskGroups || window.subTaskGroups.length === 0) {
-            subTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">No Sub Task Groups saved yet.</div>';
-            return;
-        }
+        try {
+            // Fetch all active main tasks
+            const { data: mainTasks, error: mainError } = await window.supabase
+                .from('main_tasks')
+                .select('*')
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
 
-        window.subTaskGroups.forEach((group, groupIndex) => {
-            const card = document.createElement('div');
-            card.className = 'sub-task-card';
-            card.style.background = 'var(--card-bg)';
-            card.style.borderRadius = '8px';
-            card.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-            card.style.padding = '20px';
-            card.style.display = 'flex';
-            card.style.flexDirection = 'column';
-            card.style.transition = 'all 0.3s ease';
-            card.style.position = 'relative';
+            if (mainError) throw mainError;
 
-            // Hover effect
-            card.addEventListener('mouseenter', () => card.style.transform = 'translateY(-2px)');
-            card.addEventListener('mouseleave', () => card.style.transform = 'translateY(0)');
+            if (!mainTasks || mainTasks.length === 0) {
+                subTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">No Main Tasks saved yet.</div>';
+                // Sync local cache
+                window.subTaskGroups = [];
+                return;
+            }
 
-            // Generate list items
-            let listHtml = '';
-            group.subTasks.forEach(st => {
-                listHtml += `<li style="margin-bottom: 8px; font-size: 14px; color: var(--text-color);">${st}</li>`;
+            // Fetch all active sub tasks in one batch
+            const mainTaskIds = mainTasks.map(t => t.id);
+            const { data: allSubTasks, error: subError } = await window.supabase
+                .from('sub_tasks')
+                .select('*')
+                .in('main_task_id', mainTaskIds)
+                .eq('status', 'active')
+                .order('created_at', { ascending: true });
+
+            if (subError) throw subError;
+
+            // Group sub tasks by main_task_id
+            const subTaskMap = {};
+            (allSubTasks || []).forEach(st => {
+                if (!subTaskMap[st.main_task_id]) subTaskMap[st.main_task_id] = [];
+                subTaskMap[st.main_task_id].push(st);
             });
 
-            // Generate inputs for edit mode
-            let editInputsHtml = '';
-            group.subTasks.forEach((st, idx) => {
-                editInputsHtml += `
-                    <div class="edit-sub-task-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <input type="text" value="${st}" style="flex-grow: 1; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);" class="edit-sub-task-input">
+            // Sync local cache for dropdown population
+            window.subTaskGroups = mainTasks.map(mt => ({
+                id: mt.id,
+                title: mt.task_title,
+                subTasks: (subTaskMap[mt.id] || []).map(st => st.sub_task)
+            }));
+
+            subTasksGrid.innerHTML = '';
+
+            mainTasks.forEach((mainTask) => {
+                const groupSubTasks = subTaskMap[mainTask.id] || [];
+                const card = document.createElement('div');
+                card.className = 'sub-task-card';
+                card.style.background = 'var(--card-bg)';
+                card.style.borderRadius = '8px';
+                card.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+                card.style.padding = '20px';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.transition = 'all 0.3s ease';
+                card.style.position = 'relative';
+
+                card.addEventListener('mouseenter', () => card.style.transform = 'translateY(-2px)');
+                card.addEventListener('mouseleave', () => card.style.transform = 'translateY(0)');
+
+                let listHtml = '';
+                groupSubTasks.forEach(st => {
+                    listHtml += `<li style="margin-bottom: 8px; font-size: 14px; color: var(--text-color);">${st.sub_task}</li>`;
+                });
+
+                let editInputsHtml = '';
+                groupSubTasks.forEach((st) => {
+                    editInputsHtml += `
+                        <div class="edit-sub-task-item" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" value="${st.sub_task}" data-sub-id="${st.id}" style="flex-grow: 1; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);" class="edit-sub-task-input">
+                            <button type="button" class="btn-remove-edit-st" style="background:none; border:none; cursor:pointer;" title="Remove">❌</button>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="view-mode-title">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-size: 16px;">${mainTask.task_title}</h4>
+                    </div>
+                    <div class="edit-mode-title hidden">
+                        <input type="text" class="edit-group-title" value="${mainTask.task_title}" style="width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 16px; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);">
+                    </div>
+
+                    <div class="view-mode-content" style="flex-grow: 1; margin-bottom: 20px;">
+                        <ul style="list-style-type: disc; padding-left: 20px; margin: 0;">
+                            ${listHtml || '<li style="color: var(--text-muted);">No sub tasks</li>'}
+                        </ul>
+                    </div>
+                    
+                    <div class="edit-mode-content hidden" style="flex-grow: 1; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+                        <div class="edit-sub-tasks-list">
+                            ${editInputsHtml}
+                        </div>
+                        <button type="button" class="btn-add-edit-st btn-secondary" style="border: 1px dashed var(--border-color); padding: 5px; width: 100%; background: transparent; font-size: 13px;">+ Add Sub Task</button>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: flex-end; margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 15px; gap: 8px;">
+                        <button type="button" class="btn-secondary btn-edit-group">Edit</button>
+                        <button type="button" class="btn-submit btn-save-group hidden">Save</button>
+                    </div>
+                `;
+
+                subTasksGrid.appendChild(card);
+
+                // Wire edit/save buttons
+                const btnEdit = card.querySelector('.btn-edit-group');
+                const btnSave = card.querySelector('.btn-save-group');
+                const viewModeContent = card.querySelector('.view-mode-content');
+                const editModeContent = card.querySelector('.edit-mode-content');
+                const viewModeTitle = card.querySelector('.view-mode-title');
+                const editModeTitle = card.querySelector('.edit-mode-title');
+                const editStList = card.querySelector('.edit-sub-tasks-list');
+                const btnAddEditSt = card.querySelector('.btn-add-edit-st');
+
+                btnEdit.addEventListener('click', () => {
+                    viewModeContent.classList.add('hidden');
+                    viewModeTitle.classList.add('hidden');
+                    editModeContent.classList.remove('hidden');
+                    editModeTitle.classList.remove('hidden');
+                    btnEdit.classList.add('hidden');
+                    btnSave.classList.remove('hidden');
+                });
+
+                btnSave.addEventListener('click', async () => {
+                    const newTitleElement = card.querySelector('.edit-group-title');
+                    const newTitle = newTitleElement ? newTitleElement.value.trim() : mainTask.task_title;
+                    if (!newTitle) {
+                        if (typeof showAlert === 'function') showAlert("Title cannot be empty.");
+                        return;
+                    }
+
+                    const newInputs = editStList.querySelectorAll('.edit-sub-task-input');
+                    const newSubTasks = [];
+                    newInputs.forEach(inp => {
+                        const val = inp.value.trim();
+                        if (val) newSubTasks.push(val);
+                    });
+
+                    if (newSubTasks.length === 0) {
+                        if (typeof showAlert === 'function') showAlert("Need at least one sub task.");
+                        return;
+                    }
+
+                    try {
+                        // Update main task title
+                        const { error: updateError } = await window.supabase
+                            .from('main_tasks')
+                            .update({ task_title: newTitle })
+                            .eq('id', mainTask.id);
+                        if (updateError) throw updateError;
+
+                        // Archive old sub tasks and insert new ones
+                        const { error: archiveError } = await window.supabase
+                            .from('sub_tasks')
+                            .update({ status: 'archived' })
+                            .eq('main_task_id', mainTask.id);
+                        if (archiveError) throw archiveError;
+
+                        const newPayloads = newSubTasks.map(st => ({
+                            main_task_id: mainTask.id,
+                            sub_task: st,
+                            status: 'active'
+                        }));
+                        const { error: insertError } = await window.supabase
+                            .from('sub_tasks')
+                            .insert(newPayloads);
+                        if (insertError) throw insertError;
+
+                        if (typeof showToast === 'function') showToast("Updated successfully.");
+                        renderSubTaskGroups();
+                        if (typeof populateTaskCategories === 'function') populateTaskCategories();
+                    } catch (err) {
+                        console.error("Error updating task:", err);
+                        if (typeof showToast === 'function') showToast('❌ Update failed');
+                    }
+                });
+
+                btnAddEditSt.addEventListener('click', () => {
+                    const newDiv = document.createElement('div');
+                    newDiv.className = 'edit-sub-task-item';
+                    newDiv.style.display = 'flex';
+                    newDiv.style.alignItems = 'center';
+                    newDiv.style.gap = '8px';
+                    newDiv.style.marginBottom = '8px';
+                    newDiv.innerHTML = `
+                        <input type="text" placeholder="New Sub Task" style="flex-grow: 1; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);" class="edit-sub-task-input">
                         <button type="button" class="btn-remove-edit-st" style="background:none; border:none; cursor:pointer;" title="Remove">❌</button>
-                    </div>
-                `;
-            });
+                    `;
+                    editStList.appendChild(newDiv);
 
-            card.innerHTML = `
-                <div class="view-mode-title">
-                    <h4 style="margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-size: 16px;">${group.title}</h4>
-                </div>
-                <div class="edit-mode-title hidden">
-                    <input type="text" class="edit-group-title" value="${group.title}" style="width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 16px; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);">
-                </div>
-
-                <div class="view-mode-content" style="flex-grow: 1; margin-bottom: 20px;">
-                    <ul style="list-style-type: disc; padding-left: 20px; margin: 0;">
-                        ${listHtml}
-                    </ul>
-                </div>
-                
-                <div class="edit-mode-content hidden" style="flex-grow: 1; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
-                    <div class="edit-sub-tasks-list">
-                        ${editInputsHtml}
-                    </div>
-                    <button type="button" class="btn-add-edit-st btn-secondary" style="border: 1px dashed var(--border-color); padding: 5px; width: 100%; background: transparent; font-size: 13px;">+ Add Sub Task</button>
-                </div>
-                
-                <div style="display: flex; justify-content: flex-end; margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                    <button type="button" class="btn-secondary btn-edit-group">Edit</button>
-                    <button type="button" class="btn-submit btn-save-group hidden">Save</button>
-                </div>
-            `;
-
-            subTasksGrid.appendChild(card);
-
-            // Wiring buttons
-            const btnEdit = card.querySelector('.btn-edit-group');
-            const btnSave = card.querySelector('.btn-save-group');
-            const viewModeContent = card.querySelector('.view-mode-content');
-            const editModeContent = card.querySelector('.edit-mode-content');
-            const viewModeTitle = card.querySelector('.view-mode-title');
-            const editModeTitle = card.querySelector('.edit-mode-title');
-
-            const editStList = card.querySelector('.edit-sub-tasks-list');
-            const btnAddEditSt = card.querySelector('.btn-add-edit-st');
-
-            btnEdit.addEventListener('click', () => {
-                viewModeContent.classList.add('hidden');
-                viewModeTitle.classList.add('hidden');
-                editModeContent.classList.remove('hidden');
-                editModeTitle.classList.remove('hidden');
-
-                btnEdit.classList.add('hidden');
-                btnSave.classList.remove('hidden');
-            });
-
-            btnSave.addEventListener('click', () => {
-                const newTitleElement = card.querySelector('.edit-group-title');
-                const newTitle = newTitleElement ? newTitleElement.value.trim() : group.title;
-                if (!newTitle) {
-                    if (typeof showAlert === 'function') showAlert("Title cannot be empty.");
-                    return;
-                }
-
-                const newInputs = editStList.querySelectorAll('.edit-sub-task-input');
-                const newSubTasks = [];
-                newInputs.forEach(inp => {
-                    const val = inp.value.trim();
-                    if (val) newSubTasks.push(val);
+                    const removeBtn = newDiv.querySelector('.btn-remove-edit-st');
+                    removeBtn.addEventListener('click', () => newDiv.remove());
+                    newDiv.querySelector('input').focus();
                 });
 
-                if (newSubTasks.length === 0) {
-                    if (typeof showAlert === 'function') showAlert("Need at least one sub task.");
-                    return;
-                }
-
-                // Update global array
-                window.subTaskGroups[groupIndex].title = newTitle;
-                window.subTaskGroups[groupIndex].subTasks = newSubTasks;
-
-                if (typeof showToast === 'function') showToast("Updated successfully.");
-
-                // Re-render
-                renderSubTaskGroups();
-                if (typeof populateTaskCategories === 'function') populateTaskCategories(); // Refresh dropdown
-            });
-
-            btnAddEditSt.addEventListener('click', () => {
-                const newDiv = document.createElement('div');
-                newDiv.className = 'edit-sub-task-item';
-                newDiv.style.display = 'flex';
-                newDiv.style.alignItems = 'center';
-                newDiv.style.gap = '8px';
-                newDiv.style.marginBottom = '8px';
-                newDiv.innerHTML = `
-                    <input type="text" placeholder="New Sub Task" style="flex-grow: 1; padding: 6px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color);" class="edit-sub-task-input">
-                    <button type="button" class="btn-remove-edit-st" style="background:none; border:none; cursor:pointer;" title="Remove">❌</button>
-                `;
-                editStList.appendChild(newDiv);
-
-                const removeBtn = newDiv.querySelector('.btn-remove-edit-st');
-                removeBtn.addEventListener('click', () => newDiv.remove());
-                newDiv.querySelector('input').focus();
-            });
-
-            // Wire existing remove buttons
-            const existingRemoveBtns = card.querySelectorAll('.btn-remove-edit-st');
-            existingRemoveBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.target.closest('.edit-sub-task-item').remove();
+                // Wire existing remove buttons
+                const existingRemoveBtns = card.querySelectorAll('.btn-remove-edit-st');
+                existingRemoveBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.target.closest('.edit-sub-task-item').remove();
+                    });
                 });
             });
-        });
+
+        } catch (err) {
+            console.error("Error loading main tasks:", err);
+            subTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #ff6b6b; padding: 40px;">Failed to load tasks.</div>';
+        }
     }
 
-    function populateTaskCategories() {
+    async function populateTaskCategories() {
         if (typeof window.populateTaskCategoryDropdowns === 'function') {
             window.populateTaskCategoryDropdowns();
         }
 
         const taskSubTaskTitleSelect = document.getElementById('task-sub-task-title');
-        if (taskSubTaskTitleSelect && window.subTaskGroups) {
+        if (taskSubTaskTitleSelect) {
             taskSubTaskTitleSelect.innerHTML = '<option value="">Select Task</option>';
-            window.subTaskGroups.forEach(group => {
-                const opt = document.createElement('option');
-                opt.value = group.title;
-                opt.textContent = group.title;
-                taskSubTaskTitleSelect.appendChild(opt);
-            });
+
+            try {
+                // Fetch main tasks from Supabase for dropdown
+                const { data, error } = await window.supabase
+                    .from('main_tasks')
+                    .select('id, task_title')
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    // Also sync local cache
+                    if (!window.subTaskGroups || window.subTaskGroups.length === 0) {
+                        window.subTaskGroups = data.map(d => ({ id: d.id, title: d.task_title, subTasks: [] }));
+                    }
+                    data.forEach(task => {
+                        const opt = document.createElement('option');
+                        opt.value = task.task_title;
+                        opt.textContent = task.task_title;
+                        taskSubTaskTitleSelect.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading main tasks for dropdown:", e);
+                // Fallback to local cache
+                if (window.subTaskGroups) {
+                    window.subTaskGroups.forEach(group => {
+                        const opt = document.createElement('option');
+                        opt.value = group.title;
+                        opt.textContent = group.title;
+                        taskSubTaskTitleSelect.appendChild(opt);
+                    });
+                }
+            }
         }
         // Hide display area when repopulating
         const displayArea = document.getElementById('selected-sub-tasks-display');
@@ -4467,7 +4559,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sub Task Title dropdown change → auto-display sub tasks
     const taskSubTaskTitleSelect = document.getElementById('task-sub-task-title');
     if (taskSubTaskTitleSelect) {
-        taskSubTaskTitleSelect.addEventListener('change', () => {
+        taskSubTaskTitleSelect.addEventListener('change', async () => {
             const selectedTitle = taskSubTaskTitleSelect.value;
             const displayArea = document.getElementById('selected-sub-tasks-display');
             const listEl = document.getElementById('selected-sub-tasks-list');
@@ -4477,20 +4569,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const matchedGroup = window.subTaskGroups.find(g => g.title === selectedTitle);
-            if (matchedGroup && matchedGroup.subTasks.length > 0) {
-                listEl.innerHTML = '';
-                matchedGroup.subTasks.forEach(st => {
-                    const li = document.createElement('li');
-                    li.style.marginBottom = '6px';
-                    li.style.fontSize = '14px';
-                    li.style.color = 'var(--text-color)';
-                    li.textContent = st;
-                    listEl.appendChild(li);
-                });
-                displayArea.classList.remove('hidden');
-            } else {
-                displayArea.classList.add('hidden');
+            listEl.innerHTML = '<li style="color: var(--text-muted);">Loading...</li>';
+            displayArea.classList.remove('hidden');
+
+            try {
+                // Find the main task by title to get its id
+                const { data: mainData, error: mainErr } = await window.supabase
+                    .from('main_tasks')
+                    .select('id')
+                    .eq('task_title', selectedTitle)
+                    .eq('status', 'active')
+                    .limit(1);
+
+                if (mainErr) throw mainErr;
+
+                if (mainData && mainData.length > 0) {
+                    const mainId = mainData[0].id;
+                    const { data: subData, error: subErr } = await window.supabase
+                        .from('sub_tasks')
+                        .select('sub_task')
+                        .eq('main_task_id', mainId)
+                        .eq('status', 'active');
+
+                    if (subErr) throw subErr;
+
+                    if (subData && subData.length > 0) {
+                        listEl.innerHTML = '';
+                        subData.forEach(st => {
+                            const li = document.createElement('li');
+                            li.style.marginBottom = '6px';
+                            li.style.fontSize = '14px';
+                            li.style.color = 'var(--text-color)';
+                            li.textContent = st.sub_task;
+                            listEl.appendChild(li);
+                        });
+                    } else {
+                        listEl.innerHTML = '<li style="color: var(--text-muted);">No sub tasks</li>';
+                    }
+                } else {
+                    displayArea.classList.add('hidden');
+                }
+            } catch (e) {
+                console.error("Error fetching sub tasks for display:", e);
+                // Fallback to local cache
+                const matchedGroup = window.subTaskGroups.find(g => g.title === selectedTitle);
+                if (matchedGroup && matchedGroup.subTasks.length > 0) {
+                    listEl.innerHTML = '';
+                    matchedGroup.subTasks.forEach(st => {
+                        const li = document.createElement('li');
+                        li.style.marginBottom = '6px';
+                        li.style.fontSize = '14px';
+                        li.style.color = 'var(--text-color)';
+                        li.textContent = st;
+                        listEl.appendChild(li);
+                    });
+                } else {
+                    displayArea.classList.add('hidden');
+                }
             }
         });
     }
@@ -4601,11 +4736,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (newSubTaskForm) {
-        newSubTaskForm.addEventListener('submit', (e) => {
+        newSubTaskForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const title = document.getElementById('sub-task-group-title').value;
+
+            const titleInput = document.getElementById('sub-task-group-title');
+            const title = titleInput ? titleInput.value.trim() : '';
             if (!title) {
-                if (typeof showAlert === 'function') showAlert("Sub Task Group Title is required.");
+                if (typeof showAlert === 'function') showAlert("Main Task Title is required.");
                 return;
             }
 
@@ -4621,28 +4758,85 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const newGroup = {
-                id: Date.now(),
-                title: title,
-                subTasks: subTasks
-            };
+            // Disable save button during operation
+            const saveBtn = document.getElementById('btn-save-sub-task');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+            }
 
-            window.subTaskGroups.push(newGroup);
-            if (typeof showToast === 'function') showToast('Sub Task Group saved successfully');
+            try {
+                // Step 1: Insert Main Task into Supabase
+                const { data: mainTaskData, error: mainTaskError } = await window.supabase
+                    .from('main_tasks')
+                    .insert([{
+                        task_title: title,
+                        status: 'active'
+                    }])
+                    .select();
 
-            // Reset to default
-            newSubTaskForm.reset();
-            subTaskInputsWrapper.innerHTML = `
-                <div class="sub-task-input-group" style="display: flex; align-items: flex-end; gap: 10px; width: 100%;">
-                    <div class="form-group" style="flex-grow: 1; margin: 0;">
-                        <label class="sub-task-label" style="display:block; margin-bottom:5px;">Sub Task 1 <span style="color:red">*</span></label>
-                        <input type="text" class="sub-task-item-input" placeholder="Enter sub task details" required style="width: 100%;">
+                if (mainTaskError) throw mainTaskError;
+
+                if (!mainTaskData || mainTaskData.length === 0) {
+                    throw new Error("Main task inserted but no data returned. Check RLS policies.");
+                }
+
+                const insertedTask = mainTaskData[0];
+                const mainTaskId = insertedTask.id;
+                console.log("Main task saved:", insertedTask);
+
+                // Step 2: Insert all Sub Tasks linked to the main task
+                const subTaskPayloads = subTasks.map(st => ({
+                    main_task_id: mainTaskId,
+                    sub_task: st,
+                    status: 'active'
+                }));
+
+                const { data: subTaskData, error: subTaskError } = await window.supabase
+                    .from('sub_tasks')
+                    .insert(subTaskPayloads)
+                    .select();
+
+                if (subTaskError) throw subTaskError;
+
+                console.log("Sub tasks saved:", subTaskData);
+
+                // Also push to local cache for immediate dropdown availability
+                window.subTaskGroups.push({
+                    id: mainTaskId,
+                    title: title,
+                    subTasks: subTasks
+                });
+
+                if (typeof showToast === 'function') showToast('Task saved successfully');
+
+                // Step 3: Reset form
+                newSubTaskForm.reset();
+                subTaskInputsWrapper.innerHTML = `
+                    <div class="sub-task-input-group" style="display: flex; align-items: flex-end; gap: 10px; width: 100%;">
+                        <div class="form-group" style="flex-grow: 1; margin: 0;">
+                            <label class="sub-task-label" style="display:block; margin-bottom:5px;">Sub Task 1 <span style="color:red">*</span></label>
+                            <input type="text" class="sub-task-item-input" placeholder="Enter sub task details" required style="width: 100%;">
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            newSubTaskFormContainer.classList.add('hidden');
-            taskContentArea.classList.remove('hidden');
+                newSubTaskFormContainer.classList.add('hidden');
+                taskContentArea.classList.remove('hidden');
+
+            } catch (err) {
+                console.error("Failed to save task:", err);
+                if (typeof showToast === 'function') {
+                    showToast('❌ Failed to save task: ' + (err.message || 'Unknown error'));
+                } else {
+                    alert("Failed to save task: " + (err.message || 'Unknown error'));
+                }
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save';
+                }
+            }
         });
     }
 
