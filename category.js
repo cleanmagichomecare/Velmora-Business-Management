@@ -253,7 +253,7 @@ console.log('category.js Loading...');
 
         if (btnSub2Show) btnSub2Show.addEventListener('click', () => {
             hideAllCategoryForms();
-            if (window.loadVendorMainCategories) window.loadVendorMainCategories('sub2MainCategorySelect');
+            if (window.loadAllVendorSubCategories) window.loadAllVendorSubCategories('subCategory1Select');
             resetFormInputs(sub2InputsContainer, 'Enter Sub Category 2 Name');
             if (sub2Form) sub2Form.classList.remove('hidden');
         });
@@ -363,9 +363,24 @@ console.log('category.js Loading...');
         });
 
         if (saveSub2Btn) saveSub2Btn.addEventListener('click', async () => {
-            const parentMain = document.getElementById('sub2MainCategorySelect') ? document.getElementById('sub2MainCategorySelect').value : '';
             const parentSub1 = subCategory1Select ? subCategory1Select.value : '';
-            if (!parentMain || !parentSub1) { alert("Main Category and Sub Category 1 required"); return; }
+            if (!parentSub1) { alert("Sub Category 1 required"); return; }
+
+            let parentMain = null;
+            const { data, error } = await window.supabase
+                .from('vendor_categories')
+                .select('category')
+                .eq('sub_category', parentSub1)
+                .limit(1);
+                
+            if (data && data.length > 0) {
+                parentMain = data[0].category;
+            }
+
+            if (!parentMain) {
+                alert("Error: Could not resolve Main Category for the selected Sub Category 1.");
+                return;
+            }
 
             const inputs = document.querySelectorAll('#sub2Inputs input');
             for (let i of inputs) {
@@ -614,6 +629,41 @@ window.loadVendorSubCategories = async function(category, dropdownId) {
     }
 };
 
+window.loadAllVendorSubCategories = async function(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+
+    dropdown.innerHTML = '<option value="">Select Sub Category 1</option>';
+
+    try {
+        const { data, error } = await window.supabase
+            .from('vendor_categories')
+            .select('sub_category')
+            .not('sub_category', 'is', null);
+            
+        if (error) {
+            console.error("Query issue:", error);
+            return;
+        }
+
+        const unique = [...new Set(
+            data
+                .map(item => item.sub_category)
+                .filter(Boolean)
+                .map(v => v.trim())
+        )];
+
+        unique.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub;
+            opt.textContent = sub;
+            dropdown.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Error loading all vendor sub categories:', e);
+    }
+};
+
 window.loadVendorSubSubCategories = async function(category, subCategory, dropdownId) {
     const dropdown = document.getElementById(dropdownId);
     if (!dropdown) {
@@ -695,33 +745,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const sub2MainCatDropdown = document.getElementById('sub2MainCategorySelect');
-    if (sub2MainCatDropdown) {
-        sub2MainCatDropdown.addEventListener('change', () => {
-            console.log("Sub 2 Form - Main Category changed to:", sub2MainCatDropdown.value);
-            clearSubCategory2();
-            if (window.loadVendorSubCategories) {
-                window.loadVendorSubCategories(sub2MainCatDropdown.value, 'subCategory1Select');
-            }
-        });
-    }
-
     const subCat1Dropdown = document.getElementById('subCategory1Select');
     if (subCat1Dropdown) {
-        subCat1Dropdown.addEventListener('change', () => {
+        subCat1Dropdown.addEventListener('change', async () => {
             clearSubCategory2();
             
+            const selectedSub1 = subCat1Dropdown.value;
+            console.log("Sub Category 1 changed to:", selectedSub1);
+            
+            if (!selectedSub1) return;
+            
             let mainCatValue = null;
-            const sub2Form = document.getElementById('subCategory2Form');
-            if (sub2Form && !sub2Form.classList.contains('hidden')) {
-                mainCatValue = sub2MainCatDropdown ? sub2MainCatDropdown.value : null;
-            } else {
-                mainCatValue = mainCatDropdown ? mainCatDropdown.value : null;
+            try {
+                const { data, error } = await window.supabase
+                    .from('vendor_categories')
+                    .select('category')
+                    .eq('sub_category', selectedSub1)
+                    .limit(1);
+                    
+                if (data && data.length > 0) {
+                    mainCatValue = data[0].category;
+                }
+            } catch (e) {
+                console.error('Error fetching parent category for Sub Category 1:', e);
             }
             
-            console.log("Sub Category 1 changed to:", subCat1Dropdown.value);
-            if (window.loadVendorSubSubCategories) {
-                window.loadVendorSubSubCategories(mainCatValue, subCat1Dropdown.value, 'subCategory2Select');
+            console.log("Resolved Main Category internally to:", mainCatValue);
+            
+            if (window.loadVendorSubSubCategories && mainCatValue) {
+                window.loadVendorSubSubCategories(mainCatValue, selectedSub1, 'subCategory2Select');
             }
         });
     }
