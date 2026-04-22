@@ -890,8 +890,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (vendorFormContainer) vendorFormContainer.classList.add('hidden');
             if (vendorListContainer) vendorListContainer.classList.remove('hidden');
             
-            // Optional: refresh local listed data if implemented
-            if (typeof renderVendorList === 'function') renderVendorList();
+            // Auto-refresh the vendor list after insert
+            if (typeof window.fetchVendors === 'function') window.fetchVendors();
             
         } catch (err) {
             console.error('Supabase vendor insert error:', err);
@@ -993,90 +993,141 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Delegate Edit/Archive clicks on table rows
-    if (vendorTableBody) {
-        vendorTableBody.addEventListener('click', (e) => {
-            const editBtn = e.target.closest('.btn-vendor-edit');
-            const archiveBtn = e.target.closest('.btn-vendor-archive');
+    // --- Vendor List Variables & State ---
+    let fetchedVendorsCache = [];
+    let isFetchingVendors = false;
+    let vendorSearchTimeout = null;
 
-            if (editBtn) {
-                const id = parseInt(editBtn.getAttribute('data-id'), 10);
-                editVendor(id);
-            }
-            if (archiveBtn) {
-                const id = parseInt(archiveBtn.getAttribute('data-id'), 10);
-                archiveVendor(id);
-            }
+    // --- 1. Fetch Vendors from Supabase ---
+    window.fetchVendors = async function() {
+        if (!vendorTableBody) return;
+        
+        isFetchingVendors = true;
+        vendorTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #888;">Loading vendors...</td></tr>';
+        if (vendorEmptyState) vendorEmptyState.style.display = 'none';
+        if (vendorTable) vendorTable.style.display = 'table';
+
+        try {
+            const { data, error } = await supabase
+                .from('vendors')
+                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, price_per_unit, moq, gst_applicable, phone, used_in, created_at')
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            fetchedVendorsCache = data || [];
+            
+            // Populate category filter dynamically from fetched vendors
+            updateCategoryFilterDropdown();
+
+            // Render
+            window.renderVendorList();
+
+        } catch (error) {
+            console.error("Error fetching vendors:", error);
+            showToast("Failed to load vendors: " + error.message);
+            vendorTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #ff6b6b;">Error loading vendors.</td></tr>';
+        } finally {
+            isFetchingVendors = false;
+        }
+    };
+
+    function updateCategoryFilterDropdown() {
+        if (!vendorFilterCategory) return;
+        
+        const currentSelection = vendorFilterCategory.value;
+        const categories = new Set(
+            fetchedVendorsCache
+                .map(v => v.vendor_category)
+                .filter(Boolean)
+                .map(c => c.trim())
+        );
+        
+        let optionsHtml = '<option value="">All Categories</option>';
+        Array.from(categories).sort().forEach(cat => {
+            optionsHtml += `<option value="${cat}">${cat}</option>`;
         });
+        
+        vendorFilterCategory.innerHTML = optionsHtml;
+        if (categories.has(currentSelection)) {
+            vendorFilterCategory.value = currentSelection;
+        }
     }
 
-    // Search & Filter listeners
-    if (vendorSearchInput) {
-        vendorSearchInput.addEventListener('input', () => renderVendorList());
-    }
-    if (vendorFilterCategory) {
-        vendorFilterCategory.addEventListener('change', () => renderVendorList());
-    }
-
-    function renderVendorList() {
+    // --- 2. Render & 5. Filter Vendor List ---
+    window.renderVendorList = function() {
         if (!vendorTableBody) return;
 
-        const searchTerm = vendorSearchInput ? vendorSearchInput.value.toLowerCase() : '';
+        const searchTerm = vendorSearchInput ? vendorSearchInput.value.toLowerCase().trim() : '';
         const filterCat = vendorFilterCategory ? vendorFilterCategory.value : '';
 
-        vendorTableBody.innerHTML = '';
-
-        const activeVendors = vendors.filter(v => {
-            if (v.status === 'archived') return false;
-            if (filterCat && v.category !== filterCat) return false;
+        // In-memory Filter
+        const activeVendors = fetchedVendorsCache.filter(v => {
+            if (filterCat && v.vendor_category !== filterCat) return false;
+            
             if (searchTerm) {
-                const haystack = `${v.name} ${v.company} ${v.category} ${v.subCategory} ${v.phone} ${v.city}`.toLowerCase();
-                if (!haystack.includes(searchTerm)) return false;
+                const name = (v.vendor_name || '').toLowerCase();
+                const company = (v.company_name || '').toLowerCase();
+                if (!name.includes(searchTerm) && !company.includes(searchTerm)) {
+                    return false;
+                }
             }
             return true;
         });
+
+        // 7. Empty States
+        if (fetchedVendorsCache.length === 0) {
+            if (vendorTable) vendorTable.style.display = 'none';
+            if (vendorEmptyState) {
+                vendorEmptyState.style.display = 'block';
+                vendorEmptyState.innerHTML = `
+                    <div class="vendor-empty-icon">🏪</div>
+                    <h3>No vendors yet</h3>
+                    <p>Click "+ Vendor" in the sidebar to add your first vendor.</p>
+                `;
+            }
+            return;
+        }
 
         if (activeVendors.length === 0) {
             if (vendorTable) vendorTable.style.display = 'none';
             if (vendorEmptyState) {
                 vendorEmptyState.style.display = 'block';
-                if (vendors.filter(v => v.status !== 'archived').length > 0) {
-                    vendorEmptyState.innerHTML = `
-                        <div class="vendor-empty-icon">🔍</div>
-                        <h3>No matching vendors</h3>
-                        <p>Try adjusting your search or filter.</p>
-                    `;
-                } else {
-                    vendorEmptyState.innerHTML = `
-                        <div class="vendor-empty-icon">🏪</div>
-                        <h3>No vendors yet</h3>
-                        <p>Click "+ Vendor" in the sidebar to add your first vendor.</p>
-                    `;
-                }
+                vendorEmptyState.innerHTML = `
+                    <div class="vendor-empty-icon">🔍</div>
+                    <h3>No matching vendors</h3>
+                    <p>Try adjusting your search or filter.</p>
+                `;
             }
             return;
         }
 
+        // Render Table
         if (vendorTable) vendorTable.style.display = 'table';
         if (vendorEmptyState) vendorEmptyState.style.display = 'none';
+        
+        vendorTableBody.innerHTML = '';
 
         activeVendors.forEach(vendor => {
+            // Safe Data Handling
+            const usedInFormatted = (vendor.used_in && vendor.used_in.length > 0) ? vendor.used_in.join(", ") : "-";
+            const gstFormatted = vendor.gst_applicable ? "Yes" : "No";
+
             const row = document.createElement('tr');
             row.setAttribute('data-vendor-id', vendor.id);
             row.innerHTML = `
-                <td><strong>${vendor.name || '-'}</strong></td>
-                <td>${vendor.company || '-'}</td>
-                <td>${vendor.category || '-'}</td>
-                <td>${vendor.subCategory || '-'}</td>
+                <td><strong>${vendor.vendor_name || '-'}</strong></td>
+                <td>${vendor.vendor_type1 || '-'}</td>
+                <td>${vendor.vendor_type2 || '-'}</td>
+                <td>${vendor.vendor_category || '-'}</td>
+                <td>${vendor.sub_category || '-'}</td>
+                <td>${vendor.price_per_unit != null ? vendor.price_per_unit : '-'}</td>
+                <td>${vendor.moq != null ? vendor.moq : '-'}</td>
+                <td>${gstFormatted}</td>
                 <td>${vendor.phone || '-'}</td>
-                <td>${vendor.city || '-'}</td>
-                <td><span class="vendor-status-badge active">🟢 Active</span></td>
                 <td>
                     <div class="vendor-actions">
-                        <button class="btn-vendor-edit" data-id="${vendor.id}">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Edit
-                        </button>
                         <button class="btn-vendor-archive" data-id="${vendor.id}">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
                             Archive
@@ -1086,102 +1137,51 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             vendorTableBody.appendChild(row);
         });
-    }
+    };
 
-    function editVendor(id) {
-        const vendor = vendors.find(v => v.id === id);
-        if (!vendor) return;
+    // --- 8. Archive Vendor ---
+    window.archiveVendor = async function(id) {
+        if (!confirm("Are you sure you want to archive this vendor?")) return;
+        
+        try {
+            const { error } = await supabase
+                .from('vendors')
+                .update({ status: 'archived' })
+                .eq('id', id);
 
-        currentEditVendorId = id;
-
-        // Show form
-        if (vendorFormContainer) vendorFormContainer.classList.remove('hidden');
-
-        // Update form header and button
-        if (vendorFormHeader) vendorFormHeader.textContent = 'Update Vendor';
-        if (btnSaveVendor) btnSaveVendor.textContent = 'Update Vendor';
-
-        // Populate form with vendor data
-        loadVendorIntoForm(vendor);
-
-        // Scroll to form
-        if (vendorFormContainer) {
-            vendorFormContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (error) throw error;
+            
+            showToast('Vendor archived successfully');
+            await window.fetchVendors(); // Auto refresh
+        } catch (error) {
+            console.error("Error archiving vendor:", error);
+            alert("Failed to archive vendor: " + error.message);
         }
-    }
+    };
 
-    function archiveVendor(id) {
-        const vendor = vendors.find(v => v.id === id);
-        if (!vendor) return;
-        vendor.status = 'archived';
-        renderVendorList();
-        showToast('Vendor archived successfully');
-    }
-
-    function resetVendorFormMode() {
-        currentEditVendorId = null;
-        if (vendorFormHeader) vendorFormHeader.textContent = 'Add Vendor';
-        if (btnSaveVendor) btnSaveVendor.textContent = 'Save Vendor';
-    }
-
-    // Save / Update handler
-    if (btnSaveVendor && vendorForm) {
-        btnSaveVendor.addEventListener('click', () => {
-            if (!validateVendorForm()) {
-                return;
-            }
-
-            if (currentEditVendorId !== null) {
-                // UPDATE existing vendor
-                const vendor = vendors.find(v => v.id === currentEditVendorId);
-                if (vendor) {
-                    const updated = collectVendorFormData();
-                    Object.keys(updated).forEach(key => {
-                        if (key !== 'id' && key !== 'status') {
-                            vendor[key] = updated[key];
-                        }
-                    });
-                }
-                showToast('Vendor updated successfully');
-            } else {
-                // CREATE new vendor
-                const newVendor = collectVendorFormData();
-                vendors.push(newVendor);
-                showToast('Vendor saved successfully');
-            }
-
-            vendorForm.reset();
-            resetVendorFormMode();
-            if (vendorFormContainer) vendorFormContainer.classList.add('hidden');
-            // Show the vendor list after saving
-            if (vendorListContainer) vendorListContainer.classList.remove('hidden');
-            renderVendorList();
+    // --- Search & Filter Listeners ---
+    if (vendorSearchInput) {
+        vendorSearchInput.addEventListener('input', () => {
+            if (vendorSearchTimeout) clearTimeout(vendorSearchTimeout);
+            vendorSearchTimeout = setTimeout(() => {
+                window.renderVendorList();
+            }, 300); // 300ms debounce
         });
     }
 
-    // Delegate Edit/Archive clicks on table rows
+    if (vendorFilterCategory) {
+        vendorFilterCategory.addEventListener('change', () => window.renderVendorList());
+    }
+
+    // --- Delegate Edit/Archive Clicks ---
     if (vendorTableBody) {
         vendorTableBody.addEventListener('click', (e) => {
-            const editBtn = e.target.closest('.btn-vendor-edit');
             const archiveBtn = e.target.closest('.btn-vendor-archive');
-
-            if (editBtn) {
-                const id = parseInt(editBtn.getAttribute('data-id'), 10);
-                editVendor(id);
-            }
             if (archiveBtn) {
                 const id = parseInt(archiveBtn.getAttribute('data-id'), 10);
-                archiveVendor(id);
+                window.archiveVendor(id);
             }
         });
-    }
-
-    // Search & Filter listeners
-    if (vendorSearchInput) {
-        vendorSearchInput.addEventListener('input', () => renderVendorList());
-    }
-    if (vendorFilterCategory) {
-        vendorFilterCategory.addEventListener('change', () => renderVendorList());
     }
 
     // "Vendor List" sidebar button — show list, hide form
@@ -1201,12 +1201,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Hide form, show list
             if (vendorFormContainer) vendorFormContainer.classList.add('hidden');
             if (vendorListContainer) vendorListContainer.classList.remove('hidden');
-            renderVendorList();
+            // Fetch fresh data when opening list view
+            if (typeof window.fetchVendors === 'function') window.fetchVendors();
         });
     }
 
-    // Initial render
-    renderVendorList();
+    // Initial Fetch
+    if (typeof window.fetchVendors === 'function') window.fetchVendors();
 
     // --- Campaign Dashboard Logic ---
     const btnAddInfluencer = document.getElementById('btn-add-influencer');
