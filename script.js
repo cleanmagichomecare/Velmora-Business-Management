@@ -4514,6 +4514,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const taskSubTaskTitleSelect = document.getElementById('task-sub-task-title');
         if (taskSubTaskTitleSelect) {
+            const previousTaskValue = taskSubTaskTitleSelect.value;
             taskSubTaskTitleSelect.innerHTML = '<option value="">Select Task</option>';
 
             try {
@@ -4549,6 +4550,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         taskSubTaskTitleSelect.appendChild(opt);
                     });
                 }
+            }
+
+            // Restore previous selection
+            if (previousTaskValue) {
+                taskSubTaskTitleSelect.value = previousTaskValue;
+                console.log(`[populateTaskCategories] Restored task: "${previousTaskValue}"`);
             }
         }
         // Hide display area when repopulating
@@ -6060,31 +6067,28 @@ window.navigateToDeptAndShowTasks = function (deptName) {
 document.addEventListener('DOMContentLoaded', () => {
     const taskCat = document.getElementById('task-category');
     const taskSub1 = document.getElementById('task-sub-category1');
+    const taskSub2 = document.getElementById('task-sub-category2');
 
+    // Department change → reset children, load Sub Category 1
     if (taskCat) {
         taskCat.addEventListener('change', () => {
-            if (taskSub1) {
-                taskSub1.value = ''; // Reset child
-                const taskSub2 = document.getElementById('task-sub-category2');
-                if (taskSub2) taskSub2.value = ''; // Reset grandchild
-            }
-            if (typeof window.populateTaskCategoryDropdowns === 'function') {
-                window.populateTaskCategoryDropdowns();
-            }
+            console.log("Selected department:", taskCat.value);
+            if (taskSub1) taskSub1.value = '';
+            if (taskSub2) taskSub2.value = '';
+            // Sub categories are loaded by task-category.js change listeners
         });
     }
 
+    // Sub Category 1 change → reset Sub Category 2
     if (taskSub1) {
         taskSub1.addEventListener('change', () => {
-            const taskSub2 = document.getElementById('task-sub-category2');
-            if (taskSub2) taskSub2.value = ''; // Reset child
-            if (typeof window.populateTaskCategoryDropdowns === 'function') {
-                window.populateTaskCategoryDropdowns();
-            }
+            console.log("Selected Sub Category 1:", taskSub1.value);
+            if (taskSub2) taskSub2.value = '';
+            // Sub Category 2 is loaded by task-category.js change listeners
         });
     }
 
-    // Initial Hydration once globals are ready
+    // Initial dropdown hydration (one-time only)
     setTimeout(() => {
         if (typeof window.populateTaskCategoryDropdowns === 'function') {
             window.populateTaskCategoryDropdowns();

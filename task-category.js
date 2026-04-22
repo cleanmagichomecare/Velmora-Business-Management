@@ -86,6 +86,9 @@ console.log('task-category.js Loading...');
         const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
 
+        // Preserve current selection before rebuild
+        const previousValue = dropdown.value;
+
         dropdown.innerHTML = '<option value="">Select Main Category</option>';
 
         try {
@@ -106,6 +109,12 @@ console.log('task-category.js Loading...');
                 opt.textContent = cat;
                 dropdown.appendChild(opt);
             });
+
+            // Restore previous selection if it still exists
+            if (previousValue) {
+                dropdown.value = previousValue;
+                console.log(`[loadTaskCategories] Restored "${previousValue}" in #${dropdownId}`);
+            }
         } catch (e) {
             console.error('Error loading Task Categories:', e);
         }
@@ -114,9 +123,13 @@ console.log('task-category.js Loading...');
     window.loadTaskSubCategories = async function(category, dropdownId) {
         const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
-        
+
+        const previousValue = dropdown.value;
         dropdown.innerHTML = '<option value="">Select Sub Category 1</option>';
-        if (!category) return;
+        if (!category) {
+            dropdown.disabled = true;
+            return;
+        }
 
         try {
             const { data, error } = await window.supabase
@@ -138,6 +151,9 @@ console.log('task-category.js Loading...');
                 opt.textContent = sub;
                 dropdown.appendChild(opt);
             });
+
+            dropdown.disabled = false;
+            if (previousValue) dropdown.value = previousValue;
         } catch (e) {
             console.error('Error loading Task Sub Categories 1:', e);
         }
@@ -147,8 +163,12 @@ console.log('task-category.js Loading...');
         const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
 
+        const previousValue = dropdown.value;
         dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
-        if (!category || !subCategory) return;
+        if (!category || !subCategory) {
+            dropdown.disabled = true;
+            return;
+        }
 
         try {
             const { data, error } = await window.supabase
@@ -171,6 +191,9 @@ console.log('task-category.js Loading...');
                 opt.textContent = sub;
                 dropdown.appendChild(opt);
             });
+
+            dropdown.disabled = false;
+            if (previousValue) dropdown.value = previousValue;
         } catch (e) {
             console.error('Error loading Task Sub Categories 2:', e);
         }
