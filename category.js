@@ -210,10 +210,10 @@ console.log('category.js Loading...');
                     
                     if (sub1Keys.length === 0) {
                         html += `
-                            <tr>
-                                <td style="font-weight: bold; color: #fff;">${mainCat}</td>
-                                <td style="color: #888;">-</td>
-                                <td style="color: #888;">-</td>
+                            <tr class="vendor-category-row">
+                                <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
+                                <td style="color: #94a3b8;">-</td>
+                                <td style="color: #94a3b8;">-</td>
                                 <td>
                                     <div class="category-actions">
                                         <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', null, null)">Archive</button>
@@ -228,10 +228,10 @@ console.log('category.js Loading...');
 
                             if (sub2Arr.length === 0) {
                                 html += `
-                                    <tr>
-                                        <td style="font-weight: bold; color: #fff;">${mainCat}</td>
-                                        <td style="color: #ddd;">↳ ${sub1Cat}</td>
-                                        <td style="color: #888;">-</td>
+                                    <tr class="vendor-category-row">
+                                        <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
+                                        <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
+                                        <td style="color: #94a3b8;">-</td>
                                         <td>
                                             <div class="category-actions">
                                                 <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', null)">Archive</button>
@@ -242,10 +242,10 @@ console.log('category.js Loading...');
                             } else {
                                 sub2Arr.forEach(sub2Cat => {
                                     html += `
-                                        <tr>
-                                            <td style="font-weight: bold; color: #fff;">${mainCat}</td>
-                                            <td style="color: #ddd;">↳ ${sub1Cat}</td>
-                                            <td style="color: #aaa;">&nbsp;&nbsp;↳ ${sub2Cat}</td>
+                                        <tr class="vendor-category-row">
+                                            <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
+                                            <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
+                                            <td style="font-weight: 400; color: #475569; padding-left: 40px;">↳↳ ${sub2Cat}</td>
                                             <td>
                                                 <div class="category-actions">
                                                     <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}')">Archive</button>
