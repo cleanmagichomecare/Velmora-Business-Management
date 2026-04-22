@@ -4843,59 +4843,181 @@ document.addEventListener('DOMContentLoaded', () => {
     // Removed legacy listeners
 
     if (newTaskForm) {
-        newTaskForm.addEventListener('submit', (e) => {
+        newTaskForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const category = document.getElementById('task-category').value;
-            const title = document.getElementById('task-title').value;
-            const priority = document.getElementById('task-priority').value;
-            const date = document.getElementById('task-date').value;
-            const time = document.getElementById('task-time').value;
+
+            // --- Read all form values ---
+            const department = document.getElementById('task-category').value;
+            const subCategory1 = document.getElementById('task-sub-category1') ? document.getElementById('task-sub-category1').value : '';
+            const subCategory2 = document.getElementById('task-sub-category2') ? document.getElementById('task-sub-category2').value : '';
+            const taskTitle = document.getElementById('task-title').value.trim();
+            const taskDescription = document.getElementById('task-description') ? document.getElementById('task-description').value.trim() : '';
             const assignedBy = document.getElementById('task-assigned-by') ? document.getElementById('task-assigned-by').value : '';
             const assignedTo = document.getElementById('task-assigned-to') ? document.getElementById('task-assigned-to').value : '';
+            const priority = document.getElementById('task-priority').value;
+            const dueDate = document.getElementById('task-date').value;
+            const dueTime = document.getElementById('task-time').value;
+            const subTaskTitleSelect = document.getElementById('task-sub-task-title');
+            const selectedMainTaskTitle = subTaskTitleSelect ? subTaskTitleSelect.value : '';
 
-            // HTML5 'required' property usually catches this, but adding safeguard
-            if (!category || !title || !priority || !date || !time) {
-                if (typeof showAlert === 'function') showAlert("Please fill in Category, Date, Time, Title, and Priority required fields.");
+            // --- Validation ---
+            if (!department) {
+                if (typeof showAlert === 'function') showAlert("Department is required.");
+                return;
+            }
+            if (!taskTitle) {
+                if (typeof showAlert === 'function') showAlert("Task Title is required.");
+                return;
+            }
+            if (!priority) {
+                if (typeof showAlert === 'function') showAlert("Priority is required.");
+                return;
+            }
+            if (!assignedTo) {
+                if (typeof showAlert === 'function') showAlert("Assigned To is required.");
+                return;
+            }
+            if (!selectedMainTaskTitle) {
+                if (typeof showAlert === 'function') showAlert("Please select a Main Task.");
                 return;
             }
 
-            const subTaskTitleSelect = document.getElementById('task-sub-task-title');
-            const selectedSubTaskTitle = subTaskTitleSelect ? subTaskTitleSelect.value : '';
-            const matchedGroup = selectedSubTaskTitle ? window.subTaskGroups.find(g => g.title === selectedSubTaskTitle) : null;
-
-            const newTask = {
-                id: Date.now(),
-                category: category,
-                date: date,
-                time: time,
-                subCategory1: document.getElementById('task-sub-category1').value,
-                subCategory2: document.getElementById('task-sub-category2').value,
-                title: title,
-                description: document.getElementById('task-description').value,
-                priority: priority,
-                subTaskTitle: selectedSubTaskTitle,
-                subTasks: matchedGroup ? matchedGroup.subTasks.map(st => ({
-                    title: typeof st === 'string' ? st : (st.title || 'Untitled'),
-                    status: typeof st === 'object' && st.status ? st.status : 'not_started'
-                })) : [],
-                assignedBy: assignedBy,
-                assignedTo: assignedTo,
-                status: "Pending",
-                createdAt: new Date().toISOString()
-            };
-
-            window.tasks.push(newTask);
-
-            if (typeof showToast === 'function') {
-                showToast('Task created successfully');
+            // --- Disable button during save ---
+            const createBtn = document.getElementById('btn-save-task');
+            if (createBtn) {
+                createBtn.disabled = true;
+                createBtn.textContent = 'Creating...';
             }
 
-            newTaskForm.reset();
-            const stDisplay = document.getElementById('selected-sub-tasks-display');
-            if (stDisplay) stDisplay.classList.add('hidden');
-            newTaskFormContainer.classList.add('hidden');
-            taskContentArea.classList.remove('hidden');
-            if (typeof window.renderAllTasks === 'function') window.renderAllTasks();
+            try {
+                // ===== STEP 1: Fetch main_task_id from main_tasks =====
+                const { data: mainTaskLookup, error: mainLookupErr } = await window.supabase
+                    .from('main_tasks')
+                    .select('id')
+                    .eq('task_title', selectedMainTaskTitle)
+                    .eq('status', 'active')
+                    .limit(1);
+
+                if (mainLookupErr) throw mainLookupErr;
+
+                if (!mainTaskLookup || mainTaskLookup.length === 0) {
+                    throw new Error("Selected Main Task not found in database.");
+                }
+
+                const mainTaskId = mainTaskLookup[0].id;
+                console.log("Resolved main_task_id:", mainTaskId);
+
+                // ===== STEP 2: Insert into tasks table =====
+                const taskPayload = {
+                    department: department,
+                    sub_category1: subCategory1 || null,
+                    sub_category2: subCategory2 || null,
+                    task_title: taskTitle,
+                    task_description: taskDescription || null,
+                    assigned_by: assignedBy || null,
+                    assigned_to: assignedTo,
+                    priority: priority,
+                    main_task_id: mainTaskId,
+                    due_date: dueDate || null,
+                    due_time: dueTime || null,
+                    status: 'pending'
+                };
+
+                const { data: insertedTaskData, error: insertTaskErr } = await window.supabase
+                    .from('tasks')
+                    .insert([taskPayload])
+                    .select();
+
+                if (insertTaskErr) throw insertTaskErr;
+
+                if (!insertedTaskData || insertedTaskData.length === 0) {
+                    throw new Error("Task inserted but no data returned. Check RLS policies.");
+                }
+
+                const insertedTask = insertedTaskData[0];
+                const insertedTaskId = insertedTask.id;
+                console.log("Task inserted:", insertedTask);
+
+                // ===== STEP 3: Fetch related sub_tasks from sub_tasks table =====
+                const { data: relatedSubTasks, error: subFetchErr } = await window.supabase
+                    .from('sub_tasks')
+                    .select('sub_task')
+                    .eq('main_task_id', mainTaskId)
+                    .eq('status', 'active');
+
+                if (subFetchErr) throw subFetchErr;
+
+                console.log("Fetched subtasks:", relatedSubTasks);
+
+                // ===== STEP 4: Copy sub_tasks into task_items =====
+                if (relatedSubTasks && relatedSubTasks.length > 0) {
+                    const taskItemPayloads = relatedSubTasks.map(st => ({
+                        task_id: insertedTaskId,
+                        sub_task: st.sub_task,
+                        is_completed: false,
+                        status: 'pending'
+                    }));
+
+                    const { data: taskItemsData, error: taskItemsErr } = await window.supabase
+                        .from('task_items')
+                        .insert(taskItemPayloads)
+                        .select();
+
+                    if (taskItemsErr) throw taskItemsErr;
+
+                    console.log("Task items inserted:", taskItemsData);
+                } else {
+                    console.log("No sub tasks to copy into task_items.");
+                }
+
+                // ===== STEP 5: Also push to local cache for immediate UI =====
+                const matchedGroup = window.subTaskGroups ? window.subTaskGroups.find(g => g.title === selectedMainTaskTitle) : null;
+                window.tasks.push({
+                    id: insertedTaskId,
+                    category: department,
+                    date: dueDate,
+                    time: dueTime,
+                    subCategory1: subCategory1,
+                    subCategory2: subCategory2,
+                    title: taskTitle,
+                    description: taskDescription,
+                    priority: priority,
+                    subTaskTitle: selectedMainTaskTitle,
+                    subTasks: matchedGroup ? matchedGroup.subTasks.map(st => ({
+                        title: typeof st === 'string' ? st : (st.title || 'Untitled'),
+                        status: 'not_started'
+                    })) : [],
+                    assignedBy: assignedBy,
+                    assignedTo: assignedTo,
+                    status: "Pending",
+                    createdAt: new Date().toISOString()
+                });
+
+                if (typeof showToast === 'function') {
+                    showToast('Task created successfully');
+                }
+
+                // ===== STEP 6: Reset UI =====
+                newTaskForm.reset();
+                const stDisplay = document.getElementById('selected-sub-tasks-display');
+                if (stDisplay) stDisplay.classList.add('hidden');
+                newTaskFormContainer.classList.add('hidden');
+                taskContentArea.classList.remove('hidden');
+                if (typeof window.renderAllTasks === 'function') window.renderAllTasks();
+
+            } catch (err) {
+                console.error("Failed to create task:", err);
+                if (typeof showToast === 'function') {
+                    showToast('❌ Failed to create task: ' + (err.message || 'Unknown error'));
+                } else {
+                    alert("Failed to create task: " + (err.message || 'Unknown error'));
+                }
+            } finally {
+                if (createBtn) {
+                    createBtn.disabled = false;
+                    createBtn.textContent = 'Create Task';
+                }
+            }
         });
     }
 
