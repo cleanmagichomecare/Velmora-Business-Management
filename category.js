@@ -150,91 +150,148 @@ console.log('category.js Loading...');
 
         // Legacy loaders removed as per strict dependency rules.
         // --- List Rendering ---
-        function renderCategoryTable() {
+        async function renderCategoryTable() {
             const container = document.getElementById('categoryListContent');
             if (!container) return;
 
-            let html = `
-                <table class="vendor-table">
-                    <thead>
-                        <tr>
-                            <th>Main Category</th>
-                            <th>Sub Category 1</th>
-                            <th>Sub Category 2</th>
-                            <th>Sub Category 3</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+            container.innerHTML = '<div style="text-align:center; padding: 40px; color: #888;">Loading categories...</div>';
 
-            const activeCats = window.categories.filter(c => c.status !== 'archived');
+            try {
+                const { data, error } = await window.supabase
+                    .from('vendor_categories')
+                    .select('category, sub_category, sub_sub_category')
+                    .eq('status', 'active');
 
-            if (activeCats.length === 0) {
-                html += '<tr><td colspan="5" style="text-align:center; padding: 40px; color: #888;">No categories found.</td></tr>';
-            } else {
-                activeCats.forEach(row => {
-                    html += `
-                        <tr>
-                            <td>${row.main || '-'}</td>
-                            <td>${row.sub1 || '-'}</td>
-                            <td>${row.sub2 || '-'}</td>
-                            <td>${row.sub3 || '-'}</td>
-                            <td>
-                                <div class="category-actions">
-                                    <button class="btn-edit" onclick="event.stopPropagation(); window.editCategoryRow('${row.id}')">Edit</button>
-                                    <button class="btn-archive" onclick="event.stopPropagation(); window.archiveCategoryRow('${row.id}')">Archive</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding: 40px; color: #888;">No categories found.</div>';
+                    return;
+                }
+
+                const hierarchy = {};
+
+                data.forEach(row => {
+                    const main = row.category ? row.category.trim() : null;
+                    const sub1 = row.sub_category ? row.sub_category.trim() : null;
+                    const sub2 = row.sub_sub_category ? row.sub_sub_category.trim() : null;
+
+                    if (!main) return;
+
+                    if (!hierarchy[main]) {
+                        hierarchy[main] = {};
+                    }
+
+                    if (sub1) {
+                        if (!hierarchy[main][sub1]) {
+                            hierarchy[main][sub1] = new Set();
+                        }
+                        if (sub2) {
+                            hierarchy[main][sub1].add(sub2);
+                        }
+                    }
                 });
-            }
 
-            html += '</tbody></table>';
-            container.innerHTML = html;
+                let html = `
+                    <table class="vendor-table">
+                        <thead>
+                            <tr>
+                                <th>Main Category</th>
+                                <th>Sub Category 1</th>
+                                <th>Sub Category 2</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                Object.keys(hierarchy).sort().forEach(mainCat => {
+                    const sub1Keys = Object.keys(hierarchy[mainCat]).sort();
+                    
+                    if (sub1Keys.length === 0) {
+                        html += `
+                            <tr>
+                                <td style="font-weight: bold; color: #fff;">${mainCat}</td>
+                                <td style="color: #888;">-</td>
+                                <td style="color: #888;">-</td>
+                                <td>
+                                    <div class="category-actions">
+                                        <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', null, null)">Archive</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    } else {
+                        sub1Keys.forEach(sub1Cat => {
+                            const sub2Set = hierarchy[mainCat][sub1Cat];
+                            const sub2Arr = Array.from(sub2Set).sort();
+
+                            if (sub2Arr.length === 0) {
+                                html += `
+                                    <tr>
+                                        <td style="font-weight: bold; color: #fff;">${mainCat}</td>
+                                        <td style="color: #ddd;">↳ ${sub1Cat}</td>
+                                        <td style="color: #888;">-</td>
+                                        <td>
+                                            <div class="category-actions">
+                                                <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', null)">Archive</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            } else {
+                                sub2Arr.forEach(sub2Cat => {
+                                    html += `
+                                        <tr>
+                                            <td style="font-weight: bold; color: #fff;">${mainCat}</td>
+                                            <td style="color: #ddd;">↳ ${sub1Cat}</td>
+                                            <td style="color: #aaa;">&nbsp;&nbsp;↳ ${sub2Cat}</td>
+                                            <td>
+                                                <div class="category-actions">
+                                                    <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}')">Archive</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                });
+                            }
+                        });
+                    }
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+
+            } catch (e) {
+                console.error("Error rendering category table:", e);
+                container.innerHTML = '<div style="text-align:center; padding: 40px; color: #ff6b6b;">Error loading categories.</div>';
+            }
         }
 
-        window.archiveCategoryRow = function(id) {
-            if (!confirm("Are you sure you want to archive this category row? This cannot be undone.")) return;
-
-            const targetIdx = window.categories.findIndex(c => c.id === id);
-            if (targetIdx !== -1) {
-                window.categories[targetIdx].status = 'archived';
-                saveCategoryData();
-                syncCategoryGlobals();
-                renderCategoryTable();
-                notify('🗑️ Category Archived & Removed', '🗑️');
-            }
-        };
-
-        window.editCategoryRow = function(id) {
-            const target = window.categories.find(c => c.id === id);
-            if (!target) return;
+        window.archiveVendorCategory = async function(main, sub1, sub2) {
+            if (!confirm("Are you sure you want to archive this category? This cannot be undone.")) return;
             
-            // Logic to open correct form based on deepest level
-            if (target.sub3 && target.sub3 !== '-') {
-                if(btnSub3Show) btnSub3Show.click();
-                if(subCategory2Select) subCategory2Select.value = target.sub2;
-                const inputs = document.querySelectorAll('#sub3Inputs input');
-                if (inputs[0]) inputs[0].value = target.sub3;
-            } else if (target.sub2 && target.sub2 !== '-') {
-                if(btnSub2Show) btnSub2Show.click();
-                if(subCategory1Select) subCategory1Select.value = target.sub1;
-                const inputs = document.querySelectorAll('#sub2Inputs input');
-                if (inputs[0]) inputs[0].value = target.sub2;
-            } else if (target.sub1 && target.sub1 !== '-') {
-                if(btnSub1Show) btnSub1Show.click();
-                if(mainCategorySelect) mainCategorySelect.value = target.main;
-                const inputs = document.querySelectorAll('#sub1Inputs input');
-                if (inputs[0]) inputs[0].value = target.sub1;
-            } else {
-                if(btnMainShow) btnMainShow.click();
-                const inputs = document.querySelectorAll('#categoryInputs input');
-                if (inputs[0]) inputs[0].value = target.main;
+            try {
+                let query = window.supabase
+                    .from('vendor_categories')
+                    .update({ status: 'archived' })
+                    .eq('category', main);
+                
+                if (sub1) query = query.eq('sub_category', sub1);
+                else query = query.is('sub_category', null);
+                
+                if (sub2) query = query.eq('sub_sub_category', sub2);
+                else query = query.is('sub_sub_category', null);
+                
+                const { error } = await query;
+                if (error) throw error;
+                
+                notify('🗑️ Category Archived', '🗑️');
+                renderCategoryTable();
+            } catch (e) {
+                console.error('Error archiving category:', e);
+                alert("Failed to archive category");
             }
-            // For true edits it would need to save under the same ID instead of duplicating
-            notify('ℹ️ Edit mode active (Currently saves as duplicate)', 'ℹ️');
         };
 
         // --- View Switching ---
