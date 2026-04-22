@@ -176,51 +176,67 @@
             };
 
             let html = `
-                <table class="vendor-table">
-                    <thead>
-                        <tr>
-                            <th>Main Category</th>
-                            <th>Sub Category 1</th>
-                            <th>Sub Category 2</th>
-                            <th>Amount</th>
-                            <th>Due Date</th>
-                            <th>Billing Cycle</th>
-                            <th>Payment Type</th>
-                            <th>Mode of Pay</th>
-                            <th>Email</th>
-                            <th>Notes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="finance-bills-table-wrapper" style="overflow-x: auto; padding-bottom: 10px;">
+                    <table class="vendor-table finance-bills-table" style="table-layout: fixed; width: 100%; min-width: 900px;">
+                        <colgroup>
+                            <col style="width: 12%;">
+                            <col style="width: 10%;">
+                            <col style="width: 10%;">
+                            <col style="width: 9%;">
+                            <col style="width: 9%;">
+                            <col style="width: 8%;">
+                            <col style="width: 9%;">
+                            <col style="width: 9%;">
+                            <col style="width: 10%;">
+                            <col style="width: 8%;">
+                            <col style="width: 80px;">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Main Category</th>
+                                <th>Sub Category 1</th>
+                                <th>Sub Category 2</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                                <th>Cycle</th>
+                                <th>Payment</th>
+                                <th>Mode</th>
+                                <th>Email</th>
+                                <th>Notes</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
 
             activeBills.forEach(bill => {
+                const pType = bill.payment_type || '-';
+                let badgeClass = 'vendor-status-badge';
+                if (pType.toLowerCase() === 'manual') badgeClass += ' manual-badge';
+                else if (pType.toLowerCase() === 'autopay') badgeClass += ' autopay-badge';
+
                 html += `
                     <tr>
-                        <td><strong>${bill.main_category || '-'}</strong></td>
-                        <td>${bill.sub_category1 || '-'}</td>
-                        <td>${bill.sub_category2 || '-'}</td>
-                        <td>₹${bill.amount != null ? bill.amount : '-'}</td>
-                        <td>${formatDate(bill.due_date)}</td>
-                        <td>${bill.billing_cycle || '-'}</td>
-                        <td><span class="vendor-status-badge active">${bill.payment_type || '-'}</span></td>
-                        <td>${bill.mode_of_pay || '-'}</td>
-                        <td>${bill.email || '-'}</td>
-                        <td>${bill.notes || '-'}</td>
-                        <td>
-                            <div class="vendor-actions">
-                                <button class="btn-bill-archive" data-id="${bill.id}">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                                    Archive
-                                </button>
-                            </div>
+                        <td title="${bill.main_category || '-'}"><strong>${bill.main_category || '-'}</strong></td>
+                        <td title="${bill.sub_category1 || '-'}">${bill.sub_category1 || '-'}</td>
+                        <td title="${bill.sub_category2 || '-'}">${bill.sub_category2 || '-'}</td>
+                        <td title="₹${bill.amount != null ? bill.amount : '-'}">₹${bill.amount != null ? bill.amount : '-'}</td>
+                        <td title="${formatDate(bill.due_date)}">${formatDate(bill.due_date)}</td>
+                        <td title="${bill.billing_cycle || '-'}">${bill.billing_cycle || '-'}</td>
+                        <td><span class="${badgeClass}">${pType}</span></td>
+                        <td title="${bill.mode_of_pay || '-'}">${bill.mode_of_pay || '-'}</td>
+                        <td title="${bill.email || '-'}">${bill.email || '-'}</td>
+                        <td title="${bill.notes || '-'}">${bill.notes || '-'}</td>
+                        <td class="actions-cell" style="text-align: center;">
+                            <button class="btn-bill-archive" data-id="${bill.id}" title="Archive">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                            </button>
                         </td>
                     </tr>
                 `;
             });
 
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
             console.log("Bills rendered successfully");
 
