@@ -1111,7 +1111,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         activeVendors.forEach(vendor => {
             // Safe Data Handling
-            const usedInFormatted = (vendor.used_in && vendor.used_in.length > 0) ? vendor.used_in.join(", ") : "-";
+            console.log("used_in value:", vendor.used_in, typeof vendor.used_in);
+            
+            let usedInFormatted = "-";
+            if (Array.isArray(vendor.used_in)) {
+                usedInFormatted = vendor.used_in.length > 0 ? vendor.used_in.join(", ") : "-";
+            } else if (typeof vendor.used_in === 'string') {
+                usedInFormatted = vendor.used_in;
+            } else if (vendor.used_in != null) {
+                usedInFormatted = String(vendor.used_in);
+            }
+
             const gstFormatted = vendor.gst_applicable ? "Yes" : "No";
 
             const row = document.createElement('tr');
