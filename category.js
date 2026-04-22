@@ -251,7 +251,12 @@ console.log('category.js Loading...');
             if (sub1Form) sub1Form.classList.remove('hidden');
         });
 
-        // The btnSub2Show logic has been externalized via event delegation for absolute reliability.
+        if (btnSub2Show) btnSub2Show.addEventListener('click', () => {
+            hideAllCategoryForms();
+            if (window.loadVendorMainCategories) window.loadVendorMainCategories('sub2MainCategorySelect');
+            resetFormInputs(sub2InputsContainer, 'Enter Sub Category 2 Name');
+            if (sub2Form) sub2Form.classList.remove('hidden');
+        });
 
         if (btnSub3Show) btnSub3Show.addEventListener('click', () => {
             hideAllCategoryForms();
@@ -358,11 +363,9 @@ console.log('category.js Loading...');
         });
 
         if (saveSub2Btn) saveSub2Btn.addEventListener('click', async () => {
+            const parentMain = document.getElementById('sub2MainCategorySelect') ? document.getElementById('sub2MainCategorySelect').value : '';
             const parentSub1 = subCategory1Select ? subCategory1Select.value : '';
-            if (!parentSub1) { alert("Category required"); return; }
-            
-            const ref = window.categories.find(c => c.sub1 === parentSub1 && c.status !== 'archived');
-            const parentMain = ref ? ref.main : null;
+            if (!parentMain || !parentSub1) { alert("Main Category and Sub Category 1 required"); return; }
 
             const inputs = document.querySelectorAll('#sub2Inputs input');
             for (let i of inputs) {
@@ -664,13 +667,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.loadVendorMainCategories) {
         window.loadVendorMainCategories('mainCategorySelect');
     }
+
+    function clearSubCategory2() {
+        const subCat2Dropdown = document.getElementById('subCategory2Select');
+        if (subCat2Dropdown) {
+            subCat2Dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
+        }
+        const sub2Inputs = document.getElementById('sub2Inputs');
+        if (sub2Inputs) {
+            sub2Inputs.innerHTML = '';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Enter Sub Category 2 Name';
+            input.classList.add('category-input-field');
+            sub2Inputs.appendChild(input);
+        }
+    }
     
     const mainCatDropdown = document.getElementById('mainCategorySelect');
     if (mainCatDropdown) {
         mainCatDropdown.addEventListener('change', () => {
             console.log("Main Category changed to:", mainCatDropdown.value);
+            clearSubCategory2();
             if (window.loadVendorSubCategories) {
                 window.loadVendorSubCategories(mainCatDropdown.value, 'subCategory1Select');
+            }
+        });
+    }
+
+    const sub2MainCatDropdown = document.getElementById('sub2MainCategorySelect');
+    if (sub2MainCatDropdown) {
+        sub2MainCatDropdown.addEventListener('change', () => {
+            console.log("Sub 2 Form - Main Category changed to:", sub2MainCatDropdown.value);
+            clearSubCategory2();
+            if (window.loadVendorSubCategories) {
+                window.loadVendorSubCategories(sub2MainCatDropdown.value, 'subCategory1Select');
             }
         });
     }
@@ -678,10 +709,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const subCat1Dropdown = document.getElementById('subCategory1Select');
     if (subCat1Dropdown) {
         subCat1Dropdown.addEventListener('change', () => {
-            const mainCat = mainCatDropdown ? mainCatDropdown.value : null;
+            clearSubCategory2();
+            
+            let mainCatValue = null;
+            const sub2Form = document.getElementById('subCategory2Form');
+            if (sub2Form && !sub2Form.classList.contains('hidden')) {
+                mainCatValue = sub2MainCatDropdown ? sub2MainCatDropdown.value : null;
+            } else {
+                mainCatValue = mainCatDropdown ? mainCatDropdown.value : null;
+            }
+            
             console.log("Sub Category 1 changed to:", subCat1Dropdown.value);
             if (window.loadVendorSubSubCategories) {
-                window.loadVendorSubSubCategories(mainCat, subCat1Dropdown.value, 'subCategory2Select');
+                window.loadVendorSubSubCategories(mainCatValue, subCat1Dropdown.value, 'subCategory2Select');
             }
         });
     }
