@@ -7,27 +7,8 @@
     // Isolated Data Structure for Finance Bills
     window.financeBills = [];
 
-    // Storage interactions
-    function loadFinanceBillData() {
-        try {
-            const data = localStorage.getItem('financeBillData');
-            if (data) {
-                window.financeBills = JSON.parse(data);
-            }
-        } catch (e) {
-            console.error("Failed to load financeBillData:", e);
-            window.financeBills = [];
-        }
-    }
-
-    function saveFinanceBillData() {
-        localStorage.setItem('financeBillData', JSON.stringify(window.financeBills));
-    }
-
     function initFinanceBillsLogic() {
         console.log('finance-bills.js: initFinanceBillsLogic called');
-        
-        loadFinanceBillData();
 
         // UI Elements
         const btnShowAddForm = document.getElementById('btn-show-add-bill-form');
@@ -102,44 +83,173 @@
             };
         }
 
-        function renderBillsTable() {
+        let isFetchingBills = false;
+        let billsSearchTimeout = null;
+
+        window.fetchBillsData = async function() {
             const container = document.getElementById('bill-list-content');
             if (!container) return;
+
+            try {
+                isFetchingBills = true;
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Loading bills...</div>';
+
+                const { data, error } = await window.supabase
+                    .from('finance_bills')
+                    .select('*')
+                    .eq('status', 'active')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                window.financeBills = data || [];
+                console.log("Fetched bills:", window.financeBills);
+                
+                window.renderBillsTable();
+            } catch (error) {
+                console.error("Failed to load bills:", error);
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #ff6b6b;">Failed to load bills.</div>';
+            } finally {
+                isFetchingBills = false;
+            }
+        };
+
+        window.renderBillsTable = function() {
+            const container = document.getElementById('bill-list-content');
+            if (!container) return;
+
+            const searchInput = document.getElementById('bill-search');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            // Filter in memory
+            const activeBills = window.financeBills.filter(bill => {
+                if (searchTerm) {
+                    const haystack = `${bill.main_category} ${bill.sub_category1} ${bill.sub_category2} ${bill.payment_type}`.toLowerCase();
+                    if (!haystack.includes(searchTerm)) return false;
+                }
+                return true;
+            });
+
+            // Empty States
+            if (window.financeBills.length === 0) {
+                container.innerHTML = `
+                    <div class="vendor-empty-state" style="display:block;">
+                        <div class="vendor-empty-icon">💸</div>
+                        <h3>No bills yet</h3>
+                        <p>Click "+ Add Bill" to create your first bill.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (activeBills.length === 0) {
+                container.innerHTML = `
+                    <div class="vendor-empty-state" style="display:block;">
+                        <div class="vendor-empty-icon">🔍</div>
+                        <h3>No matching bills</h3>
+                        <p>Try adjusting your search.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '-';
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            };
 
             let html = `
                 <table class="vendor-table">
                     <thead>
                         <tr>
-                            <th>Category</th>
+                            <th>Main Category</th>
+                            <th>Sub Category 1</th>
+                            <th>Sub Category 2</th>
                             <th>Amount</th>
                             <th>Due Date</th>
+                            <th>Billing Cycle</th>
+                            <th>Payment Type</th>
+                            <th>Mode of Pay</th>
                             <th>Email</th>
-                            <th>Mode / Account</th>
-                            <th>Status</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
 
-            if (window.financeBills.length === 0) {
-                html += '<tr><td colspan="6" style="text-align:center; padding: 40px; color: #888;">No bills saved yet.</td></tr>';
-            } else {
-                window.financeBills.forEach(bill => {
-                    html += `
-                        <tr>
-                            <td>${bill.mainCategory} / ${bill.subCategory1 || '-'}</td>
-                            <td>₹${bill.amount}</td>
-                            <td>${bill.dueDate}</td>
-                            <td>${bill.email || '-'}</td>
-                            <td>${bill.modeOfPay} / ${bill.account || '-'}</td>
-                            <td>${bill.paymentType}</td>
-                        </tr>
-                    `;
-                });
-            }
+            activeBills.forEach(bill => {
+                html += `
+                    <tr>
+                        <td><strong>${bill.main_category || '-'}</strong></td>
+                        <td>${bill.sub_category1 || '-'}</td>
+                        <td>${bill.sub_category2 || '-'}</td>
+                        <td>₹${bill.amount != null ? bill.amount : '-'}</td>
+                        <td>${formatDate(bill.due_date)}</td>
+                        <td>${bill.billing_cycle || '-'}</td>
+                        <td><span class="vendor-status-badge active">${bill.payment_type || '-'}</span></td>
+                        <td>${bill.mode_of_pay || '-'}</td>
+                        <td>${bill.email || '-'}</td>
+                        <td>${bill.notes || '-'}</td>
+                        <td>
+                            <div class="vendor-actions">
+                                <button class="btn-bill-archive" data-id="${bill.id}">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                                    Archive
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
 
             html += '</tbody></table>';
             container.innerHTML = html;
+            console.log("Bills rendered successfully");
+
+            document.querySelectorAll('.btn-bill-archive').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    await window.archiveBill(id);
+                });
+            });
+        };
+
+        window.archiveBill = async function(id) {
+            if (!confirm("Archive this bill?")) return;
+            try {
+                const { error } = await window.supabase
+                    .from('finance_bills')
+                    .update({ status: 'archived' })
+                    .eq('id', id);
+
+                if (error) throw error;
+                if (window.showToast) window.showToast('Bill archived', '✅');
+                await window.fetchBillsData();
+            } catch (err) {
+                console.error("Error archiving bill:", err);
+                alert("Failed to archive bill");
+            }
+        };
+
+        // --- Bindings ---
+        const billSearchInput = document.getElementById('bill-search');
+        if (billSearchInput) {
+            billSearchInput.addEventListener('input', () => {
+                if (billsSearchTimeout) clearTimeout(billsSearchTimeout);
+                billsSearchTimeout = setTimeout(() => {
+                    window.renderBillsTable();
+                }, 300);
+            });
+        }
+
+        const btnRefreshBills = document.getElementById('btn-refresh-bills');
+        if (btnRefreshBills) {
+            btnRefreshBills.addEventListener('click', () => {
+                window.fetchBillsData();
+            });
         }
 
         if (btnShowAddForm) {
@@ -158,7 +268,8 @@
                 hideAllBillViews();
                 if (billListContainer) {
                     billListContainer.classList.remove('hidden');
-                    renderBillsTable();
+                    if (billSearchInput) billSearchInput.value = ''; // Clear search on open
+                    window.fetchBillsData();
                 }
             });
         }

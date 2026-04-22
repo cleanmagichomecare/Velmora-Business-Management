@@ -845,7 +845,13 @@
 
                             <!-- Bill List -->
                             <div id="bill-list-container" class="vendor-form-container hidden">
-                                <div class="form-header">Saved Bills</div>
+                                <div class="form-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Saved Bills</span>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="text" id="bill-search" placeholder="Search bills..." class="input-field" style="width: 200px; padding: 6px 12px; font-size: 14px;">
+                                        <button type="button" id="btn-refresh-bills" class="btn-secondary" style="font-size: 14px; padding: 6px 12px;">Refresh</button>
+                                    </div>
+                                </div>
                                 <div id="bill-list-content" style="margin-top: 20px;">
                                     <!-- Table rendered here -->
                                 </div>
