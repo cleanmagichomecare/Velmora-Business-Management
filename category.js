@@ -281,7 +281,7 @@ console.log('category.js Loading...');
 
         if (btnSub1Show) btnSub1Show.addEventListener('click', () => {
             hideAllCategoryForms();
-            if (window.loadVendorMainCategories) window.loadVendorMainCategories('mainCategoryDropdown');
+            if (window.loadVendorMainCategories) window.loadVendorMainCategories('mainCategorySelect');
             resetFormInputs(sub1InputsContainer, 'Enter Sub Category 1 Name');
             if (sub1Form) sub1Form.classList.remove('hidden');
         });
@@ -377,7 +377,7 @@ console.log('category.js Loading...');
         });
 
         if (saveSub1Btn) saveSub1Btn.addEventListener('click', async () => {
-            const dropdown = document.getElementById('mainCategoryDropdown');
+            const dropdown = document.getElementById('mainCategorySelect');
             const parent = dropdown ? dropdown.value : '';
             if (!parent) { alert("Category required"); return; }
             
@@ -499,6 +499,7 @@ window.insertCategory = async function(category) {
         alert("Insert failed");
     } else {
         alert("Category saved");
+        if (window.loadVendorMainCategories) window.loadVendorMainCategories('mainCategorySelect');
     }
 };
 
@@ -561,7 +562,10 @@ window.insertSubSubCategory = async function(category, subCategory, subSubCatego
 
 window.loadVendorMainCategories = async function(dropdownId) {
     const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
+    if (!dropdown) {
+        console.error("DOM Binding Error: Dropdown not found with ID:", dropdownId);
+        return;
+    }
 
     // Reset dropdown
     dropdown.innerHTML = '<option value="">Select Main Category</option>';
@@ -570,8 +574,10 @@ window.loadVendorMainCategories = async function(dropdownId) {
         .from('vendor_categories')
         .select('category');
 
+    console.log("Supabase fetched data for main categories:", data, error);
+
     if (error) {
-        console.error(error);
+        console.error("Query issue:", error);
         return;
     }
 
@@ -582,6 +588,8 @@ window.loadVendorMainCategories = async function(dropdownId) {
             .filter(Boolean)
             .map(v => v.trim())
     )];
+
+    console.log("Unique main categories to append:", unique);
 
     unique.forEach(value => {
         const option = document.createElement('option');
@@ -672,6 +680,6 @@ window.loadVendorSubSubCategories = async function(category, subCategory, dropdo
 
 document.addEventListener('DOMContentLoaded', () => {
     if (window.loadVendorMainCategories) {
-        window.loadVendorMainCategories('mainCategoryDropdown');
+        window.loadVendorMainCategories('mainCategorySelect');
     }
 });
