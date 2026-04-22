@@ -170,42 +170,110 @@
             });
         }
 
-        if (btnSaveBill) {
-            btnSaveBill.addEventListener('click', () => {
-                const mainCat = billMainCat.value;
-                const amount = document.getElementById('bill-amount').value;
-                const dueDate = document.getElementById('bill-due-date').value;
+        // CREATE async saveBill() FUNCTION
+        async function saveBill() {
+            const mainCatRaw = billMainCat ? billMainCat.value : '';
+            const amountRaw = document.getElementById('bill-amount').value;
+            const dueDateRaw = document.getElementById('bill-due-date').value;
 
-                if (!mainCat || !amount || !dueDate) {
-                    if (window.showToast) window.showToast('Please fill all required fields.', '⚠');
-                    else alert('Please fill all required fields.');
-                    return;
+            const mainCat = mainCatRaw.trim();
+            const amount = parseFloat(amountRaw);
+            const dueDate = dueDateRaw.trim();
+
+            if (!mainCat || isNaN(amount) || !dueDate) {
+                if (window.showToast) window.showToast('Please fill all required fields.', '⚠');
+                else alert('Please fill all required fields.');
+                return;
+            }
+
+            // Optional fields (trim and handle empty as null)
+            const getVal = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return null;
+                const val = el.value.trim();
+                return val === '' ? null : val;
+            };
+
+            const sub1 = getVal('bill-sub-category1');
+            const sub2 = getVal('bill-sub-category2');
+            const billingCycle = getVal('bill-cycle');
+            const payMode = getVal('bill-pay-mode');
+            const account = getVal('bill-account');
+            const email = getVal('bill-email');
+            const notes = getVal('bill-notes');
+
+            // Payment type radio
+            const pTypeEl = document.querySelector('input[name="bill-payment-type"]:checked');
+            const paymentType = pTypeEl ? pTypeEl.value.trim() : null;
+
+            const payload = {
+                main_category: mainCat,
+                sub_category1: sub1,
+                sub_category2: sub2,
+                amount: amount,
+                due_date: dueDate,
+                billing_cycle: billingCycle,
+                payment_type: paymentType,
+                mode_of_pay: payMode,
+                which_account: account,
+                email: email,
+                notes: notes
+            };
+
+            console.log("Saving bill:", payload);
+
+            try {
+                // Disable button
+                const saveBtn = document.getElementById('btn-save-bill');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving...';
                 }
 
-                const newBill = {
-                    id: Date.now(),
-                    mainCategory: mainCat,
-                    subCategory1: billSub1.value,
-                    subCategory2: billSub2.value,
-                    amount: amount,
-                    dueDate: dueDate,
-                    billingCycle: document.getElementById('bill-cycle').value,
-                    paymentType: document.querySelector('input[name="bill-payment-type"]:checked').value,
-                    modeOfPay: document.getElementById('bill-pay-mode').value,
-                    account: document.getElementById('bill-account').value,
-                    email: document.getElementById('bill-email').value,
-                    notes: document.getElementById('bill-notes').value,
-                    createdAt: new Date().toISOString()
-                };
+                const { data, error } = await window.supabase
+                    .from('finance_bills')
+                    .insert([payload]);
 
-                window.financeBills.push(newBill);
-                saveFinanceBillData();
-                
+                if (error) throw error;
+
+                console.log("Bill saved successfully");
                 if (window.showToast) window.showToast('Bill saved successfully!', '✅');
+
+                // Reset entire form cleanly
+                if (addBillForm) addBillForm.reset();
                 
+                // Clear dropdowns explicitly
+                if (billSub1) {
+                    billSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
+                    billSub1.disabled = true;
+                }
+                if (billSub2) {
+                    billSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+                    billSub2.disabled = true;
+                }
+
+                // Hide form, show default
                 hideAllBillViews();
                 if (billDefaultState) billDefaultState.classList.remove('hidden');
-            });
+
+            } catch (err) {
+                console.error("Supabase insert error:", err);
+                if (window.showToast) window.showToast("Failed to save bill", '❌');
+                else alert("Failed to save bill");
+            } finally {
+                const saveBtn = document.getElementById('btn-save-bill');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Bill';
+                }
+            }
+        }
+
+        if (btnSaveBill) {
+            // Prevent duplicate listeners by replacing node
+            const newBtn = btnSaveBill.cloneNode(true);
+            btnSaveBill.parentNode.replaceChild(newBtn, btnSaveBill);
+            newBtn.addEventListener('click', saveBill);
         }
     }
 
