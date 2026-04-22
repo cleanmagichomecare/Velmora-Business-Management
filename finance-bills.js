@@ -215,7 +215,7 @@
                 billing_cycle: billingCycle,
                 payment_type: paymentType,
                 mode_of_pay: payMode,
-                which_account: account,
+                account: account,
                 email: email,
                 notes: notes
             };
