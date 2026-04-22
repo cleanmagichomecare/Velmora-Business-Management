@@ -366,33 +366,43 @@ console.log('category.js Loading...');
             return true;
         }
 
-        if (saveMainBtn) saveMainBtn.addEventListener('click', () => {
-            if (collectAndSaveNew('categoryInputs', 'main', [], "✅ Main Categories saved!")) {
-                hideAllCategoryForms();
-                if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
+        if (saveMainBtn) saveMainBtn.addEventListener('click', async () => {
+            const inputs = document.querySelectorAll('#categoryInputs input');
+            for (let i of inputs) {
+                const v = i.value.trim();
+                if (v) await window.insertCategory(v);
             }
+            hideAllCategoryForms();
+            if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
         });
 
-        if (saveSub1Btn) saveSub1Btn.addEventListener('click', () => {
+        if (saveSub1Btn) saveSub1Btn.addEventListener('click', async () => {
             const parent = mainCategorySelect ? mainCategorySelect.value : '';
-            if (!parent) { notify("⚠ Select Main Category!", '⚠'); return; }
-            if (collectAndSaveNew('sub1Inputs', 'sub1', [parent], "✅ Sub Category 1 saved!")) {
-                hideAllCategoryForms();
-                if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
+            if (!parent) { alert("Category required"); return; }
+            
+            const inputs = document.querySelectorAll('#sub1Inputs input');
+            for (let i of inputs) {
+                const v = i.value.trim();
+                if (v) await window.insertSubCategory(parent, v);
             }
+            hideAllCategoryForms();
+            if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
         });
 
-        if (saveSub2Btn) saveSub2Btn.addEventListener('click', () => {
+        if (saveSub2Btn) saveSub2Btn.addEventListener('click', async () => {
             const parentSub1 = subCategory1Select ? subCategory1Select.value : '';
-            if (!parentSub1) { notify("⚠ Select Sub Category 1!", '⚠'); return; }
+            if (!parentSub1) { alert("Category required"); return; }
             
             const ref = window.categories.find(c => c.sub1 === parentSub1 && c.status !== 'archived');
             const parentMain = ref ? ref.main : null;
 
-            if (collectAndSaveNew('sub2Inputs', 'sub2', [parentMain, parentSub1], "✅ Sub Category 2 saved!")) {
-                hideAllCategoryForms();
-                if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
+            const inputs = document.querySelectorAll('#sub2Inputs input');
+            for (let i of inputs) {
+                const v = i.value.trim();
+                if (v) await window.insertSubSubCategory(parentMain, parentSub1, v);
             }
+            hideAllCategoryForms();
+            if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
         });
 
         if (saveSub3Btn) saveSub3Btn.addEventListener('click', () => {
@@ -459,3 +469,206 @@ document.addEventListener('click', (e) => {
         }
     }
 });
+
+// ==========================================
+// SUPABASE VENDOR CATEGORY MANAGEMENT SYSTEM
+// ==========================================
+
+window.insertCategory = async function(category) {
+    if (!category) {
+        alert("Category required");
+        return;
+    }
+
+    console.log("Inserting:", category);
+
+    const { data, error } = await window.supabase
+        .from('vendor_categories')
+        .insert([
+            {
+                category: category.trim(),
+                status: 'active'
+            }
+        ]);
+
+    console.log("Response:", data, error);
+
+    if (error) {
+        console.error(error);
+        alert("Insert failed");
+    } else {
+        alert("Category saved");
+    }
+};
+
+window.insertSubCategory = async function(category, subCategory) {
+    if (!category || !subCategory) {
+        alert("Category required");
+        return;
+    }
+
+    console.log("Inserting:", category, subCategory);
+
+    const { data, error } = await window.supabase
+        .from('vendor_categories')
+        .insert([
+            {
+                category: category.trim(),
+                sub_category: subCategory.trim(),
+                status: 'active'
+            }
+        ]);
+
+    console.log("Response:", data, error);
+
+    if (error) {
+        console.error(error);
+        alert("Insert failed");
+    } else {
+        alert("Sub Category saved");
+    }
+};
+
+window.insertSubSubCategory = async function(category, subCategory, subSubCategory) {
+    if (!category || !subCategory || !subSubCategory) {
+        alert("Category required");
+        return;
+    }
+
+    console.log("Inserting:", category, subCategory, subSubCategory);
+
+    const { data, error } = await window.supabase
+        .from('vendor_categories')
+        .insert([
+            {
+                category: category.trim(),
+                sub_category: subCategory.trim(),
+                sub_sub_category: subSubCategory.trim(),
+                status: 'active'
+            }
+        ]);
+
+    console.log("Response:", data, error);
+
+    if (error) {
+        console.error(error);
+        alert("Insert failed");
+    } else {
+        alert("Sub Sub Category saved");
+    }
+};
+
+window.loadVendorCategories = async function(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.innerHTML = '<option value="">Select Category</option>';
+    }
+
+    try {
+        const { data, error } = await window.supabase
+            .from('vendor_categories')
+            .select('category');
+            
+        if (error) throw error;
+
+        const uniqueCategories = new Set();
+        if (data) {
+            data.forEach(row => {
+                if (row.category) uniqueCategories.add(row.category);
+            });
+        }
+
+        if (dropdown) {
+            uniqueCategories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                dropdown.appendChild(opt);
+            });
+        }
+        
+        return Array.from(uniqueCategories);
+    } catch (e) {
+        console.error('Error loading vendor categories:', e);
+        return [];
+    }
+};
+
+window.loadVendorSubCategories = async function(category, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.innerHTML = '<option value="">Select Sub Category</option>';
+    }
+
+    if (!category) return [];
+
+    try {
+        const { data, error } = await window.supabase
+            .from('vendor_categories')
+            .select('sub_category')
+            .eq('category', category);
+            
+        if (error) throw error;
+
+        const uniqueSubCategories = new Set();
+        if (data) {
+            data.forEach(row => {
+                if (row.sub_category) uniqueSubCategories.add(row.sub_category);
+            });
+        }
+
+        if (dropdown) {
+            uniqueSubCategories.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                dropdown.appendChild(opt);
+            });
+        }
+        
+        return Array.from(uniqueSubCategories);
+    } catch (e) {
+        console.error('Error loading vendor sub categories:', e);
+        return [];
+    }
+};
+
+window.loadVendorSubSubCategories = async function(category, subCategory, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.innerHTML = '<option value="">Select Sub Sub Category</option>';
+    }
+
+    if (!category || !subCategory) return [];
+
+    try {
+        const { data, error } = await window.supabase
+            .from('vendor_categories')
+            .select('sub_sub_category')
+            .eq('category', category)
+            .eq('sub_category', subCategory);
+            
+        if (error) throw error;
+
+        const uniqueSubSubCategories = new Set();
+        if (data) {
+            data.forEach(row => {
+                if (row.sub_sub_category) uniqueSubSubCategories.add(row.sub_sub_category);
+            });
+        }
+
+        if (dropdown) {
+            uniqueSubSubCategories.forEach(subSub => {
+                const opt = document.createElement('option');
+                opt.value = subSub;
+                opt.textContent = subSub;
+                dropdown.appendChild(opt);
+            });
+        }
+        
+        return Array.from(uniqueSubSubCategories);
+    } catch (e) {
+        console.error('Error loading vendor sub sub categories:', e);
+        return [];
+    }
+};
