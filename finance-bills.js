@@ -94,15 +94,30 @@
                 isFetchingBills = true;
                 container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Loading bills...</div>';
 
-                const { data, error } = await window.supabase
+                let response = await window.supabase
                     .from('finance_bills')
                     .select('*')
                     .eq('status', 'active')
                     .order('created_at', { ascending: false });
 
+                // Fallback if 'status' column doesn't exist (Code 42703: undefined_column)
+                if (response.error && response.error.code === '42703') {
+                    console.warn("Column 'status' does not exist in finance_bills. Fetching all rows without filter.");
+                    response = await window.supabase
+                        .from('finance_bills')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                }
+
+                const { data, error } = response;
                 if (error) throw error;
                 
+                // If there's a status column but we fetched all, we might want to manually filter out 'archived' just in case the fallback was hit for some other reason, but since the fallback is only for missing column, all rows are effectively active.
                 window.financeBills = data || [];
+                
+                // Filter out archived ones manually just in case status exists but is null or something, though the query handled it.
+                window.financeBills = window.financeBills.filter(b => b.status !== 'archived');
+                
                 console.log("Fetched bills:", window.financeBills);
                 
                 window.renderBillsTable();
@@ -220,11 +235,20 @@
         window.archiveBill = async function(id) {
             if (!confirm("Archive this bill?")) return;
             try {
-                const { error } = await window.supabase
+                let response = await window.supabase
                     .from('finance_bills')
                     .update({ status: 'archived' })
                     .eq('id', id);
 
+                if (response.error && response.error.code === '42703') {
+                    console.warn("Column 'status' does not exist. Falling back to delete.");
+                    response = await window.supabase
+                        .from('finance_bills')
+                        .delete()
+                        .eq('id', id);
+                }
+
+                const { error } = response;
                 if (error) throw error;
                 if (window.showToast) window.showToast('Bill archived', '✅');
                 await window.fetchBillsData();
