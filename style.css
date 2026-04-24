@@ -5025,3 +5025,5 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 [data-theme="dark"] .multi-select-dropdown {
     background-color: var(--card-bg);
 }
+
+.btn-danger { background-color: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; } .btn-danger:hover { background-color: #ef4444; color: white; }

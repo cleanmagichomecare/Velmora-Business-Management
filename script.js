@@ -1539,6 +1539,89 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Pricing Info Next Button Logic
+    const btnNextPricingInfo = document.getElementById('btn-next-pricing-info');
+    if (btnNextPricingInfo) {
+        btnNextPricingInfo.addEventListener('click', () => {
+            const form = document.querySelector('#tab-pricing-info form');
+            if (!form) return;
+
+            const finalPriceInput = document.getElementById('pricing-final-price');
+            const totalVideosInput = document.getElementById('pricing-total-videos');
+
+            const finalPriceStr = finalPriceInput ? finalPriceInput.value.trim() : "";
+            const totalVideosStr = totalVideosInput ? totalVideosInput.value.trim() : "";
+
+            if (!finalPriceStr || !totalVideosStr) {
+                if (typeof showToast === 'function') {
+                    showToast('❌ Please fill Final Price and Total Videos.');
+                } else {
+                    alert('Please fill Final Price and Total Videos.');
+                }
+                return;
+            }
+
+            const finalPrice = parseFloat(finalPriceStr);
+            const totalVideos = parseInt(totalVideosStr);
+
+            const bargainHistoryContainer = document.getElementById('bargain-history-container');
+            const bargainHistory = [];
+            let bargainValidationFailed = false;
+
+            if (bargainHistoryContainer) {
+                const rows = bargainHistoryContainer.querySelectorAll('.bargain-row');
+                rows.forEach(row => {
+                    const creatorInput = row.querySelector('.creator-request-input');
+                    const brandInput = row.querySelector('.brand-request-input');
+
+                    const creatorStr = creatorInput ? creatorInput.value.trim() : "";
+                    const brandStr = brandInput ? brandInput.value.trim() : "";
+
+                    // If one is filled but the other is empty, validation fails
+                    if ((creatorStr && !brandStr) || (!creatorStr && brandStr)) {
+                        bargainValidationFailed = true;
+                    }
+
+                    const cReq = creatorStr ? parseFloat(creatorStr) : null;
+                    const bReq = brandStr ? parseFloat(brandStr) : null;
+
+                    bargainHistory.push({
+                        creatorRequest: Number.isNaN(cReq) ? null : cReq,
+                        brandRequest: Number.isNaN(bReq) ? null : bReq
+                    });
+                });
+            }
+
+            if (bargainValidationFailed) {
+                if (typeof showToast === 'function') {
+                    showToast('❌ Please fill both Creator Request and Brand Request if entering a Bargain Set.');
+                } else {
+                    alert('Please fill both Creator Request and Brand Request if entering a Bargain Set.');
+                }
+                return;
+            }
+
+            // Save state
+            if (!window.newInfluencerData) {
+                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+            }
+            
+            window.newInfluencerData.pricingInfo = {
+                finalPrice: Number.isNaN(finalPrice) ? null : finalPrice,
+                totalVideos: Number.isNaN(totalVideos) ? null : totalVideos,
+                bargainHistory: bargainHistory
+            };
+
+            console.log("window.newInfluencerData:", window.newInfluencerData);
+
+            // Move to Brand Performance Tab
+            const nextTabBtn = document.querySelector('.tab-btn[data-tab="tab-brand-performance"]');
+            if (nextTabBtn) {
+                nextTabBtn.click();
+            }
+        });
+    }
+
     // --- Tabs Navigation Logic (Add Influencer Form) ---
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -1711,8 +1794,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     <label>Brand Request</label>
                     <input type="number" class="brand-request-input" placeholder="Amount">
                 </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button type="button" class="btn-remove-bargain-set btn-danger" style="margin-top: auto; margin-bottom: 5px;">Remove Set</button>
+                </div>
             `;
             bargainContainer.appendChild(newRow);
+        }
+
+        // Handle Remove Bargain Set
+        if (e.target && e.target.classList.contains('btn-remove-bargain-set')) {
+            const rowToRemove = e.target.closest('.bargain-row');
+            if (rowToRemove) {
+                const container = rowToRemove.closest('.bargain-history-container');
+                if (container && container.querySelectorAll('.bargain-row').length > 1) {
+                    rowToRemove.remove();
+                } else {
+                    if (typeof showToast === 'function') {
+                        showToast('❌ At least one bargain history set must remain.');
+                    } else {
+                        alert('At least one bargain history set must remain.');
+                    }
+                }
+            }
         }
 
         // 3. Brand Performance - Dynamic Cards
