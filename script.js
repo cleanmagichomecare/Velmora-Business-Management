@@ -4023,7 +4023,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Are you sure you want to archive this task?')) return;
         try {
             const { error } = await window.supabase
-                .from('created_tasks')
+                .from('tasks')
                 .update({ status: 'archived' })
                 .eq('id', id);
             if (error) throw error;
@@ -4054,9 +4054,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const { data, error } = await window.supabase
-                .from('created_tasks')
-                .select('*')
-                .eq('status', 'active')
+                .from('tasks')
+                .select('*, task_items(*)')
+                .neq('status', 'archived')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -4101,16 +4101,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sColor = '#22c55e', sBg = 'rgba(34,197,94,0.12)';
 
                 // Format date
-                let fDate = s(task.date);
-                if (task.date) { try { fDate = new Date(task.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) {} }
+                let fDate = s(task.due_date);
+                if (task.due_date) { try { fDate = new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) {} }
 
                 // Format time
-                let fTime = s(task.time);
-                if (task.time) { try { const [h,m] = task.time.split(':'); const ap = parseInt(h) >= 12 ? 'PM' : 'AM'; fTime = `${parseInt(h) % 12 || 12}:${m} ${ap}`; } catch(e) {} }
+                let fTime = s(task.due_time);
+                if (task.due_time) { try { const [h,m] = task.due_time.split(':'); const ap = parseInt(h) >= 12 ? 'PM' : 'AM'; fTime = `${parseInt(h) % 12 || 12}:${m} ${ap}`; } catch(e) {} }
 
                 // Sub tasks
                 let subTasksHtml = '';
-                let subTasks = task.selected_sub_tasks;
+                let subTasks = task.task_items;
                 if (typeof subTasks === 'string') { try { subTasks = JSON.parse(subTasks); } catch(e) { subTasks = null; } }
                 if (Array.isArray(subTasks) && subTasks.length > 0) {
                     subTasksHtml = '<div style="margin-top:4px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Selected Sub Tasks</div><ul style="list-style:none;padding:0;margin:0;">';
