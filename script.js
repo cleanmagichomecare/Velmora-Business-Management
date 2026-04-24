@@ -4088,7 +4088,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filteredTasks.forEach(task => {
                 const s = v => (v != null && v !== '') ? v : '-';
                 const card = document.createElement('div');
-                card.style.cssText = 'background:var(--card-bg);border-radius:10px;border:1px solid var(--border-color);padding:20px;display:flex;flex-direction:column;gap:12px;transition:all 0.3s ease;position:relative;overflow:hidden;width:100%;';
+                card.style.cssText = 'background:var(--card-bg);border-radius:10px;border:1px solid var(--border-color);padding:20px;display:flex;flex-direction:column;gap:10px;transition:all 0.3s ease;position:relative;overflow:hidden;';
                 card.addEventListener('mouseenter', () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)'; });
                 card.addEventListener('mouseleave', () => { card.style.transform = 'translateY(0)'; card.style.boxShadow = 'none'; });
 
@@ -4097,73 +4097,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (task.priority === 'Medium') { pColor = '#f59e0b'; pBg = 'rgba(245,158,11,0.12)'; }
                 if (task.priority === 'High') { pColor = '#ef4444'; pBg = 'rgba(239,68,68,0.12)'; }
 
-                // Status colors
-                let sColor = '#f59e0b', sBg = 'rgba(245,158,11,0.12)'; // Pending (orange)
-                let statusText = task.status || 'Pending';
-                if (statusText.toLowerCase() === 'completed') {
-                    sColor = '#22c55e'; sBg = 'rgba(34,197,94,0.12)';
-                } else if (statusText.toLowerCase() === 'in progress') {
-                    sColor = '#3b82f6'; sBg = 'rgba(59,130,246,0.12)';
-                }
+                // Status colors (active = green)
+                const sColor = '#22c55e', sBg = 'rgba(34,197,94,0.12)';
 
                 // Format date
                 let fDate = s(task.due_date);
-                if (task.due_date) { try { fDate = new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) {} }
+                if (task.due_date) { try { fDate = new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) {} }
 
                 // Format time
                 let fTime = s(task.due_time);
                 if (task.due_time) { try { const [h,m] = task.due_time.split(':'); const ap = parseInt(h) >= 12 ? 'PM' : 'AM'; fTime = `${parseInt(h) % 12 || 12}:${m} ${ap}`; } catch(e) {} }
 
-                // Sub tasks (Tracking Status)
+                // Sub tasks
                 let subTasksHtml = '';
                 let subTasks = task.task_items;
                 if (typeof subTasks === 'string') { try { subTasks = JSON.parse(subTasks); } catch(e) { subTasks = null; } }
                 if (Array.isArray(subTasks) && subTasks.length > 0) {
-                    let pillsHtml = subTasks.map(st => {
+                    subTasksHtml = '<div style="margin-top:4px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Selected Sub Tasks</div><ul style="list-style:none;padding:0;margin:0;">';
+                    subTasks.forEach(st => {
                         const label = typeof st === 'string' ? st : (st.title || st.sub_task || '-');
-                        return `<span style="display:inline-block;font-size:12px;font-weight:500;color:var(--text-main);background:var(--input-bg);border:1px solid var(--border-color);padding:5px 12px;border-radius:20px;">${label}</span>`;
-                    }).join('');
-
-                    subTasksHtml = `
-                        <div style="margin-bottom:12px;">
-                            <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Tracking Status</div>
-                            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                                ${pillsHtml}
-                            </div>
-                        </div>
-                    `;
+                        subTasksHtml += `<li style="font-size:13px;color:var(--text-main);padding:3px 0;">• ${label}</li>`;
+                    });
+                    subTasksHtml += '</ul></div>';
                 }
 
-                // Category breadcrumb
-                let categoryParts = [task.department];
-                if (task.sub_category1) categoryParts.push(task.sub_category1);
-                if (task.sub_category2) categoryParts.push(task.sub_category2);
-                const categoryBreadcrumb = categoryParts.filter(p => p).join(' › ');
+                const row = (label, val) => `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;"><span style="color:var(--text-muted);font-weight:500;">${label}</span><span style="color:var(--text-main);font-weight:500;text-align:right;max-width:60%;word-break:break-word;">${s(val)}</span></div>`;
 
                 card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                        <div>
-                            <div style="font-size: 11px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${categoryBreadcrumb}</div>
-                            <h4 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--text-main);">${s(task.task_title)}</h4>
-                        </div>
-                        <div style="text-align: right; margin-left: 15px; flex-shrink: 0;">
-                            <div style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">📅 ${fDate}</div>
-                            <div style="font-size: 12px; font-weight: 500; color: var(--text-muted);">⏰ ${fTime}</div>
-                        </div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+                        <h4 style="margin:0;font-size:16px;font-weight:700;color:var(--text-main);flex:1;padding-right:10px;">${s(task.task_title)}</h4>
+                        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;color:${pColor};background:${pBg};">${s(task.priority)}</span>
                     </div>
-                    
-                    ${task.assigned_by && task.assigned_to ? `<div style="font-size: 13px; font-weight: 500; color: var(--text-main); margin-bottom: 10px; background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: inline-block; width: fit-content;">Assigned: <span style="color: var(--primary-color); font-weight:600;">${task.assigned_by}</span> → <span style="color: var(--primary-color); font-weight:600;">${task.assigned_to}</span></div>` : ''}
-                    
-                    ${task.task_description ? `<div style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">${task.task_description}</div>` : ''}
-                    
+                    <div style="border-bottom:1px solid var(--border-color);padding-bottom:10px;margin-bottom:4px;">
+                        ${row('Department', task.department)}
+                        ${row('Sub Category 1', task.sub_category1)}
+                        ${row('Sub Category 2', task.sub_category2)}
+                    </div>
+                    ${task.task_description ? `<div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:4px;">${task.task_description}</div>` : ''}
+                    ${row('Assigned By', task.assigned_by)}
+                    ${row('Assigned To', task.assigned_to)}
+                    <div style="display:flex;gap:14px;font-size:12px;color:var(--text-muted);margin-top:2px;">
+                        <span>📅 ${fDate}</span>
+                        <span>⏰ ${fTime}</span>
+                    </div>
                     ${subTasksHtml}
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                        <span style="font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; color: ${pColor}; background: ${pBg};">${s(task.priority)} Priority</span>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <span style="font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; color: ${sColor}; background: ${sBg}; text-transform: capitalize;">${s(task.status)}</span>
-                            <button type="button" class="btn-archive-created-task" data-id="${task.id}" style="font-size:12px;padding:4px 14px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s ease;">Archive</button>
-                        </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;border-top:1px solid var(--border-color);padding-top:10px;">
+                        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:${sColor};background:${sBg};">${s(task.status)}</span>
+                        <button type="button" class="btn-archive-created-task" data-id="${task.id}" style="font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s ease;">Archive</button>
                     </div>
                 `;
 
