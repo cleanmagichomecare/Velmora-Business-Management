@@ -4975,3 +4975,53 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     color: #ffffff;
     border-color: #ef4444;
 }
+/* Custom Multi Select Dropdown */
+.custom-multi-select {
+    position: relative;
+    width: 100%;
+}
+
+.multi-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    transition: var(--transition);
+}
+
+[data-theme="dark"] .multi-select-header {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.multi-select-header:hover {
+    border-color: var(--primary-color);
+}
+
+.multi-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 4px;
+    padding: 10px;
+    z-index: 100;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+[data-theme="dark"] .multi-select-dropdown {
+    background-color: var(--card-bg);
+}

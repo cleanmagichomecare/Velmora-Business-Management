@@ -1335,6 +1335,106 @@ document.addEventListener('DOMContentLoaded', () => {
         btnAddInfluencer.addEventListener('click', () => {
             campaignDashboardView.classList.add('hidden');
             addInfluencerView.classList.remove('hidden');
+            
+            // Initialize fresh state if opening Add Influencer form
+            if (!window.newInfluencerData) {
+                window.newInfluencerData = {
+                    basicInfo: {},
+                    platformDetails: {},
+                    pricingInfo: {},
+                    brandPerformance: {}
+                };
+            }
+        });
+    }
+
+    // --- Add Influencer Wizard State ---
+    window.newInfluencerData = {
+        basicInfo: {},
+        platformDetails: {},
+        pricingInfo: {},
+        brandPerformance: {}
+    };
+
+    // Custom Multi-Select Dropdown Logic
+    const languageHeader = document.getElementById('language-select-header');
+    const languageDropdown = document.getElementById('language-select-dropdown');
+    const languageSelectedText = document.getElementById('language-selected-text');
+    
+    if (languageHeader && languageDropdown) {
+        languageHeader.addEventListener('click', (e) => {
+            e.stopPropagation();
+            languageDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!languageHeader.contains(e.target) && !languageDropdown.contains(e.target)) {
+                languageDropdown.classList.add('hidden');
+            }
+        });
+
+        // Update selected text when checkboxes change
+        const langCheckboxes = languageDropdown.querySelectorAll('input[type="checkbox"]');
+        langCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const selected = Array.from(langCheckboxes)
+                    .filter(c => c.checked)
+                    .map(c => c.value);
+                
+                if (selected.length > 0) {
+                    languageSelectedText.textContent = selected.join(', ');
+                } else {
+                    languageSelectedText.textContent = 'Select Language(s)';
+                }
+            });
+        });
+    }
+
+    // Basic Info Next Button Logic
+    const btnNextBasicInfo = document.getElementById('btn-next-basic-info');
+    if (btnNextBasicInfo) {
+        btnNextBasicInfo.addEventListener('click', () => {
+            const form = document.querySelector('#tab-basic-info form');
+            if (!form) return;
+
+            const infName = form.elements['inf_name']?.value.trim();
+            const infPhone = form.elements['inf_phone']?.value.trim();
+            
+            // Validate required fields
+            if (!infName || !infPhone) {
+                if (typeof showToast === 'function') {
+                    showToast('❌ Please fill Name and Phone Number');
+                } else {
+                    alert('Please fill Name and Phone Number');
+                }
+                return;
+            }
+
+            // Collect selected languages
+            const checkedLanguages = Array.from(document.querySelectorAll('input[name="inf_language"]:checked'))
+                .map(cb => cb.value);
+
+            // Save to memory
+            window.newInfluencerData.basicInfo = {
+                name: infName,
+                influencer_name: form.elements['inf_influencer_name']?.value.trim(),
+                phone: infPhone,
+                alt_phone: form.elements['inf_alt_phone']?.value.trim(),
+                upi: form.elements['inf_upi']?.value.trim(),
+                city: form.elements['inf_city']?.value.trim(),
+                address: form.elements['inf_address']?.value.trim(),
+                state: form.elements['inf_state']?.value.trim(),
+                languages: checkedLanguages
+            };
+
+            console.log("window.newInfluencerData:", window.newInfluencerData);
+
+            // Move to Platform Details Tab
+            const nextTabBtn = document.querySelector('.tab-btn[data-tab="tab-platform-details"]');
+            if (nextTabBtn) {
+                nextTabBtn.click();
+            }
         });
     }
 
