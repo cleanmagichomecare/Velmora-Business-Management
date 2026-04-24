@@ -3797,6 +3797,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const createdTasksListContainer = document.getElementById('created-tasks-list-container');
     const createdTasksGrid = document.getElementById('created-tasks-grid');
 
+    // Task Status View specific elements
+    const btnTaskStatus = document.getElementById('btn-task-status');
+    const taskStatusView = document.getElementById('taskStatusView');
+    const taskStatusGrid = document.getElementById('task-status-grid');
+    const taskStatusSearchInput = document.getElementById('task-status-search');
+
     // Dashboard Task View specific elements
     const dashboardTasksContainer = document.getElementById('dashboard-tasks-container');
     const taskDefaultState = document.getElementById('task-default-state');
@@ -4029,7 +4035,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
             console.log('Archived task id:', id);
             if (typeof showToast === 'function') showToast('Task archived successfully');
-            renderCreatedTasks();
+            if (typeof renderCreatedTasks === 'function') renderCreatedTasks();
+            if (typeof renderTaskStatus === 'function') renderTaskStatus();
         } catch (err) {
             console.error('Error archiving task:', err);
             if (typeof showToast === 'function') showToast('❌ Failed to archive task');
@@ -4043,6 +4050,15 @@ document.addEventListener('DOMContentLoaded', () => {
         createdTasksSearchInput.addEventListener('input', () => {
             clearTimeout(searchDebounce);
             searchDebounce = setTimeout(() => renderCreatedTasks(), 300);
+        });
+    }
+
+    const taskStatusSearchInput = document.getElementById('task-status-search');
+    if (taskStatusSearchInput) {
+        let tsDebounce = null;
+        taskStatusSearchInput.addEventListener('input', () => {
+            clearTimeout(tsDebounce);
+            tsDebounce = setTimeout(() => { if (typeof renderTaskStatus === 'function') renderTaskStatus(); }, 300);
         });
     }
 
@@ -4161,6 +4177,143 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Error fetching created tasks:', err);
             createdTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #ff6b6b; padding: 40px;">Failed to load tasks.</div>';
+        }
+    }
+
+    // ─── Render Task Status View ───
+    async function renderTaskStatus() {
+        if (!taskStatusGrid) return;
+        taskStatusGrid.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Loading task status...</div>';
+
+        const countEl = document.getElementById('task-status-count');
+
+        try {
+            const { data, error } = await window.supabase
+                .from('tasks')
+                .select('*, task_items(*)')
+                .neq('status', 'archived')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const searchEl = document.getElementById('task-status-search');
+            const searchTerm = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            let filteredTasks = data || [];
+
+            if (searchTerm) {
+                filteredTasks = filteredTasks.filter(t => {
+                    const title = (t.task_title || '').toLowerCase();
+                    const assignedTo = (t.assigned_to || '').toLowerCase();
+                    const dept = (t.department || '').toLowerCase();
+                    return title.includes(searchTerm) || assignedTo.includes(searchTerm) || dept.includes(searchTerm);
+                });
+            }
+
+            if (filteredTasks.length === 0) {
+                taskStatusGrid.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">No active tasks found.</div>';
+                if (countEl) countEl.textContent = searchTerm ? '0 results' : '';
+                return;
+            }
+
+            if (countEl) countEl.textContent = `${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`;
+            taskStatusGrid.innerHTML = '';
+
+            filteredTasks.forEach(task => {
+                const s = v => (v != null && v !== '') ? v : '-';
+                const card = document.createElement('div');
+                card.style.cssText = 'background:var(--card-bg);border-radius:10px;border:1px solid var(--border-color);padding:20px;display:flex;flex-direction:column;gap:12px;transition:all 0.3s ease;position:relative;overflow:hidden;width:100%;';
+                card.addEventListener('mouseenter', () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)'; });
+                card.addEventListener('mouseleave', () => { card.style.transform = 'translateY(0)'; card.style.boxShadow = 'none'; });
+
+                // Priority colors
+                let pColor = '#22c55e', pBg = 'rgba(34,197,94,0.12)';
+                if (task.priority === 'Medium') { pColor = '#f59e0b'; pBg = 'rgba(245,158,11,0.12)'; }
+                if (task.priority === 'High') { pColor = '#ef4444'; pBg = 'rgba(239,68,68,0.12)'; }
+
+                // Status colors
+                let sColor = '#f59e0b', sBg = 'rgba(245,158,11,0.12)'; // Pending (orange)
+                let statusText = task.status || 'Pending';
+                if (statusText.toLowerCase() === 'completed') {
+                    sColor = '#22c55e'; sBg = 'rgba(34,197,94,0.12)';
+                } else if (statusText.toLowerCase() === 'in progress') {
+                    sColor = '#3b82f6'; sBg = 'rgba(59,130,246,0.12)';
+                }
+
+                // Format date
+                let fDate = s(task.due_date);
+                if (task.due_date) { try { fDate = new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) {} }
+
+                // Format time
+                let fTime = s(task.due_time);
+                if (task.due_time) { try { const [h,m] = task.due_time.split(':'); const ap = parseInt(h) >= 12 ? 'PM' : 'AM'; fTime = `${parseInt(h) % 12 || 12}:${m} ${ap}`; } catch(e) {} }
+
+                // Sub tasks (Tracking Status)
+                let subTasksHtml = '';
+                let subTasks = task.task_items;
+                if (typeof subTasks === 'string') { try { subTasks = JSON.parse(subTasks); } catch(e) { subTasks = null; } }
+                if (Array.isArray(subTasks) && subTasks.length > 0) {
+                    let pillsHtml = subTasks.map(st => {
+                        const label = typeof st === 'string' ? st : (st.title || st.sub_task || '-');
+                        return `<span style="display:inline-block;font-size:12px;font-weight:500;color:var(--text-main);background:var(--input-bg);border:1px solid var(--border-color);padding:5px 12px;border-radius:20px;">${label}</span>`;
+                    }).join('');
+
+                    subTasksHtml = `
+                        <div style="margin-bottom:12px;">
+                            <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Tracking Status</div>
+                            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                ${pillsHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Category breadcrumb
+                let categoryParts = [task.department];
+                if (task.sub_category1) categoryParts.push(task.sub_category1);
+                if (task.sub_category2) categoryParts.push(task.sub_category2);
+                const categoryBreadcrumb = categoryParts.filter(p => p).join(' › ');
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-size: 11px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">${categoryBreadcrumb}</div>
+                            <h4 style="margin: 0; font-size: 17px; font-weight: 700; color: var(--text-main);">${s(task.task_title)}</h4>
+                        </div>
+                        <div style="text-align: right; margin-left: 15px; flex-shrink: 0;">
+                            <div style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">📅 ${fDate}</div>
+                            <div style="font-size: 12px; font-weight: 500; color: var(--text-muted);">⏰ ${fTime}</div>
+                        </div>
+                    </div>
+                    
+                    ${task.assigned_by && task.assigned_to ? `<div style="font-size: 13px; font-weight: 500; color: var(--text-main); margin-bottom: 10px; background: var(--input-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); display: inline-block; width: fit-content;">Assigned: <span style="color: var(--primary-color); font-weight:600;">${task.assigned_by}</span> → <span style="color: var(--primary-color); font-weight:600;">${task.assigned_to}</span></div>` : ''}
+                    
+                    ${task.task_description ? `<div style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">${task.task_description}</div>` : ''}
+                    
+                    ${subTasksHtml}
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                        <span style="font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; color: ${pColor}; background: ${pBg};">${s(task.priority)} Priority</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; color: ${sColor}; background: ${sBg}; text-transform: capitalize;">${s(task.status)}</span>
+                            <button type="button" class="btn-archive-created-task" data-id="${task.id}" style="font-size:12px;padding:4px 14px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s ease;">Archive</button>
+                        </div>
+                    </div>
+                `;
+
+                // Archive button handler
+                const archBtn = card.querySelector('.btn-archive-created-task');
+                if (archBtn) {
+                    archBtn.addEventListener('mouseenter', () => { archBtn.style.borderColor = '#ef4444'; archBtn.style.color = '#ef4444'; });
+                    archBtn.addEventListener('mouseleave', () => { archBtn.style.borderColor = 'var(--border-color)'; archBtn.style.color = 'var(--text-muted)'; });
+                    archBtn.addEventListener('click', () => archiveCreatedTask(task.id));
+                }
+
+                taskStatusGrid.appendChild(card);
+            });
+
+        } catch (err) {
+            console.error('Error fetching task status:', err);
+            taskStatusGrid.innerHTML = '<div style="text-align: center; color: #ff6b6b; padding: 40px;">Failed to load task status.</div>';
         }
     }
 
@@ -4515,6 +4668,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (subTasksListContainer) subTasksListContainer.classList.add('hidden');
             if (createdTasksListContainer) createdTasksListContainer.classList.add('hidden');
             taskContentArea.classList.add('hidden');
+            if (taskStatusView) taskStatusView.classList.add('hidden');
             populateTaskCategories();
 
             // Set default date and time
@@ -4538,8 +4692,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newSubTaskFormContainer) newSubTaskFormContainer.classList.add('hidden');
             if (subTasksListContainer) subTasksListContainer.classList.add('hidden');
             if (createdTasksListContainer) createdTasksListContainer.classList.add('hidden');
-            if (taskContentArea) taskContentArea.classList.remove('hidden');
-            renderDashboardTasks();
+            if (taskContentArea) taskContentArea.classList.add('hidden');
+            if (taskStatusView) taskStatusView.classList.remove('hidden');
+            if (typeof renderTaskStatus === 'function') renderTaskStatus();
         });
     }
 
@@ -4550,6 +4705,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (subTasksListContainer) subTasksListContainer.classList.add('hidden');
             if (createdTasksListContainer) createdTasksListContainer.classList.add('hidden');
             taskContentArea.classList.add('hidden');
+            if (taskStatusView) taskStatusView.classList.add('hidden');
         });
     }
 
@@ -4560,6 +4716,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newSubTaskFormContainer) newSubTaskFormContainer.classList.add('hidden');
             if (createdTasksListContainer) createdTasksListContainer.classList.add('hidden');
             taskContentArea.classList.add('hidden');
+            if (taskStatusView) taskStatusView.classList.add('hidden');
             renderSubTaskGroups();
         });
     }
@@ -4571,7 +4728,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newSubTaskFormContainer) newSubTaskFormContainer.classList.add('hidden');
             if (subTasksListContainer) subTasksListContainer.classList.add('hidden');
             taskContentArea.classList.add('hidden');
+            if (taskStatusView) taskStatusView.classList.add('hidden');
             renderCreatedTasks();
+        });
+    }
+
+    if (btnTaskStatus && taskStatusView) {
+        btnTaskStatus.addEventListener('click', () => {
+            taskStatusView.classList.remove('hidden');
+            if (newTaskFormContainer) newTaskFormContainer.classList.add('hidden');
+            if (newSubTaskFormContainer) newSubTaskFormContainer.classList.add('hidden');
+            if (subTasksListContainer) subTasksListContainer.classList.add('hidden');
+            if (createdTasksListContainer) createdTasksListContainer.classList.add('hidden');
+            taskContentArea.classList.add('hidden');
+            if (typeof renderTaskStatus === 'function') renderTaskStatus();
         });
     }
 
