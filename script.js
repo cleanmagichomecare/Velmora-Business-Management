@@ -1438,6 +1438,107 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Platform Details Next Button Logic
+    const btnNextPlatformDetails = document.getElementById('btn-next-platform-details');
+    if (btnNextPlatformDetails) {
+        btnNextPlatformDetails.addEventListener('click', () => {
+            const form = document.querySelector('#tab-platform-details form');
+            if (!form) return;
+
+            const availabilitySelect = document.getElementById('platform-availability-select');
+            const agreedSelect = document.getElementById('platform-agreed-select');
+            
+            if (!availabilitySelect) return;
+
+            const val = availabilitySelect.value;
+            const renderMap = {
+                'Instagram': ['Instagram'],
+                'Youtube': ['Youtube'],
+                'Facebook': ['Facebook'],
+                'Instagram and Youtube': ['Instagram', 'Youtube'],
+                'Instagram and Facebook': ['Instagram', 'Facebook'],
+                'Youtube and Facebook': ['Youtube', 'Facebook'],
+                'All': ['Instagram', 'Youtube', 'Facebook']
+            };
+
+            const selectedPlatformsArray = (renderMap[val] || []).map(p => p.toLowerCase());
+            
+            // Base platform data structure
+            const platformDetails = {
+                selectedPlatforms: selectedPlatformsArray,
+                platformAgreed: agreedSelect ? agreedSelect.value : "All",
+                instagram: { username: "", profileLink: "", followers: "", videoViews: [] },
+                youtube: { username: "", profileLink: "", followers: "", videoViews: [] },
+                facebook: { username: "", profileLink: "", followers: "", videoViews: [] }
+            };
+
+            const platformContainer = document.getElementById('platform-forms-container');
+            let hasValidVisibleData = false;
+            let validationFailed = false;
+
+            if (platformContainer) {
+                const allCards = platformContainer.querySelectorAll('.platform-card');
+                
+                allCards.forEach(card => {
+                    const platformName = card.getAttribute('data-platform-id').toLowerCase();
+                    const isVisible = !card.classList.contains('hidden');
+
+                    const username = card.querySelector('.plat-username')?.value.trim() || "";
+                    const link = card.querySelector('.plat-link')?.value.trim() || "";
+                    const followers = card.querySelector('.plat-followers')?.value.trim() || "";
+                    
+                    const videoInputs = card.querySelectorAll('.plat-video-input');
+                    const videoViews = [];
+                    videoInputs.forEach(input => {
+                        videoViews.push(parseInt(input.value) || 0);
+                    });
+
+                    // Update the structured data (save regardless of visibility)
+                    if (platformDetails[platformName]) {
+                        platformDetails[platformName] = {
+                            username: username,
+                            profileLink: link,
+                            followers: followers,
+                            videoViews: videoViews
+                        };
+                    }
+
+                    // Validate visible sections
+                    if (isVisible) {
+                        if (!username && !link) {
+                            validationFailed = true;
+                        } else {
+                            hasValidVisibleData = true;
+                        }
+                    }
+                });
+            }
+
+            if (selectedPlatformsArray.length > 0 && (validationFailed || !hasValidVisibleData)) {
+                if (typeof showToast === 'function') {
+                    showToast('❌ Please fill Username or Link for the selected platforms.');
+                } else {
+                    alert('Please fill Username or Link for the selected platforms.');
+                }
+                return;
+            }
+
+            // Save to memory
+            if (!window.newInfluencerData) {
+                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+            }
+            window.newInfluencerData.platformDetails = platformDetails;
+
+            console.log("window.newInfluencerData:", window.newInfluencerData);
+
+            // Move to Pricing Info Tab
+            const nextTabBtn = document.querySelector('.tab-btn[data-tab="tab-pricing-info"]');
+            if (nextTabBtn) {
+                nextTabBtn.click();
+            }
+        });
+    }
+
     // --- Tabs Navigation Logic (Add Influencer Form) ---
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -1544,8 +1645,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const platformContainer = wrapper.querySelector('.platform-forms-container');
             if (!platformContainer) return;
 
-            platformContainer.innerHTML = ''; // Clear existing
-
             const renderMap = {
                 'Instagram': ['Instagram'],
                 'Youtube': ['Youtube'],
@@ -1557,8 +1656,32 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             const platformsToRender = renderMap[val] || [];
-            platformsToRender.forEach(plat => {
-                platformContainer.innerHTML += generatePlatformHTML(plat);
+            
+            // Ensure all 3 platforms exist in the DOM
+            const allPlatforms = ['Instagram', 'Youtube', 'Facebook'];
+            
+            allPlatforms.forEach(plat => {
+                let existingCard = platformContainer.querySelector(`.platform-card[data-platform-id="${plat}"]`);
+                if (!existingCard) {
+                    // Create it if it doesn't exist, initially hidden
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = generatePlatformHTML(plat);
+                    existingCard = tempDiv.firstElementChild;
+                    existingCard.classList.add('hidden');
+                    platformContainer.appendChild(existingCard);
+                }
+            });
+
+            // Show/hide based on selection without destroying data
+            allPlatforms.forEach(plat => {
+                const card = platformContainer.querySelector(`.platform-card[data-platform-id="${plat}"]`);
+                if (card) {
+                    if (platformsToRender.includes(plat)) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                }
             });
         }
     });
