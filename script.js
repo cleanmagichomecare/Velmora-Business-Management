@@ -724,83 +724,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle Form Submit
     if (campaignForm) {
-        campaignForm.addEventListener('submit', (e) => {
+        campaignForm.addEventListener('submit', async (e) => {
             e.preventDefault(); // Prevent page reload
 
             if (!validateCampaignForm()) {
                 return;
             }
 
-            // Extract required data
-            const campaignName = campaignNameInput.value.trim() || 'Untitled Campaign';
+            const btnSubmit = campaignForm.querySelector('.btn-submit');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = 'Creating...';
+            }
 
-            // Clear active state from other sibling folders
-            const existingFolders = emptyCampaignList.querySelectorAll('.campaign-folder-item');
-            existingFolders.forEach(folder => folder.classList.remove('active-folder'));
+            try {
+                // Collect target languages
+                const selectedLanguages = Array.from(document.querySelectorAll('input[name="target_language"]:checked'))
+                    .map(checkbox => checkbox.value);
 
-            // Create new campaign folder DOM element
-            const folderItem = document.createElement('div');
-            folderItem.className = 'campaign-folder-item active-folder'; // Highlight newly created
-            folderItem.setAttribute('data-campaign-id', campaignName);
+                // Collect form data matching DB schema
+                const payload = {
+                    campaign_name: campaignForm.elements['campaign_name'].value.trim() || 'Untitled Campaign',
+                    campaign_type: campaignForm.elements['campaign_type'].value,
+                    total_budget: parseFloat(campaignForm.elements['total_budget'].value),
+                    expected_influencers: parseInt(campaignForm.elements['expected_influencers'].value, 10),
+                    expected_total_videos: parseInt(campaignForm.elements['expected_videos'].value, 10),
+                    avg_per_video_cost: parseFloat(campaignForm.elements['avg_video_cost'].value),
+                    target_languages: selectedLanguages, // Send array directly for JSON type
+                    campaign_goal: campaignForm.elements['campaign_goal'].value,
+                    start_date: campaignForm.elements['start_date'].value,
+                    end_date: campaignForm.elements['end_date'].value,
+                    status: 'active'
+                };
 
-            // Inline SVG for the folder icon
-            folderItem.innerHTML = `
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
-                <span class="folder-name">${campaignName}</span>
-            `;
+                const { data, error } = await window.supabase
+                    .from('influencer_create_campaigns')
+                    .insert([payload])
+                    .select();
 
-            // Append to the list at the top (preceding older campaigns)
-            emptyCampaignList.prepend(folderItem);
+                if (error) throw error;
 
-            // Give it select functionality and route to Campaign Dashboard
-            folderItem.addEventListener('click', () => {
-                emptyCampaignList.querySelectorAll('.campaign-folder-item').forEach(f => f.classList.remove('active-folder'));
-                folderItem.classList.add('active-folder');
-
-                // Show Campaign Dashboard View
-                contentPlaceholder.classList.add('hidden');
-                campaignFormContainer.classList.add('hidden');
-                document.getElementById('add-influencer-view').classList.add('hidden');
-                const influencerList = document.getElementById('influencer-list-view');
-                if (influencerList) influencerList.classList.add('hidden');
-
-                const dashboardView = document.getElementById('campaign-dashboard-view');
-                if (dashboardView) {
-                    dashboardView.classList.remove('hidden');
-                    document.getElementById('campaign-dashboard-title').textContent = `${campaignName} Campaign`;
+                if (typeof showToast === 'function') {
+                    showToast('Campaign created successfully');
                 }
 
-                const dispatchedListView = document.getElementById('view-dispatched-list');
-                if (dispatchedListView) {
-                    dispatchedListView.classList.add('hidden');
-                    dispatchedListView.classList.remove('active-view');
+                campaignForm.reset();
+
+                // Clear active states and hide form
+                if (emptyCampaignList) {
+                    const existingFolders = emptyCampaignList.querySelectorAll('.campaign-folder-item');
+                    existingFolders.forEach(folder => folder.classList.remove('active-folder'));
                 }
 
-                const statusTrackingView = document.getElementById('view-status-tracking');
-                if (statusTrackingView) {
-                    statusTrackingView.classList.add('hidden');
-                    statusTrackingView.classList.remove('active-view');
+                if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
+                if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
+
+                // Reload the sidebar list
+                if (typeof renderCampaignList === 'function') {
+                    await renderCampaignList();
                 }
 
-                // Filter Influencers to only those matching this exact campaign
-                const activeId = folderItem.getAttribute('data-campaign-id');
-                const allInfluencerCards = document.querySelectorAll('.influencer-profile-card');
-                allInfluencerCards.forEach(card => {
-                    if (card.getAttribute('data-campaign-id') === activeId) {
-                        card.style.display = 'flex'; // Use original display logic or empty for native css block
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-            });
-
-            // Trigger Success Message
-            showToast('Campaign created successfully');
-
-            // Reset Form Fields naturally
-            campaignForm.reset();
+            } catch (err) {
+                console.error("Failed to create campaign:", err);
+                if (typeof showToast === 'function') {
+                    showToast('❌ Failed to create campaign: ' + (err.message || 'Unknown error'));
+                } else {
+                    alert("Failed to create campaign: " + (err.message || 'Unknown error'));
+                }
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Create Campaign';
+                }
+            }
         });
 
         // Campaign Submission Trigger
@@ -811,6 +807,69 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    async function renderCampaignList() {
+        if (!emptyCampaignList) return;
+        emptyCampaignList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px;">Loading campaigns...</div>';
+
+        try {
+            const { data, error } = await window.supabase
+                .from('influencer_create_campaigns')
+                .select('*')
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                emptyCampaignList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px;">No campaigns created yet.</div>';
+                return;
+            }
+
+            emptyCampaignList.innerHTML = ''; // Clear container
+
+            data.forEach(campaign => {
+                const folderItem = document.createElement('div');
+                folderItem.className = 'campaign-folder-item';
+                
+                // Highlight if it's the currently selected campaign
+                if (window.selectedCampaignId == campaign.id) {
+                    folderItem.classList.add('active-folder');
+                }
+
+                folderItem.setAttribute('data-id', campaign.id);
+
+                folderItem.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span class="folder-name">${campaign.campaign_name || 'Untitled Campaign'}</span>
+                `;
+
+                folderItem.addEventListener('click', () => {
+                    emptyCampaignList.querySelectorAll('.campaign-folder-item').forEach(f => f.classList.remove('active-folder'));
+                    folderItem.classList.add('active-folder');
+
+                    window.selectedCampaignId = campaign.id;
+                    localStorage.setItem('selectedCampaignId', campaign.id);
+                    
+                    console.log("Selected Campaign:", campaign);
+                });
+
+                emptyCampaignList.appendChild(folderItem);
+            });
+
+        } catch (err) {
+            console.error('Error fetching campaigns:', err);
+            emptyCampaignList.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 10px;">Failed to load campaigns.</div>';
+        }
+    }
+
+    // Call on load
+    window.selectedCampaignId = localStorage.getItem('selectedCampaignId') || null;
+    renderCampaignList();
+
+
 
     // --- Vendor CRUD Logic ---
     const btnSaveVendor = document.getElementById('btn-save-vendor');
