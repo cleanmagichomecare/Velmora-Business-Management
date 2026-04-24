@@ -4018,279 +4018,150 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function renderCreatedTasks() {
+    // ─── Archive Created Task ───
+    async function archiveCreatedTask(id) {
+        if (!confirm('Are you sure you want to archive this task?')) return;
+        try {
+            const { error } = await window.supabase
+                .from('created_tasks')
+                .update({ status: 'archived' })
+                .eq('id', id);
+            if (error) throw error;
+            console.log('Archived task id:', id);
+            if (typeof showToast === 'function') showToast('Task archived successfully');
+            renderCreatedTasks();
+        } catch (err) {
+            console.error('Error archiving task:', err);
+            if (typeof showToast === 'function') showToast('❌ Failed to archive task');
+        }
+    }
+
+    // ─── Search listener ───
+    const createdTasksSearchInput = document.getElementById('created-tasks-search');
+    if (createdTasksSearchInput) {
+        let searchDebounce = null;
+        createdTasksSearchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => renderCreatedTasks(), 300);
+        });
+    }
+
+    async function renderCreatedTasks() {
         if (!createdTasksGrid) return;
-        createdTasksGrid.innerHTML = '';
+        createdTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Loading tasks...</div>';
 
         const countEl = document.getElementById('created-tasks-count');
 
-        if (!window.tasks || window.tasks.length === 0) {
-            createdTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">No tasks created yet.</div>';
-            if (countEl) countEl.textContent = '';
-            return;
-        }
+        try {
+            const { data, error } = await window.supabase
+                .from('created_tasks')
+                .select('*')
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
 
-        if (countEl) countEl.textContent = `${window.tasks.length} task${window.tasks.length !== 1 ? 's' : ''}`;
+            if (error) throw error;
+            console.log('Fetched created tasks:', data);
 
-        // Render tasks in reverse order
-        const sortedTasks = [...window.tasks].reverse();
+            // Search filter
+            const searchEl = document.getElementById('created-tasks-search');
+            const searchTerm = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            let filteredTasks = data || [];
 
-        sortedTasks.forEach(task => {
-            const card = document.createElement('div');
-            card.style.background = 'var(--card-bg)';
-            card.style.borderRadius = '10px';
-            card.style.border = '1px solid var(--border-color)';
-            card.style.padding = '20px';
-            card.style.display = 'flex';
-            card.style.flexDirection = 'column';
-            card.style.gap = '12px';
-            card.style.transition = 'all 0.3s ease';
-            card.style.position = 'relative';
-
-            card.addEventListener('mouseenter', () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)'; });
-            card.addEventListener('mouseleave', () => { card.style.transform = 'translateY(0)'; card.style.boxShadow = 'none'; });
-
-            // Priority badge
-            let priorityColor = '#22c55e';
-            let priorityBg = 'rgba(34,197,94,0.12)';
-            if (task.priority === 'Medium') { priorityColor = '#f59e0b'; priorityBg = 'rgba(245,158,11,0.12)'; }
-            if (task.priority === 'High') { priorityColor = '#ef4444'; priorityBg = 'rgba(239,68,68,0.12)'; }
-
-            // Status badge
-            let statusColor = '#f59e0b';
-            let statusBg = 'rgba(245,158,11,0.12)';
-            if (task.status === 'Completed') { statusColor = '#22c55e'; statusBg = 'rgba(34,197,94,0.12)'; }
-
-            // Format date
-            let formattedDate = task.date || '';
-            if (task.date) {
-                try {
-                    const d = new Date(task.date + 'T00:00:00');
-                    formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                } catch (e) { formattedDate = task.date; }
-            }
-
-            // Format time
-            let formattedTime = task.time || '';
-            if (task.time) {
-                try {
-                    const [h, m] = task.time.split(':');
-                    const ampm = parseInt(h) >= 12 ? 'PM' : 'AM';
-                    const h12 = parseInt(h) % 12 || 12;
-                    formattedTime = `${h12}:${m} ${ampm}`;
-                } catch (e) { formattedTime = task.time; }
-            }
-
-            // Actionable sub-tasks
-            let subTasksHtml = '';
-            if (task.subTasks && task.subTasks.length > 0) {
-                subTasksHtml = '<div class="dept-card-subtasks-container" style="margin-top: 8px; margin-bottom: 12px;">';
-                task.subTasks.forEach((st, idx) => {
-                    const title = typeof st === 'string' ? st : (st.title || 'Untitled');
-                    const status = typeof st === 'string' ? 'not_started' : (st.status || 'not_started');
-
-                    let actionHtml = '';
-                    let titleClass = '';
-
-                    if (status === 'not_started') {
-                        actionHtml = `<button class="btn-subtask-action" data-task-id="${task.id}" data-subtask-idx="${idx}">Start</button>`;
-                    } else if (status === 'in_progress') {
-                        actionHtml = `<button class="btn-subtask-action in-progress" data-task-id="${task.id}" data-subtask-idx="${idx}">Complete</button>`;
-                    } else if (status === 'done') {
-                        actionHtml = `<span class="subtask-done-badge">✔ Done</span>`;
-                        titleClass = 'done';
-                    }
-
-                    subTasksHtml += `
-                        <div class="subtask-item">
-                            <span class="subtask-title ${titleClass}">${title}</span>
-                            ${actionHtml}
-                        </div>
-                    `;
+            if (searchTerm) {
+                filteredTasks = filteredTasks.filter(t => {
+                    const title = (t.task_title || '').toLowerCase();
+                    const assignedTo = (t.assigned_to || '').toLowerCase();
+                    const dept = (t.department || '').toLowerCase();
+                    return title.includes(searchTerm) || assignedTo.includes(searchTerm) || dept.includes(searchTerm);
                 });
-                subTasksHtml += '</div>';
             }
 
-            // Category breadcrumb
-            let categoryParts = [task.category];
-            if (task.subCategory1) categoryParts.push(task.subCategory1);
-            if (task.subCategory2) categoryParts.push(task.subCategory2);
-            const categoryBreadcrumb = categoryParts.join(' › ');
-
-            // Build Sub Task Inputs for Edit Mode
-            let editSubTasksHtml = '';
-            if (task.subTasks && task.subTasks.length > 0) {
-                editSubTasksHtml = task.subTasks.map(st => {
-                    const title = typeof st === 'string' ? st : (st.title || '');
-                    return `
-                        <div class="edit-sub-task-wrapper" style="display: flex; gap: 8px; margin-bottom: 6px; align-items: center;">
-                            <input type="text" value="${title.replace(/"/g, '&quot;')}" class="edit-task-sub-task-input" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-color); font-size: 13px;">
-                            <button type="button" class="btn-remove-task-edit-st" style="background:none; border:none; cursor:pointer;" title="Remove">❌</button>
-                        </div>
-                    `;
-                }).join('');
+            if (!filteredTasks || filteredTasks.length === 0) {
+                createdTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">No tasks created yet.</div>';
+                if (countEl) countEl.textContent = searchTerm ? '0 results' : '';
+                return;
             }
 
-            card.innerHTML = `
-                <!-- VIEW MODE -->
-                <div class="view-mode-item" style="flex-grow:1; display:flex; flex-direction:column;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <h4 style="margin: 0; font-size: 15px; font-weight: 600; flex: 1; padding-right: 10px;">${task.title}</h4>
-                        <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; white-space: nowrap; color: ${priorityColor}; background: ${priorityBg};">${task.priority}</span>
+            if (countEl) countEl.textContent = `${filteredTasks.length} task${filteredTasks.length !== 1 ? 's' : ''}`;
+            createdTasksGrid.innerHTML = '';
+
+            filteredTasks.forEach(task => {
+                const s = v => (v != null && v !== '') ? v : '-';
+                const card = document.createElement('div');
+                card.style.cssText = 'background:var(--card-bg);border-radius:10px;border:1px solid var(--border-color);padding:20px;display:flex;flex-direction:column;gap:10px;transition:all 0.3s ease;position:relative;overflow:hidden;';
+                card.addEventListener('mouseenter', () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)'; });
+                card.addEventListener('mouseleave', () => { card.style.transform = 'translateY(0)'; card.style.boxShadow = 'none'; });
+
+                // Priority colors
+                let pColor = '#22c55e', pBg = 'rgba(34,197,94,0.12)';
+                if (task.priority === 'Medium') { pColor = '#f59e0b'; pBg = 'rgba(245,158,11,0.12)'; }
+                if (task.priority === 'High') { pColor = '#ef4444'; pBg = 'rgba(239,68,68,0.12)'; }
+
+                // Status colors (active = green)
+                const sColor = '#22c55e', sBg = 'rgba(34,197,94,0.12)';
+
+                // Format date
+                let fDate = s(task.date);
+                if (task.date) { try { fDate = new Date(task.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) {} }
+
+                // Format time
+                let fTime = s(task.time);
+                if (task.time) { try { const [h,m] = task.time.split(':'); const ap = parseInt(h) >= 12 ? 'PM' : 'AM'; fTime = `${parseInt(h) % 12 || 12}:${m} ${ap}`; } catch(e) {} }
+
+                // Sub tasks
+                let subTasksHtml = '';
+                let subTasks = task.selected_sub_tasks;
+                if (typeof subTasks === 'string') { try { subTasks = JSON.parse(subTasks); } catch(e) { subTasks = null; } }
+                if (Array.isArray(subTasks) && subTasks.length > 0) {
+                    subTasksHtml = '<div style="margin-top:4px;"><div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Selected Sub Tasks</div><ul style="list-style:none;padding:0;margin:0;">';
+                    subTasks.forEach(st => {
+                        const label = typeof st === 'string' ? st : (st.title || st.sub_task || '-');
+                        subTasksHtml += `<li style="font-size:13px;color:var(--text-main);padding:3px 0;">• ${label}</li>`;
+                    });
+                    subTasksHtml += '</ul></div>';
+                }
+
+                const row = (label, val) => `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;"><span style="color:var(--text-muted);font-weight:500;">${label}</span><span style="color:var(--text-main);font-weight:500;text-align:right;max-width:60%;word-break:break-word;">${s(val)}</span></div>`;
+
+                card.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+                        <h4 style="margin:0;font-size:16px;font-weight:700;color:var(--text-main);flex:1;padding-right:10px;">${s(task.task_title)}</h4>
+                        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;color:${pColor};background:${pBg};">${s(task.priority)}</span>
                     </div>
-                    <div style="font-size: 12px; color: var(--text-muted);">${categoryBreadcrumb}</div>
-                    <div style="display: flex; gap: 14px; font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">
-                        <span>📅 ${formattedDate}</span>
-                        <span>⏰ ${formattedTime}</span>
+                    <div style="border-bottom:1px solid var(--border-color);padding-bottom:10px;margin-bottom:4px;">
+                        ${row('Department', task.department)}
+                        ${row('Sub Category 1', task.sub_category1)}
+                        ${row('Sub Category 2', task.sub_category2)}
                     </div>
-                    
-                    ${task.assignedBy && task.assignedTo ? `<div style="font-size: 12px; font-weight: 500; color: var(--text-main); margin-bottom: 8px; background: var(--input-bg); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); display: inline-table;">Assigned: <span style="color: var(--primary-color); font-weight:600;">${task.assignedBy}</span> → <span style="color: var(--primary-color); font-weight:600;">${task.assignedTo}</span></div>` : ''}
-                    
-                    ${task.description ? `<div style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 6px;">${task.description}</div>` : ''}
+                    ${task.task_description ? `<div style="font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:4px;">${task.task_description}</div>` : ''}
+                    ${row('Assigned By', task.assigned_by)}
+                    ${row('Assigned To', task.assigned_to)}
+                    <div style="display:flex;gap:14px;font-size:12px;color:var(--text-muted);margin-top:2px;">
+                        <span>📅 ${fDate}</span>
+                        <span>⏰ ${fTime}</span>
+                    </div>
                     ${subTasksHtml}
-                </div>
-                
-                <!-- EDIT MODE -->
-                <div class="edit-mode-item hidden" style="flex-grow:1; display: flex; flex-direction: column; gap: 10px;">
-                    <div>
-                        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Task Title</label>
-                        <input type="text" class="edit-task-title" value="${task.title.replace(/"/g, '&quot;')}" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-main); font-size: 14px; font-weight: 600;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;border-top:1px solid var(--border-color);padding-top:10px;">
+                        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;color:${sColor};background:${sBg};">${s(task.status)}</span>
+                        <button type="button" class="btn-archive-created-task" data-id="${task.id}" style="font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);cursor:pointer;transition:all 0.2s ease;">Archive</button>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Assigned By</label>
-                            <select class="edit-task-assigned-by" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-main); font-size: 13px;">
-                                <option value="" ${!task.assignedBy ? 'selected' : ''}>Select Assigner</option>
-                                <option value="Jack" ${task.assignedBy === 'Jack' ? 'selected' : ''}>Jack</option>
-                                <option value="Thomos" ${task.assignedBy === 'Thomos' ? 'selected' : ''}>Thomos</option>
-                                <option value="Dave" ${task.assignedBy === 'Dave' ? 'selected' : ''}>Dave</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Assigned To</label>
-                            <select class="edit-task-assigned-to" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-main); font-size: 13px;">
-                                <option value="" ${!task.assignedTo ? 'selected' : ''}>Select Assignee</option>
-                                <option value="Inventory" ${task.assignedTo === 'Inventory' ? 'selected' : ''}>Inventory</option>
-                                <option value="Sales" ${task.assignedTo === 'Sales' ? 'selected' : ''}>Sales</option>
-                                <option value="Document Room" ${task.assignedTo === 'Document Room' ? 'selected' : ''}>Document Room</option>
-                                <option value="Marketing" ${task.assignedTo === 'Marketing' ? 'selected' : ''}>Marketing</option>
-                                <option value="Task Manager" ${task.assignedTo === 'Task Manager' ? 'selected' : ''}>Task Manager</option>
-                                <option value="Expense Tracker" ${task.assignedTo === 'Expense Tracker' ? 'selected' : ''}>Expense Tracker</option>
-                                <option value="Vendor Management" ${task.assignedTo === 'Vendor Management' ? 'selected' : ''}>Vendor Management</option>
-                                <option value="Category" ${task.assignedTo === 'Category' ? 'selected' : ''}>Category</option>
-                                <option value="Research & Development" ${task.assignedTo === 'Research & Development' ? 'selected' : ''}>Research & Development</option>
-                                <option value="Human Resources" ${task.assignedTo === 'Human Resources' ? 'selected' : ''}>Human Resources</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Description</label>
-                        <textarea class="edit-task-desc" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-main); font-size: 13px; min-height: 60px; resize: vertical;">${task.description || ''}</textarea>
-                    </div>
-                    <div>
-                        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Sub Tasks</label>
-                        <div class="edit-task-st-list">
-                            ${editSubTasksHtml}
-                        </div>
-                        <button type="button" class="btn-primary btn-add-task-edit-st" style="font-size: 12px; padding: 6px 12px; margin-top: 6px; border-radius: 6px; border: 1px solid var(--primary-color); background: transparent; color: var(--primary-color);">+ Add Sub Task</button>
-                    </div>
-                </div>
-                
-                <!-- FOOTER ACTIONS -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 12px;">
-                    <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; color: ${statusColor}; background: ${statusBg};">${task.status}</span>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn-primary btn-edit-task view-mode-item" style="padding: 4px 12px; font-size: 12px; border-radius: 4px;">Edit</button>
-                        <button type="button" class="btn-primary btn-save-task edit-mode-item hidden" style="padding: 4px 12px; font-size: 12px; border-radius: 4px; background-color: #22c55e; border-color: #22c55e;">Save</button>
-                    </div>
-                </div>
-            `;
-
-            createdTasksGrid.appendChild(card);
-
-            // Setup Inline Edit Listeners
-            const btnEdit = card.querySelector('.btn-edit-task');
-            const btnSave = card.querySelector('.btn-save-task');
-            const viewItems = card.querySelectorAll('.view-mode-item');
-            const editItems = card.querySelectorAll('.edit-mode-item');
-            const btnAddSt = card.querySelector('.btn-add-task-edit-st');
-            const stList = card.querySelector('.edit-task-st-list');
-
-            btnEdit.addEventListener('click', () => {
-                viewItems.forEach(el => el.classList.add('hidden'));
-                editItems.forEach(el => el.classList.remove('hidden'));
-            });
-
-            btnSave.addEventListener('click', () => {
-                const newTitle = card.querySelector('.edit-task-title').value.trim();
-                const newDesc = card.querySelector('.edit-task-desc').value.trim();
-
-                const newAssignedByInput = card.querySelector('.edit-task-assigned-by');
-                const newAssignedToInput = card.querySelector('.edit-task-assigned-to');
-                const newAssignedBy = newAssignedByInput ? newAssignedByInput.value : undefined;
-                const newAssignedTo = newAssignedToInput ? newAssignedToInput.value : undefined;
-
-                const newStInputs = card.querySelectorAll('.edit-task-sub-task-input');
-                const newSubTasks = [];
-                newStInputs.forEach(inp => {
-                    const val = inp.value.trim();
-                    if (val) {
-                        // Preserve status if it existed, otherwise default to not_started
-                        // Since edit UI just shows text, we default to not_started for simplicity,
-                        // but ideally we'd look up the old status if it's the exact same string
-                        const existing = (task.subTasks || []).find(st => (typeof st === 'string' ? st : st.title) === val);
-                        const status = existing ? (typeof existing === 'string' ? 'not_started' : existing.status) : 'not_started';
-                        newSubTasks.push({ title: val, status: status });
-                    }
-                });
-
-                if (!newTitle) {
-                    if (typeof showAlert === 'function') showAlert("Task Title cannot be empty.");
-                    return;
-                }
-
-                // Save data using internal task.id identification
-                const taskIndex = window.tasks.findIndex(t => t.id === task.id);
-                if (taskIndex !== -1) {
-                    window.tasks[taskIndex].title = newTitle;
-                    window.tasks[taskIndex].description = newDesc;
-                    window.tasks[taskIndex].subTasks = newSubTasks;
-                    if (newAssignedBy !== undefined) window.tasks[taskIndex].assignedBy = newAssignedBy;
-                    if (newAssignedTo !== undefined) window.tasks[taskIndex].assignedTo = newAssignedTo;
-
-                    if (typeof showToast === 'function') showToast("Task Updated successfully.");
-
-                    // Exit edit mode strictly via full UI re-render (Global Sync)
-                    if (typeof window.renderAllTasks === 'function') window.renderAllTasks();
-                }
-            });
-
-            btnAddSt.addEventListener('click', () => {
-                const newDiv = document.createElement('div');
-                newDiv.className = 'edit-sub-task-wrapper';
-                newDiv.style.display = 'flex';
-                newDiv.style.gap = '8px';
-                newDiv.style.marginBottom = '6px';
-                newDiv.style.alignItems = 'center';
-                newDiv.innerHTML = `
-                    <input type="text" placeholder="New Sub Task" class="edit-task-sub-task-input" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-color); font-size: 13px;">
-                    <button type="button" class="btn-remove-task-edit-st" style="background:none; border:none; cursor:pointer;" title="Remove">❌</button>
                 `;
-                stList.appendChild(newDiv);
 
-                const removeBtn = newDiv.querySelector('.btn-remove-task-edit-st');
-                removeBtn.addEventListener('click', () => newDiv.remove());
-                newDiv.querySelector('input').focus();
+                // Archive button handler
+                const archBtn = card.querySelector('.btn-archive-created-task');
+                if (archBtn) {
+                    archBtn.addEventListener('mouseenter', () => { archBtn.style.borderColor = '#ef4444'; archBtn.style.color = '#ef4444'; });
+                    archBtn.addEventListener('mouseleave', () => { archBtn.style.borderColor = 'var(--border-color)'; archBtn.style.color = 'var(--text-muted)'; });
+                    archBtn.addEventListener('click', () => archiveCreatedTask(task.id));
+                }
+
+                createdTasksGrid.appendChild(card);
             });
 
-            // Wire up previously existing remove buttons
-            const existingRemoveBtns = card.querySelectorAll('.btn-remove-task-edit-st');
-            existingRemoveBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.target.closest('.edit-sub-task-wrapper').remove();
-                });
-            });
-        });
+        } catch (err) {
+            console.error('Error fetching created tasks:', err);
+            createdTasksGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #ff6b6b; padding: 40px;">Failed to load tasks.</div>';
+        }
     }
 
     async function renderSubTaskGroups() {
