@@ -851,9 +851,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     folderItem.classList.add('active-folder');
 
                     window.selectedCampaignId = campaign.id;
+                    window.selectedCampaign = campaign;
                     localStorage.setItem('selectedCampaignId', campaign.id);
                     
-                    console.log("Selected Campaign:", campaign);
+                    console.log("Selected Campaign:", window.selectedCampaign);
+                    
+                    if (typeof renderCampaignDashboard === 'function') {
+                        renderCampaignDashboard(campaign);
+                    }
                 });
 
                 emptyCampaignList.appendChild(folderItem);
@@ -862,6 +867,39 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Error fetching campaigns:', err);
             emptyCampaignList.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 10px;">Failed to load campaigns.</div>';
+        }
+    }
+
+
+    function renderCampaignDashboard(campaign) {
+        const contentPlaceholder = document.getElementById('content-viewer-placeholder');
+        const campaignFormContainer = document.getElementById('campaign-form-container');
+        const addInfluencerView = document.getElementById('add-influencer-view');
+        const influencerListView = document.getElementById('influencer-list-view');
+        const dashboardView = document.getElementById('campaign-dashboard-view');
+        const dispatchedListView = document.getElementById('view-dispatched-list');
+        const statusTrackingView = document.getElementById('view-status-tracking');
+
+        // Hide other views
+        if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
+        if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
+        if (addInfluencerView) addInfluencerView.classList.add('hidden');
+        if (influencerListView) influencerListView.classList.add('hidden');
+        if (dispatchedListView) dispatchedListView.classList.add('hidden');
+        if (statusTrackingView) statusTrackingView.classList.add('hidden');
+
+        // Show Dashboard View
+        if (dashboardView) {
+            dashboardView.classList.remove('fade-in');
+            void dashboardView.offsetWidth; // Trigger reflow for animation
+            dashboardView.classList.remove('hidden');
+            dashboardView.classList.add('fade-in'); // Smooth transition
+            
+            // Set Campaign Title
+            const titleEl = document.getElementById('campaign-dashboard-title');
+            if (titleEl) {
+                titleEl.textContent = `${campaign.campaign_name || 'Untitled'} Campaign`;
+            }
         }
     }
 
