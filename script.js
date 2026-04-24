@@ -81,11 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             if (landingPage) {
+                landingPage.style.display = 'none';
                 landingPage.classList.add('hidden');
                 landingPage.classList.remove('active', 'fade-out');
             }
 
             if (dashboardPage) {
+                dashboardPage.style.display = 'flex';
                 dashboardPage.classList.remove('hidden');
                 dashboardPage.classList.add('active', 'stage-enter');
 
@@ -105,9 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 400);
     }
 
-    if (brandBtn) {
-        brandBtn.addEventListener('click', showDashboard);
-    }
+    const brandSelectBtns = document.querySelectorAll('.brand-select-btn');
+    brandSelectBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            let selectedBrand = e.target.getAttribute('data-brand') || e.target.textContent || 'Clean Magic';
+            window.selectedBrand = selectedBrand;
+            console.log('Brand selected:', selectedBrand);
+            
+            // Call showDashboard which handles the CSS animations and display toggles
+            showDashboard();
+        });
+    });
 
     if (backBtn) {
         backBtn.addEventListener('click', () => {
@@ -4053,7 +4063,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const taskStatusSearchInput = document.getElementById('task-status-search');
     if (taskStatusSearchInput) {
         let tsDebounce = null;
         taskStatusSearchInput.addEventListener('input', () => {
