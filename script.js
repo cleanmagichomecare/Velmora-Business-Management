@@ -1767,6 +1767,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
+        // Brand Performance Link Visibility Toggling
+        if (e.target && e.target.classList.contains('perf-platform-select')) {
+            const val = e.target.value;
+            const parentCard = e.target.closest('.performance-card');
+            if (!parentCard) return;
+
+            const igWrapper = parentCard.querySelector('.ig-link-wrapper');
+            const ytWrapper = parentCard.querySelector('.yt-link-wrapper');
+            const fbWrapper = parentCard.querySelector('.fb-link-wrapper');
+
+            if (!igWrapper || !ytWrapper || !fbWrapper) return;
+
+            const renderMap = {
+                'Instagram': ['ig'],
+                'Youtube': ['yt'],
+                'Facebook': ['fb'],
+                'Instagram and Youtube': ['ig', 'yt'],
+                'Instagram and Facebook': ['ig', 'fb'],
+                'Youtube and Facebook': ['yt', 'fb'],
+                'All': ['ig', 'yt', 'fb']
+            };
+
+            const platformsToRender = renderMap[val] || [];
+            
+            if (platformsToRender.includes('ig')) igWrapper.classList.remove('hidden');
+            else igWrapper.classList.add('hidden');
+
+            if (platformsToRender.includes('yt')) ytWrapper.classList.remove('hidden');
+            else ytWrapper.classList.add('hidden');
+
+            if (platformsToRender.includes('fb')) fbWrapper.classList.remove('hidden');
+            else fbWrapper.classList.add('hidden');
+        }
     });
 
     document.body.addEventListener('click', (e) => {
@@ -1863,22 +1897,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="links-section">
                     <h4 class="mb-10 text-muted">Links</h4>
                     <div class="grid-3 mb-10">
-                        <div class="form-group">
+                        <div class="form-group ig-link-wrapper">
                             <label>Instagram Link</label>
                             <input type="url" class="perf-ig-link" placeholder="https://instagram.com/...">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group yt-link-wrapper">
                             <label>Youtube Link</label>
                             <input type="url" class="perf-yt-link" placeholder="https://youtube.com/...">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group fb-link-wrapper">
                             <label>Facebook Link</label>
                             <input type="url" class="perf-fb-link" placeholder="https://facebook.com/...">
                         </div>
                     </div>
                 </div>
+                <div style="text-align: right; margin-top: 10px;">
+                    <button type="button" class="btn-remove-performance btn-danger">Remove Set</button>
+                </div>
             `;
             performanceContainer.appendChild(newCard);
+            
+            // Trigger change event to set initial visibility of links
+            const select = newCard.querySelector('.perf-platform-select');
+            if (select) {
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        // Handle Remove Performance
+        if (e.target && e.target.classList.contains('btn-remove-performance')) {
+            const cardToRemove = e.target.closest('.performance-card');
+            if (cardToRemove) {
+                const container = cardToRemove.closest('.brand-performance-container');
+                if (container && container.querySelectorAll('.performance-card').length > 1) {
+                    cardToRemove.remove();
+                } else {
+                    if (typeof showToast === 'function') {
+                        showToast('❌ At least one performance card must remain.');
+                    } else {
+                        alert('At least one performance card must remain.');
+                    }
+                }
+            }
         }
     });
 
@@ -1937,292 +1997,128 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (btnSaveInfluencer && influencerListView && influencerListContainer) {
+    if (btnSaveInfluencer) {
         btnSaveInfluencer.addEventListener('click', () => {
-            // Validation: Ensure an active campaign folder is selected
-            const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
-            if (!activeFolder) {
-                alert("⚠ Please select a campaign folder before adding an influencer.");
-                return;
-            }
+            // Loading State ON
+            const originalText = btnSaveInfluencer.textContent;
+            btnSaveInfluencer.textContent = "Saving...";
+            btnSaveInfluencer.disabled = true;
 
-            // Validation: Basic Info Names
-            const basicNameInput = document.querySelector('#add-influencer-view input[placeholder="Enter name"]');
-            const infNameInput = document.querySelector('#add-influencer-view input[placeholder="Enter influencer name"]');
+            try {
+                // Extract Brand Performance Data
+                const performanceContainer = document.getElementById('brand-performance-container');
+                const brandPerformance = [];
+                let performanceValidationFailed = false;
 
-            if (!basicNameInput || !basicNameInput.value.trim() || !infNameInput || !infNameInput.value.trim()) {
-                alert("⚠ Please fill in the Name and Influencer Name in the Basic Info tab.");
-                return;
-            }
+                if (performanceContainer) {
+                    const cards = performanceContainer.querySelectorAll('.performance-card');
+                    cards.forEach(card => {
+                        const brandInput = card.querySelector('.perf-brand-input');
+                        const productInput = card.querySelector('.perf-product-input');
+                        const viewsInput = card.querySelector('.perf-views-input');
+                        const platformSelect = card.querySelector('.perf-platform-select');
+                        
+                        const igLink = card.querySelector('.perf-ig-link');
+                        const ytLink = card.querySelector('.perf-yt-link');
+                        const fbLink = card.querySelector('.perf-fb-link');
 
-            const currentCampaignId = activeFolder.getAttribute('data-campaign-id');
+                        const brand = brandInput ? brandInput.value.trim() : "";
+                        const product = productInput ? productInput.value.trim() : "";
+                        const viewsStr = viewsInput ? viewsInput.value.trim() : "";
+                        const platformVal = platformSelect ? platformSelect.value : "All";
+                        
+                        // Ignore completely empty cards
+                        if (!brand && !product && !viewsStr && 
+                            (!igLink || !igLink.value.trim()) && 
+                            (!ytLink || !ytLink.value.trim()) && 
+                            (!fbLink || !fbLink.value.trim())) {
+                            return;
+                        }
 
-            // Very simplisitic data extraction for UI generation purpose
-            // In a real app, this would serialize all inputs. For now, grab the name.
-            const rawInputs = document.querySelectorAll('#add-influencer-view input, #add-influencer-view select');
-            let basicName = "New Influencer";
-            let rawData = {}; // K-V store of class/id to value for injection
+                        // Validate that at least brand or product is provided
+                        if (!brand && !product) {
+                            performanceValidationFailed = true;
+                        }
 
-            rawInputs.forEach(input => {
-                // If it's the basic info name field (the first input)
-                if (input.placeholder === "Enter name" && input.value) {
-                    basicName = input.value;
+                        const renderMap = {
+                            'Instagram': ['instagram'],
+                            'Youtube': ['youtube'],
+                            'Facebook': ['facebook'],
+                            'Instagram and Youtube': ['instagram', 'youtube'],
+                            'Instagram and Facebook': ['instagram', 'facebook'],
+                            'Youtube and Facebook': ['youtube', 'facebook'],
+                            'All': ['instagram', 'youtube', 'facebook']
+                        };
+
+                        const views = viewsStr ? parseInt(viewsStr) : null;
+
+                        brandPerformance.push({
+                            brand: brand,
+                            product: product,
+                            views: Number.isNaN(views) ? null : views,
+                            uploadedPlatforms: renderMap[platformVal] || [],
+                            links: {
+                                instagram: igLink ? igLink.value.trim() : "",
+                                youtube: ytLink ? ytLink.value.trim() : "",
+                                facebook: fbLink ? fbLink.value.trim() : ""
+                            }
+                        });
+                    });
                 }
-            });
 
-            // Extract User Profile Avatar
-            let avatarContent = `${basicName.charAt(0).toUpperCase()}`;
-            const fileUploadField = document.querySelector('#add-influencer-view .file-upload');
-            if (fileUploadField && fileUploadField.files && fileUploadField.files[0]) {
-                const imageUrl = URL.createObjectURL(fileUploadField.files[0]);
-                avatarContent = `<img src="${imageUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-            }
-
-            // Clone the entire tabs content HTML structure
-            const tabsContentObj = document.querySelector('.tabs-content');
-            if (!tabsContentObj) return;
-
-            // Unique ID for scoped tab switching
-            const uniqueId = 'inf-' + Date.now();
-
-            // Create the cloned DOM payload mapping the entire form to a read-only list card
-
-            const cardHTML = `
-                <div class="profile-card-header" style="border-bottom: none; padding-bottom: 0;">
-                    <div class="profile-info-group">
-                        <div class="profile-avatar">${avatarContent}</div>
-                        <div class="profile-name-block">
-                            <h3>${basicName}</h3>
-                            <span class="profile-status status-badge">Active</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="tabs-nav-container" style="padding: 0 25px; border-bottom: 1px solid var(--border-color);">
-                    <div class="tabs-nav scoped-tabs-${uniqueId}" style="margin-top: 12px; margin-bottom: 16px;">
-                        <button class="tab-btn active" data-targettab="tab-basic-${uniqueId}">Basic Info</button>
-                        <button class="tab-btn" data-targettab="tab-plat-${uniqueId}">Platform Details</button>
-                        <button class="tab-btn" data-targettab="tab-price-${uniqueId}">Pricing Info</button>
-                        <button class="tab-btn" data-targettab="tab-perf-${uniqueId}">Brand Performance</button>
-                    </div>
-                </div>
-
-                <div class="profile-card-body" style="padding-top: 16px;">
-                    <div class="scoped-content-${uniqueId}">
-                        <!-- Tab 1: Basic Info Cloned -->
-                        <div id="tab-basic-${uniqueId}" class="scoped-pane">
-                            ${document.getElementById('tab-basic-info').innerHTML}
-                        </div>
-                        
-                        <!-- Tab 2: Platform Details Cloned -->
-                        <div id="tab-plat-${uniqueId}" class="scoped-pane hidden">
-                            ${document.getElementById('tab-platform-details').innerHTML}
-                        </div>
-                        
-                        <!-- Tab 3: Pricing Info Cloned -->
-                        <div id="tab-price-${uniqueId}" class="scoped-pane hidden">
-                            ${document.getElementById('tab-pricing-info').innerHTML}
-                        </div>
-
-                        <!-- Tab 4: Brand Performance Cloned -->
-                        <div id="tab-perf-${uniqueId}" class="scoped-pane hidden">
-                            ${document.getElementById('tab-brand-performance').innerHTML}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="profile-actions-row">
-                    <button class="btn-edit">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> 
-                        Edit
-                    </button>
-                    <button class="btn-save-inline hidden">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        Save
-                    </button>
-                    <button class="btn-dispatch">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        Dispatch
-                    </button>
-                    <button class="btn-archive">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                        Archive
-                    </button>
-                </div>
-            `;
-
-            const cardNode = document.createElement('div');
-            cardNode.className = 'influencer-profile-card';
-            cardNode.setAttribute('data-campaign-id', currentCampaignId);
-            cardNode.innerHTML = cardHTML;
-
-            // Cleanup the HTML string for buttons that shouldn't exist in the read-only card
-            const unnecessaryBtns = cardNode.querySelectorAll('.form-footer');
-            unnecessaryBtns.forEach(b => b.remove());
-
-            // Lock all inputs immediately
-            const allInputs = cardNode.querySelectorAll('input, select, textarea');
-            const sourceElements = Array.from(rawInputs);
-            allInputs.forEach((inp, idx) => {
-                inp.disabled = true;
-                // Attempt simple 1:1 value mapping since DOM structures match
-                if (sourceElements[idx]) {
-                    if (inp.type === 'file') {
-                        // File input value cannot be set programmatically
-                    } else if (inp.type === 'checkbox' || inp.type === 'radio') {
-                        inp.checked = sourceElements[idx].checked;
+                if (performanceValidationFailed) {
+                    if (typeof showToast === 'function') {
+                        showToast('❌ Each Brand Performance card requires at least a Brand or Product name.');
                     } else {
-                        inp.value = sourceElements[idx].value;
+                        alert('Each Brand Performance card requires at least a Brand or Product name.');
                     }
+                    throw new Error("Validation Failed");
                 }
-            });
 
-            // Lock Add Set and Add Performance buttons by default
-            // Important: Use scoped queries
-            const dynamicAddBtns = cardNode.querySelectorAll('.btn-add-bargain-set, .btn-add-performance');
-            dynamicAddBtns.forEach(btn => btn.disabled = true);
+                // Save to state
+                if (!window.newInfluencerData) {
+                    window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+                }
+                window.newInfluencerData.brandPerformance = brandPerformance;
 
-            // Delegate Scoped Tabs Logic
-            const cardTabBtns = cardNode.querySelectorAll(`.scoped-tabs-${uniqueId} .tab-btn`);
-            const cardPanes = cardNode.querySelectorAll(`.scoped-content-${uniqueId} .scoped-pane`);
+                // Validate Entire Wizard
+                const d = window.newInfluencerData;
+                if (!d.basicInfo || Object.keys(d.basicInfo).length === 0) {
+                    alert("⚠ Basic Info is missing. Please review the first tab.");
+                    throw new Error("Missing Basic Info");
+                }
+                if (!d.platformDetails || Object.keys(d.platformDetails).length === 0) {
+                    alert("⚠ Platform Details are missing. Please review the second tab.");
+                    throw new Error("Missing Platform Details");
+                }
+                if (!d.pricingInfo || Object.keys(d.pricingInfo).length === 0) {
+                    alert("⚠ Pricing Info is missing. Please review the third tab.");
+                    throw new Error("Missing Pricing Info");
+                }
 
-            cardTabBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    cardTabBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    cardPanes.forEach(p => p.classList.add('hidden'));
-                    const targetId = btn.getAttribute('data-targettab');
-                    const targetEl = cardNode.querySelector(`#${targetId}`);
-                    if (targetEl) targetEl.classList.remove('hidden');
-                });
-            });
-
-            // Delegate Action Buttons Logic
-            const btnEdit = cardNode.querySelector('.btn-edit');
-            const btnSaveInline = cardNode.querySelector('.btn-save-inline');
-            const btnDispatch = cardNode.querySelector('.btn-dispatch');
-            const btnArchive = cardNode.querySelector('.btn-archive');
-            const statusBadge = cardNode.querySelector('.status-badge');
-
-            btnEdit.addEventListener('click', () => {
-                allInputs.forEach(i => i.disabled = false);
-                dynamicAddBtns.forEach(btn => btn.disabled = false);
-                btnEdit.classList.add('hidden');
-                btnSaveInline.classList.remove('hidden');
-            });
-
-            btnSaveInline.addEventListener('click', () => {
-                allInputs.forEach(i => i.disabled = true);
-                dynamicAddBtns.forEach(btn => btn.disabled = true);
-                btnSaveInline.classList.add('hidden');
-                btnEdit.classList.remove('hidden');
-                showToast('Influencer updated successfully');
-            });
-
-            btnDispatch.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                // Store card reference on modal for the submit handler
-                dispatchModal.setAttribute('data-target-card', uniqueId);
-                cardNode.setAttribute('id', `card-${uniqueId}`); // guarantee an ID
-
-                // Reset the form to clear checkboxes and other inputs BEFORE populating data
-                const dispatchForm = document.getElementById('dispatch-form');
-                if (dispatchForm) dispatchForm.reset();
-
-                // Manually disable quantity inputs after form reset
-                const qtyInputs = dispatchModal.querySelectorAll('.product-quantity-input');
-                qtyInputs.forEach(input => {
-                    input.disabled = true;
-                    input.value = '';
-                });
-
-                // Extract Data from Card
-                const cardCreatorName = cardNode.querySelector('h3').textContent;
-                const cardCampaignId = cardNode.getAttribute('data-campaign-id');
-
-                // Retrieve values from the *actual inputs* stored in the DOM clone
-                const phoneInput = cardNode.querySelector(`div#tab-basic-${uniqueId} input[placeholder="Enter phone number"]`);
-                const altPhoneInput = cardNode.querySelector(`div#tab-basic-${uniqueId} input[placeholder="Enter alternative number"]`);
-                const addressInput = cardNode.querySelector(`div#tab-basic-${uniqueId} input[placeholder="Enter address"]`);
-                const stateInput = cardNode.querySelector(`div#tab-basic-${uniqueId} input[placeholder="Enter state"]`);
-
-                // Populate Modal Fields (use fallback to empty string if node not found)
-                document.getElementById('dispatch-creator-name').value = cardCreatorName || '';
-                document.getElementById('dispatch-campaign').value = cardCampaignId || '';
-
-                document.getElementById('dispatch-phone').value = (phoneInput && phoneInput.value) ? phoneInput.value : '';
-                document.getElementById('dispatch-alt-phone').value = (altPhoneInput && altPhoneInput.value) ? altPhoneInput.value : '';
-                document.getElementById('dispatch-address').value = (addressInput && addressInput.value) ? addressInput.value : '';
-                document.getElementById('dispatch-state').value = (stateInput && stateInput.value) ? stateInput.value : '';
-
-                // document.getElementById('dispatch-product').value = ''; // Removing non-existent ID
-                // const quantityInput = document.getElementById('dispatch-quantity'); 
-                // if (quantityInput) quantityInput.value = ''; // Removing non-existent ID
-
-                // Reset image previews
-                ['preview-pack-photo', 'preview-final-photo'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.innerHTML = '<span>No Image</span>';
-                });
-
-                // Duplicate block removed – reference already set above
-
-                console.log("Opening modal");
-                dispatchModal.classList.remove('hidden');
-            });
-
-            btnArchive.addEventListener('click', () => {
-                cardNode.style.transition = 'opacity 0.3s';
-                cardNode.style.opacity = '0';
-                setTimeout(() => cardNode.remove(), 300);
-            });
-
-            // Prepend new card
-            influencerListContainer.prepend(cardNode);
-
-            // Clean form and switch view
-            document.querySelectorAll('#add-influencer-view form').forEach(f => f.reset());
-            // Clear dynamic containers in the builder
-            if (platformContainer) platformContainer.innerHTML = '';
-
-            // Force Tab UI to Reset back to Basic Info
-            const firstTabBtn = document.querySelector('.tab-btn[data-tab="tab-basic-info"]');
-            if (firstTabBtn) firstTabBtn.click();
-
-            // Toggle active view
-            document.getElementById('add-influencer-view').classList.add('hidden');
-            influencerListView.classList.remove('hidden');
-
-            // Trigger native filter to refresh the list matching only this campaign
-            const activeId = activeFolder.getAttribute('data-campaign-id');
-            const allInfluencerCards = document.querySelectorAll('.influencer-profile-card');
-            allInfluencerCards.forEach(card => {
-                if (card.getAttribute('data-campaign-id') === activeId) {
-                    card.style.display = 'flex';
+                // ALL DATA COLLECTED SUCCESSFULLY
+                console.log("========================================");
+                console.log("FINAL INFLUENCER DATA READY FOR SUPABASE");
+                console.log("========================================");
+                console.log(JSON.stringify(window.newInfluencerData, null, 2));
+                
+                if (typeof showToast === 'function') {
+                    showToast('✅ Influencer Data Collected Successfully! Check Console.');
                 } else {
-                    card.style.display = 'none';
+                    alert('Influencer Data Collected Successfully! Check Console.');
                 }
-            });
 
-            // NEW: Push to central data source
-            const influencerObject = {
-                id: uniqueId,
-                name: basicName,
-                campaignId: currentCampaignId,
-                status: 'Active',
-                avatar: avatarContent,
-                // In a real app, storing all raw inputs here
-                data: {}
-            };
-            influencerData.push(influencerObject);
-
-            showToast('Influencer saved successfully');
+            } catch (err) {
+                console.warn(err.message);
+            } finally {
+                // Loading State OFF
+                btnSaveInfluencer.textContent = originalText;
+                btnSaveInfluencer.disabled = false;
+            }
         });
-    }    // --- Dispatch Modal Logic ---
+    }
+
+    // --- Dispatch Modal Logic ---
     const dispatchModal = document.getElementById('dispatch-modal');
     const btnCloseDispatch = document.getElementById('btn-close-dispatch');
     const btnSubmitDispatch = document.getElementById('btn-submit-dispatch');
