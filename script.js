@@ -2139,10 +2139,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (platData.username || platData.profileLink) {
                             platformInserts.push({
                                 influencer_id: influencerId,
-                                platform_name: platformName,
+                                platform: platformName,
                                 username: platData.username || null,
                                 profile_link: platData.profileLink || null,
-                                followers: platData.followers || null,
+                                followers_count: platData.followers || null,
                                 video_views: platData.videoViews || []
                             });
                         }
