@@ -35,7 +35,7 @@
         const defaultState = document.getElementById('influencer-db-default');
         const influencerForm = document.getElementById('influencer-db-form');
         const btnCancel = document.getElementById('btn-cancel-influencer');
-        const btnSave = document.getElementById('btn-save-influencer');
+        const btnSave = document.getElementById('btn-save-influencer-db');
 
         // Form Fields
         const infBrand = document.getElementById('inf-brand');
