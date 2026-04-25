@@ -2382,8 +2382,99 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
 
-                    // For now, complex multi-row editing (Platforms, Bargains, Performance) is locked to avoid massive UI complexity inline.
-                    // We only support basic info and pricing top-level fields for inline editing to keep it clean.
+                    // Platform Details Inline Editing
+                    const platformPane = card.querySelector(`#platform-${data.id}`);
+                    if (platformPane) {
+                        const existingPlats = (data.platforms || []).map(p => p.platform.toLowerCase());
+                        let availVal = "All";
+                        if (existingPlats.length === 1) availVal = existingPlats[0].charAt(0).toUpperCase() + existingPlats[0].slice(1);
+                        else if (existingPlats.includes('instagram') && existingPlats.includes('youtube') && !existingPlats.includes('facebook')) availVal = "Instagram and Youtube";
+                        else if (existingPlats.includes('instagram') && existingPlats.includes('facebook') && !existingPlats.includes('youtube')) availVal = "Instagram and Facebook";
+                        else if (existingPlats.includes('youtube') && existingPlats.includes('facebook') && !existingPlats.includes('instagram')) availVal = "Youtube and Facebook";
+                        
+                        let platEditHtml = `
+                            <div class="edit-grid" style="margin-bottom: 25px;">
+                                <div class="form-group">
+                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Platform Availability</label>
+                                    <select class="inf-edit-platform-avail edit-input">
+                                        <option value="All">All</option>
+                                        <option value="Instagram">Instagram</option>
+                                        <option value="Youtube">Youtube</option>
+                                        <option value="Facebook">Facebook</option>
+                                        <option value="Instagram and Youtube">Instagram and Youtube</option>
+                                        <option value="Instagram and Facebook">Instagram and Facebook</option>
+                                        <option value="Youtube and Facebook">Youtube and Facebook</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Platform Agreed</label>
+                                    <select class="inf-edit-platform-agreed edit-input">
+                                        <option value="All">All</option>
+                                        <option value="Instagram">Instagram</option>
+                                        <option value="Youtube">Youtube</option>
+                                        <option value="Facebook">Facebook</option>
+                                        <option value="Instagram and Youtube">Instagram and Youtube</option>
+                                        <option value="Instagram and Facebook">Instagram and Facebook</option>
+                                        <option value="Youtube and Facebook">Youtube and Facebook</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="inf-edit-platform-forms platform-forms-container"></div>
+                        `;
+                        platformPane.innerHTML = platEditHtml;
+                        const pfContainer = platformPane.querySelector('.inf-edit-platform-forms');
+                        const availSelect = platformPane.querySelector('.inf-edit-platform-avail');
+                        availSelect.value = availVal;
+                        platformPane.querySelector('.inf-edit-platform-agreed').value = availVal;
+
+                        const allPlats = ['Instagram', 'Youtube', 'Facebook'];
+                        allPlats.forEach(plat => {
+                            const pData = (data.platforms || []).find(p => p.platform.toLowerCase() === plat.toLowerCase());
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = generatePlatformHTML(plat);
+                            const pCard = tempDiv.firstElementChild;
+                            
+                            if (pData) {
+                                pCard.querySelector('.plat-username').value = pData.username || '';
+                                pCard.querySelector('.plat-link').value = pData.profile_link || '';
+                                pCard.querySelector('.plat-followers').value = pData.followers_count || '';
+                                const viewInputs = pCard.querySelectorAll('.plat-video-input');
+                                if (pData.video_views && Array.isArray(pData.video_views)) {
+                                    pData.video_views.forEach((v, idx) => {
+                                        if (viewInputs[idx]) viewInputs[idx].value = v;
+                                    });
+                                }
+                            } else {
+                                pCard.classList.add('hidden');
+                            }
+                            pfContainer.appendChild(pCard);
+                        });
+
+                        availSelect.addEventListener('change', (e) => {
+                            const val = e.target.value;
+                            const renderMap = {
+                                'Instagram': ['Instagram'],
+                                'Youtube': ['Youtube'],
+                                'Facebook': ['Facebook'],
+                                'Instagram and Youtube': ['Instagram', 'Youtube'],
+                                'Instagram and Facebook': ['Instagram', 'Facebook'],
+                                'Youtube and Facebook': ['Youtube', 'Facebook'],
+                                'All': ['Instagram', 'Youtube', 'Facebook']
+                            };
+                            const toRender = renderMap[val] || [];
+                            allPlats.forEach(plat => {
+                                const pCard = pfContainer.querySelector(`.platform-card[data-platform-id="${plat}"]`);
+                                if (pCard) {
+                                    if (toRender.includes(plat)) pCard.classList.remove('hidden');
+                                    else pCard.classList.add('hidden');
+                                }
+                            });
+                        });
+                        
+                        availSelect.dispatchEvent(new Event('change'));
+                    }
+
+                    // For now, complex multi-row editing for Bargains and Performance is locked.
                     
                 } else {
                     // Turn OFF Edit Mode (Save)
@@ -2398,11 +2489,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         editInputs.forEach(inp => {
                             const field = inp.getAttribute('data-field');
-                            if (field === 'final_price' || field === 'total_videos') {
-                                if (!priceUpdates) priceUpdates = {};
-                                priceUpdates[field] = inp.value ? Number(inp.value) : null;
-                            } else {
-                                updates[field] = inp.value;
+                            if (field) {
+                                if (field === 'final_price' || field === 'total_videos') {
+                                    if (!priceUpdates) priceUpdates = {};
+                                    priceUpdates[field] = inp.value ? Number(inp.value) : null;
+                                } else {
+                                    updates[field] = inp.value;
+                                }
                             }
                         });
 
@@ -2431,12 +2524,70 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
 
+                        // Extract Platform Details for Save
+                        const platformPane = card.querySelector(`#platform-${data.id}`);
+                        let platformDataToSave = [];
+                        let platformValidationFailed = false;
+                        if (platformPane) {
+                            const allCards = platformPane.querySelectorAll('.inf-edit-platform-forms .platform-card');
+                            allCards.forEach(pCard => {
+                                if (!pCard.classList.contains('hidden')) {
+                                    const platName = pCard.getAttribute('data-platform-id').toLowerCase();
+                                    const username = pCard.querySelector('.plat-username').value.trim();
+                                    const link = pCard.querySelector('.plat-link').value.trim();
+                                    const followers = pCard.querySelector('.plat-followers').value.trim();
+                                    
+                                    if (!username && !link) {
+                                        platformValidationFailed = true;
+                                    }
+                                    
+                                    const views = [];
+                                    pCard.querySelectorAll('.plat-video-input').forEach(inp => {
+                                        views.push(inp.value ? parseInt(inp.value) : 0);
+                                    });
+                                    platformDataToSave.push({
+                                        influencer_id: data.id,
+                                        platform: platName,
+                                        username: username,
+                                        profile_link: link,
+                                        followers_count: followers,
+                                        video_views: views
+                                    });
+                                }
+                            });
+                        }
+
+                        if (platformValidationFailed) {
+                            if (window.showToast) window.showToast('❌ Please fill Username or Link for selected platforms.');
+                            btnEdit.textContent = 'Save Changes';
+                            btnEdit.disabled = false;
+                            return;
+                        }
+
                         // 1. Update basic info
-                        const { error: infoErr } = await window.supabase
-                            .from('influencers_info')
-                            .update(updates)
-                            .eq('id', data.id);
-                        if (infoErr) throw infoErr;
+                        if (Object.keys(updates).length > 0) {
+                            const { error: infoErr } = await window.supabase
+                                .from('influencers_info')
+                                .update(updates)
+                                .eq('id', data.id);
+                            if (infoErr) throw infoErr;
+                        }
+                        
+                        // 1.5 Update platform info (Delete & Re-insert strategy)
+                        if (platformPane) {
+                            const { error: platDelErr } = await window.supabase
+                                .from('influencer_platforms_details')
+                                .delete()
+                                .eq('influencer_id', data.id);
+                            if (platDelErr) throw platDelErr;
+                            
+                            if (platformDataToSave.length > 0) {
+                                const { error: platInsErr } = await window.supabase
+                                    .from('influencer_platforms_details')
+                                    .insert(platformDataToSave);
+                                if (platInsErr) throw platInsErr;
+                            }
+                        }
 
                         // 2. Update pricing info
                         if (priceUpdates && data.pricing?.id) {
