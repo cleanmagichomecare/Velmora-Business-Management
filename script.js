@@ -2140,22 +2140,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            let platformHtml = `<div id="platform-${data.id}" class="tab-pane hidden"><div class="grid-3">`;
+            let platformHtml = `<div id="platform-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">`;
             if (data.platforms && data.platforms.length > 0) {
                 data.platforms.forEach(p => {
+                    let videoViewsHtml = '';
+                    if (p.video_views && Array.isArray(p.video_views) && p.video_views.length > 0) {
+                        videoViewsHtml = `<div class="video-views-grid mt-15">`;
+                        p.video_views.forEach((view, idx) => {
+                            videoViewsHtml += `
+                                <div class="video-metric-card">
+                                    <div class="video-metric-label">Video ${idx + 1}</div>
+                                    <div class="video-metric-val">${view}</div>
+                                </div>
+                            `;
+                        });
+                        videoViewsHtml += `</div>`;
+                    } else {
+                        videoViewsHtml = `<div class="text-muted mt-10" style="font-size: 13px;">No video views recorded.</div>`;
+                    }
+
                     platformHtml += `
-                        <div class="nested-card">
-                            <div class="platform-header" style="text-transform: capitalize;">${p.platform}</div>
-                            <div class="info-group"><label>Username</label><div class="info-val">${p.username || '-'}</div></div>
-                            <div class="info-group"><label>Followers</label><div class="info-val">${p.followers_count || '-'}</div></div>
-                            ${p.profile_link ? `<div class="info-group"><label>Link</label><a href="${p.profile_link}" target="_blank" style="color:var(--accent-color); word-break: break-all;">View Profile</a></div>` : ''}
+                        <div class="platform-display-card">
+                            <div class="platform-meta-row">
+                                <div class="platform-header">${p.platform}</div>
+                                ${p.profile_link ? `<a href="${p.profile_link}" target="_blank" class="btn-secondary" style="font-size: 12px; padding: 6px 12px; border-radius: 6px; text-decoration: none;">View Profile</a>` : ''}
+                            </div>
+                            <div class="platform-stats-grid">
+                                <div class="info-group"><label>Username</label><div class="info-val">${p.username || '-'}</div></div>
+                                <div class="info-group"><label>Followers</label><div class="info-val">${p.followers_count || '-'}</div></div>
+                            </div>
+                            <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Previous 15 Videos Views</div>
+                            ${videoViewsHtml}
                         </div>
                     `;
                 });
             } else {
                 platformHtml += `<div class="text-muted">No platform details added.</div>`;
             }
-            platformHtml += `</div></div>`;
+            platformHtml += `</div>`;
 
             let pricingHtml = `<div id="pricing-${data.id}" class="tab-pane hidden">
                 <div class="grid-2 mb-15">

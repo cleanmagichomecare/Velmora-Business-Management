@@ -5175,3 +5175,60 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 .compact-input[type="number"] {
     -moz-appearance: textfield;
 }
+
+/* Read-Only Platform Display UI */
+.platform-display-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 24px;
+    width: 100%;
+}
+
+.platform-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.platform-meta-row .platform-header {
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-size: 16px;
+    text-transform: capitalize;
+}
+
+.platform-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.platform-stats-grid .info-group {
+    margin: 0;
+}
+
+.video-metric-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.video-metric-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.video-metric-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
