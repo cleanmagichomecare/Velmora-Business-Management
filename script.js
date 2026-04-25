@@ -1975,15 +1975,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Loading influencers...</div>';
 
+        const activeCampaignId = Number(campaignId);
+        
+        console.log('ACTIVE CAMPAIGN:', window.selectedCampaign);
+        console.log('ACTIVE CAMPAIGN ID (original):', campaignId);
+        console.log('ACTIVE CAMPAIGN ID (Number):', activeCampaignId);
+
         try {
             // 1. Fetch main info
             const { data: infoData, error: infoError } = await window.supabase
                 .from('influencers_info')
                 .select('*')
-                .eq('campaign_id', campaignId)
-                .neq('is_archived', true)
+                .eq('campaign_id', activeCampaignId)
                 .order('created_at', { ascending: false });
 
+            console.log('FETCHED INFLUENCERS (infoData):', infoData);
+            
             if (infoError) throw infoError;
 
             if (!infoData || infoData.length === 0) {
