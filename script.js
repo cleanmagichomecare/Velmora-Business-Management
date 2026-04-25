@@ -2288,10 +2288,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!isEditing) {
                     // Turn ON Edit Mode
                     card.classList.add('is-editing');
+                    card.classList.add('edit-mode-card');
                     btnEdit.textContent = 'Save Changes';
                     btnEdit.classList.remove('btn-secondary');
                     btnEdit.classList.add('btn-primary');
                     btnArchive.style.display = 'none'; // Hide archive while editing
+
+                    // Convert grids to edit-grid
+                    const basicPane = card.querySelector(`#basic-${data.id} .grid-2`);
+                    if (basicPane) {
+                        basicPane.classList.remove('grid-2');
+                        basicPane.classList.add('edit-grid');
+                    }
+                    const pricingPane = card.querySelector(`#pricing-${data.id} .grid-2`);
+                    if (pricingPane) {
+                        pricingPane.classList.remove('grid-2');
+                        pricingPane.classList.add('edit-grid');
+                    }
 
                     // Convert basic fields to inputs
                     const editableFields = ['name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state', 'complete_address'];
@@ -2299,7 +2312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const valDiv = card.querySelector(`.info-val[data-field="${f}"]`);
                         if (valDiv) {
                             const val = valDiv.textContent === '-' ? '' : valDiv.textContent;
-                            valDiv.innerHTML = `<input type="text" class="edit-input" data-field="${f}" value="${val.replace(/"/g, '&quot;')}" style="width:100%; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: white;">`;
+                            valDiv.innerHTML = `<input type="text" class="edit-input" data-field="${f}" value="${val.replace(/"/g, '&quot;')}">`;
                         }
                     });
 
@@ -2307,21 +2320,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     const fpDiv = card.querySelector(`.info-val[data-field="final_price"]`);
                     if (fpDiv) {
                         const val = fpDiv.textContent.replace('₹', '') === '-' ? '' : fpDiv.textContent.replace('₹', '');
-                        fpDiv.innerHTML = `<input type="number" class="edit-input" data-field="final_price" value="${val}" style="width:100%; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: white;">`;
+                        fpDiv.innerHTML = `<input type="number" class="edit-input" data-field="final_price" value="${val}">`;
                     }
                     const tvDiv = card.querySelector(`.info-val[data-field="total_videos"]`);
                     if (tvDiv) {
                         const val = tvDiv.textContent === '-' ? '' : tvDiv.textContent;
-                        tvDiv.innerHTML = `<input type="number" class="edit-input" data-field="total_videos" value="${val}" style="width:100%; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: white;">`;
+                        tvDiv.innerHTML = `<input type="number" class="edit-input" data-field="total_videos" value="${val}">`;
                     }
 
                     // Append File Upload for Edit Mode
                     const editHeader = card.querySelector('.influencer-header-section');
                     if (editHeader) {
                         const imgUploadDiv = document.createElement('div');
-                        imgUploadDiv.className = 'edit-img-upload-div';
-                        imgUploadDiv.style.marginLeft = '15px';
-                        imgUploadDiv.innerHTML = `<label style="display:block; font-size:11px; margin-bottom:5px; color:var(--text-muted);">Change Profile Image</label><input type="file" class="edit-img-upload" accept=".jpg,.jpeg,.png,.webp" style="font-size:11px;">`;
+                        imgUploadDiv.className = 'edit-img-upload-div custom-upload';
+                        imgUploadDiv.innerHTML = `
+                            <label class="btn-secondary" style="cursor:pointer; padding: 8px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-right: 10px; display:inline-block;">
+                                Upload Image
+                                <input type="file" class="edit-img-upload hidden" accept=".jpg,.jpeg,.png,.webp">
+                            </label>
+                            <span class="upload-filename text-muted" style="font-size: 12px; font-weight: 500;">No file selected</span>
+                        `;
                         // Insert it before the actions div
                         const actionsDiv = card.querySelector('.influencer-card-actions');
                         if (actionsDiv) {
@@ -2329,6 +2347,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             editHeader.appendChild(imgUploadDiv);
                         }
+
+                        // Add listener for filename display
+                        const fileInp = imgUploadDiv.querySelector('.edit-img-upload');
+                        const fileSpan = imgUploadDiv.querySelector('.upload-filename');
+                        fileInp.addEventListener('change', (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                                fileSpan.textContent = e.target.files[0].name;
+                            } else {
+                                fileSpan.textContent = 'No file selected';
+                            }
+                        });
                     }
 
                     // For now, complex multi-row editing (Platforms, Bargains, Performance) is locked to avoid massive UI complexity inline.
