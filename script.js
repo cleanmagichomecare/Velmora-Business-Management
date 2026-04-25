@@ -2329,11 +2329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         basicPane.classList.remove('grid-2');
                         basicPane.classList.add('edit-grid');
                     }
-                    const pricingPane = card.querySelector(`#pricing-${data.id} .grid-2`);
-                    if (pricingPane) {
-                        pricingPane.classList.remove('grid-2');
-                        pricingPane.classList.add('edit-grid');
-                    }
+
 
                     // Convert basic fields to inputs
                     const editableFields = ['name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state', 'complete_address'];
@@ -2481,8 +2477,69 @@ document.addEventListener('DOMContentLoaded', () => {
                         availSelect.dispatchEvent(new Event('change'));
                     }
 
-                    // For now, complex multi-row editing for Bargains and Performance is locked.
-                    
+                    // Bargain History Inline Editing
+                    const pricingPane = card.querySelector(`#pricing-${data.id}`);
+                    if (pricingPane) {
+                        const bargainContainer = pricingPane.querySelector('.bargain-history-grid');
+                        if (bargainContainer) {
+                            let bargainEditHtml = '';
+                            if (data.pricing?.bargainHistory && data.pricing.bargainHistory.length > 0) {
+                                data.pricing.bargainHistory.forEach((b, i) => {
+                                    bargainEditHtml += `
+                                        <div class="bargain-row bargain-edit-card">
+                                            <div class="bargain-set-title" style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span>Set ${i+1}</span>
+                                                <button type="button" class="btn-remove-bargain-set btn-danger" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; margin: 0;">Remove</button>
+                                            </div>
+                                            <div class="edit-grid" style="margin-bottom: 0;">
+                                                <div class="form-group" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
+                                                    <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount" value="${b.creator_request !== null ? b.creator_request : ''}">
+                                                </div>
+                                                <div class="form-group" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
+                                                    <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount" value="${b.brand_request !== null ? b.brand_request : ''}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                            } else {
+                                bargainEditHtml += `
+                                    <div class="bargain-row bargain-edit-card">
+                                        <div class="bargain-set-title" style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span>Set 1</span>
+                                            <button type="button" class="btn-remove-bargain-set btn-danger" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; margin: 0;">Remove</button>
+                                        </div>
+                                        <div class="edit-grid" style="margin-bottom: 0;">
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
+                                                <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
+                                                <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount">
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            bargainContainer.innerHTML = bargainEditHtml;
+                            bargainContainer.classList.add('bargain-history-container');
+                            
+                            const bargainSection = pricingPane.querySelector('.pricing-bargain-section');
+                            if (bargainSection && !bargainSection.querySelector('.btn-add-bargain-set')) {
+                                const addBtn = document.createElement('button');
+                                addBtn.type = 'button';
+                                addBtn.className = 'btn-add-bargain-set btn-secondary mt-15';
+                                addBtn.style = 'padding: 8px 16px; border-radius: 8px; font-size: 13px;';
+                                addBtn.textContent = '+ Add Set';
+                                bargainSection.appendChild(addBtn);
+                            }
+                        }
+                    }
+
+                    // For now, complex multi-row editing for Performance is locked.
                 } else {
                     // Turn OFF Edit Mode (Save)
                     btnEdit.textContent = 'Saving...';
@@ -2571,6 +2628,43 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
 
+                        // Extract Bargain History for Save
+                        const pricingPane = card.querySelector(`#pricing-${data.id}`);
+                        let bargainDataToSave = [];
+                        let bargainValidationFailed = false;
+                        if (pricingPane && data.pricing?.id) {
+                            const rows = pricingPane.querySelectorAll('.bargain-history-grid .bargain-row');
+                            rows.forEach(row => {
+                                const creatorInput = row.querySelector('.creator-request-input');
+                                const brandInput = row.querySelector('.brand-request-input');
+                                
+                                const creatorStr = creatorInput ? creatorInput.value.trim() : "";
+                                const brandStr = brandInput ? brandInput.value.trim() : "";
+                                
+                                if ((creatorStr && !brandStr) || (!creatorStr && brandStr)) {
+                                    bargainValidationFailed = true;
+                                }
+                                
+                                const cReq = creatorStr ? parseFloat(creatorStr) : null;
+                                const bReq = brandStr ? parseFloat(brandStr) : null;
+                                
+                                if (cReq !== null || bReq !== null) {
+                                    bargainDataToSave.push({
+                                        pricing_id: data.pricing.id,
+                                        creator_request: cReq,
+                                        brand_request: bReq
+                                    });
+                                }
+                            });
+                        }
+
+                        if (bargainValidationFailed) {
+                            if (window.showToast) window.showToast('❌ Please fill both Creator Request and Brand Request if entering a Bargain Set.');
+                            btnEdit.textContent = 'Save Changes';
+                            btnEdit.disabled = false;
+                            return;
+                        }
+
                         // 1. Update basic info
                         if (Object.keys(updates).length > 0) {
                             const { error: infoErr } = await window.supabase
@@ -2603,6 +2697,22 @@ document.addEventListener('DOMContentLoaded', () => {
                                 .update(priceUpdates)
                                 .eq('id', data.pricing.id);
                             if (priceErr) throw priceErr;
+                        }
+                        
+                        // 2.5 Update bargain info (Delete & Re-insert strategy)
+                        if (pricingPane && data.pricing?.id) {
+                            const { error: bargDelErr } = await window.supabase
+                                .from('influencer_bargain_history')
+                                .delete()
+                                .eq('pricing_id', data.pricing.id);
+                            if (bargDelErr) throw bargDelErr;
+                            
+                            if (bargainDataToSave.length > 0) {
+                                const { error: bargInsErr } = await window.supabase
+                                    .from('influencer_bargain_history')
+                                    .insert(bargainDataToSave);
+                                if (bargInsErr) throw bargInsErr;
+                            }
                         }
 
                         if (window.showToast) window.showToast('✅ Influencer updated successfully');
