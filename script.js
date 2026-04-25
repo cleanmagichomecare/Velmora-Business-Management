@@ -2035,8 +2035,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
 
-                        // Validate that at least brand or product is provided
-                        if (!brand && !product) {
+                        // Valid if at least Brand OR Product is provided
+                        if (brand === "" && product === "") {
                             performanceValidationFailed = true;
                         }
 
@@ -2067,12 +2067,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (performanceValidationFailed) {
-                    if (typeof showToast === 'function') {
-                        showToast('❌ Each Brand Performance card requires at least a Brand or Product name.');
-                    } else {
-                        alert('Each Brand Performance card requires at least a Brand or Product name.');
-                    }
-                    throw new Error("Validation Failed");
+                    throw new Error("Each Brand Performance card requires at least a Brand or Product name.");
                 }
 
                 // Save to state
@@ -2084,16 +2079,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Validate Entire Wizard
                 const d = window.newInfluencerData;
                 if (!d.basicInfo || Object.keys(d.basicInfo).length === 0) {
-                    alert("⚠ Basic Info is missing. Please review the first tab.");
-                    throw new Error("Missing Basic Info");
+                    throw new Error("Basic Info is missing. Please review the first tab.");
                 }
                 if (!d.platformDetails || Object.keys(d.platformDetails).length === 0) {
-                    alert("⚠ Platform Details are missing. Please review the second tab.");
-                    throw new Error("Missing Platform Details");
+                    throw new Error("Platform Details are missing. Please review the second tab.");
                 }
                 if (!d.pricingInfo || Object.keys(d.pricingInfo).length === 0) {
-                    alert("⚠ Pricing Info is missing. Please review the third tab.");
-                    throw new Error("Missing Pricing Info");
+                    throw new Error("Pricing Info is missing. Please review the third tab.");
                 }
 
                 // ALL DATA COLLECTED SUCCESSFULLY
@@ -2103,12 +2095,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(JSON.stringify(window.newInfluencerData, null, 2));
                 
                 // --- SUPABASE INTEGRATION START ---
-                const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
-                const campaignId = activeFolder ? activeFolder.getAttribute('data-campaign-id') : null;
+                // Verify Save Influencer reads the SAME global state value
+                const campaignId = window.selectedCampaignId;
 
                 if (!campaignId) {
                     throw new Error("No active campaign selected. Please select a campaign folder first.");
                 }
+                
+                console.log("Saving Influencer to Campaign ID:", campaignId);
 
                 const basic = d.basicInfo;
                 
