@@ -2011,7 +2011,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let performanceValidationFailed = false;
 
                 if (performanceContainer) {
-                    const cards = performanceContainer.querySelectorAll('.performance-card');
+                    const cards = Array.from(performanceContainer.querySelectorAll('.performance-card')).filter(card => !card.classList.contains('hidden') && card.style.display !== 'none');
                     cards.forEach(card => {
                         const brandInput = card.querySelector('.perf-brand-input');
                         const productInput = card.querySelector('.perf-product-input');
@@ -2117,7 +2117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         alt_phone: basic.alt_phone,
                         upi: basic.upi,
                         city: basic.city,
-                        address: basic.address,
+                        complete_address: basic.address,
                         state: basic.state,
                         languages: basic.languages || []
                     }])
