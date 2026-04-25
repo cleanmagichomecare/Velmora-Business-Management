@@ -1622,6 +1622,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Profile Image Upload Logic ---
+    window.uploadedProfileUrl = null;
+    const profileImageInput = document.querySelector('input[name="inf_profile_image"]');
+    if (profileImageInput) {
+        profileImageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                if (window.showToast) window.showToast('❌ Invalid file type. Only JPG, PNG, WEBP allowed.');
+                e.target.value = '';
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                if (window.showToast) window.showToast('❌ File too large. Max 5MB allowed.');
+                e.target.value = '';
+                return;
+            }
+
+            const campaignId = window.selectedCampaignId || 'general';
+            const timestamp = Date.now();
+            const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const filePath = `${campaignId}/${timestamp}-${safeName}`;
+
+            try {
+                let msgSpan = profileImageInput.parentElement.querySelector('.upload-msg');
+                if (!msgSpan) {
+                    msgSpan = document.createElement('div');
+                    msgSpan.className = 'upload-msg text-muted mt-5';
+                    profileImageInput.parentElement.appendChild(msgSpan);
+                }
+                msgSpan.textContent = 'Uploading...';
+                msgSpan.style.color = 'var(--text-muted)';
+
+                const { data, error } = await window.supabase.storage
+                    .from('influencer-profiles')
+                    .upload(filePath, file);
+
+                if (error) throw error;
+
+                const { data: publicData } = window.supabase.storage
+                    .from('influencer-profiles')
+                    .getPublicUrl(filePath);
+
+                window.uploadedProfileUrl = publicData.publicUrl;
+                msgSpan.textContent = '✅ Image uploaded successfully';
+                msgSpan.style.color = '#28a745';
+            } catch (err) {
+                console.error("Upload error:", err);
+                if (window.showToast) window.showToast('❌ Upload failed: ' + err.message);
+                const msgSpan = profileImageInput.parentElement.querySelector('.upload-msg');
+                if (msgSpan) {
+                    msgSpan.textContent = '❌ Upload failed';
+                    msgSpan.style.color = '#ff6b6b';
+                }
+            }
+        });
+    }
+
     // --- Tabs Navigation Logic (Add Influencer Form) ---
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -2138,20 +2199,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             perfHtml += `</div></div>`;
 
+            const avatarUrl = data.profile_file_url || 'assets/images/default-profile.png';
+
             card.innerHTML = `
-                <div class="flex-between mb-15">
-                    <div>
-                        <h3 style="margin-bottom: 5px;">${data.name || 'Unknown'}</h3>
-                        <div class="text-muted" style="font-size: 12px;">Handle: ${data.influencer_name || '-'}</div>
+                <div class="influencer-header-section flex-row align-center" style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                    <div class="avatar-wrapper" style="flex-shrink: 0;">
+                        <img src="${avatarUrl}" alt="Profile Image" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); background: var(--card-bg);">
                     </div>
-                    <div class="influencer-card-actions flex-row" style="gap: 10px;">
-                        <button class="btn-secondary btn-dispatch-inf" data-id="${data.id}">Dispatch</button>
-                        <button class="btn-secondary btn-edit-inf" data-id="${data.id}">Edit</button>
-                        <button class="btn-danger btn-archive-inf" data-id="${data.id}">Archive</button>
+                    <div style="flex-grow: 1;">
+                        <h2 style="margin: 0 0 5px 0; font-size: 20px; color: var(--text-main); font-weight: 600;">${data.name || 'Unknown'}</h2>
+                        <div class="text-muted" style="font-size: 13px; margin-bottom: 8px;">Handle: ${data.influencer_name || '-'}</div>
+                        <span class="badge" style="background: rgba(40, 167, 69, 0.15); color: #28a745; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; border: 1px solid rgba(40, 167, 69, 0.3);">Active</span>
+                    </div>
+                    <div class="influencer-card-actions flex-row align-center" style="display: flex; gap: 10px; margin-left: auto;">
+                        <button class="btn-secondary btn-dispatch-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Dispatch</button>
+                        <button class="btn-secondary btn-edit-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Edit</button>
+                        <button class="btn-danger btn-archive-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Archive</button>
                     </div>
                 </div>
                 ${tabNavHtml}
-                <div class="tabs-content">
+                <div class="tabs-content" style="padding: 10px 0;">
                     ${basicHtml}
                     ${platformHtml}
                     ${pricingHtml}
@@ -2248,6 +2315,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         tvDiv.innerHTML = `<input type="number" class="edit-input" data-field="total_videos" value="${val}" style="width:100%; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: white;">`;
                     }
 
+                    // Append File Upload for Edit Mode
+                    const editHeader = card.querySelector('.influencer-header-section');
+                    if (editHeader) {
+                        const imgUploadDiv = document.createElement('div');
+                        imgUploadDiv.className = 'edit-img-upload-div';
+                        imgUploadDiv.style.marginLeft = '15px';
+                        imgUploadDiv.innerHTML = `<label style="display:block; font-size:11px; margin-bottom:5px; color:var(--text-muted);">Change Profile Image</label><input type="file" class="edit-img-upload" accept=".jpg,.jpeg,.png,.webp" style="font-size:11px;">`;
+                        // Insert it before the actions div
+                        const actionsDiv = card.querySelector('.influencer-card-actions');
+                        if (actionsDiv) {
+                            editHeader.insertBefore(imgUploadDiv, actionsDiv);
+                        } else {
+                            editHeader.appendChild(imgUploadDiv);
+                        }
+                    }
+
                     // For now, complex multi-row editing (Platforms, Bargains, Performance) is locked to avoid massive UI complexity inline.
                     // We only support basic info and pricing top-level fields for inline editing to keep it clean.
                     
@@ -2271,6 +2354,31 @@ document.addEventListener('DOMContentLoaded', () => {
                                 updates[field] = inp.value;
                             }
                         });
+
+                        // Image upload in edit mode
+                        const fileInput = card.querySelector('.edit-img-upload');
+                        if (fileInput && fileInput.files.length > 0) {
+                            const file = fileInput.files[0];
+                            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                            if (validTypes.includes(file.type) && file.size <= 5 * 1024 * 1024) {
+                                const campaignId = window.selectedCampaignId || 'general';
+                                const timestamp = Date.now();
+                                const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                                const filePath = `${campaignId}/${timestamp}-${safeName}`;
+                                
+                                const { data: upData, error: upError } = await window.supabase.storage
+                                    .from('influencer-profiles')
+                                    .upload(filePath, file);
+
+                                if (upError) throw upError;
+
+                                const { data: publicData } = window.supabase.storage
+                                    .from('influencer-profiles')
+                                    .getPublicUrl(filePath);
+
+                                updates.profile_file_url = publicData.publicUrl;
+                            }
+                        }
 
                         // 1. Update basic info
                         const { error: infoErr } = await window.supabase
@@ -2467,7 +2575,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         city: basic.city,
                         complete_address: basic.address,
                         state: basic.state,
-                        languages: basic.languages || []
+                        languages: basic.languages || [],
+                        profile_file_url: window.uploadedProfileUrl || null
                     }])
                     .select();
 
@@ -2638,6 +2747,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Clear temporary wizard state
                 window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+                window.uploadedProfileUrl = null;
+
+                // Reset upload msg
+                const msgSpan = document.querySelector('.upload-msg');
+                if (msgSpan) msgSpan.remove();
 
                 // Refresh influencer list UI automatically
                 const btnInfluencerListNav = document.getElementById('btn-influencer-list');
