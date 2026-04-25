@@ -5172,6 +5172,6 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     -webkit-appearance: none;
     margin: 0;
 }
-.compact-input[type=number] {
+.compact-input[type="number"] {
     -moz-appearance: textfield;
 }
