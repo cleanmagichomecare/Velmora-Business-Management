@@ -2213,8 +2213,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     d.brandPerformance.forEach(p => {
                         perfInserts.push({
                             influencer_id: influencerId,
-                            brand: p.brand,
-                            product: p.product,
+                            brand_name: p.brand,
+                            product_name: p.product,
                             views: p.views,
                             uploaded_platforms: p.uploadedPlatforms || [],
                             instagram_link: p.links?.instagram || null,
