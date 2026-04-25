@@ -1931,24 +1931,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!performanceContainer) return;
 
             const newCard = document.createElement('div');
-            newCard.className = 'performance-card popup-card mt-15';
+            newCard.className = 'performance-card brand-performance-edit-card mt-15';
             newCard.innerHTML = `
-                <div class="grid-2 mb-15">
-                    <div class="form-group">
-                        <label>Which Brand</label>
-                        <input type="text" class="perf-brand-input" placeholder="Enter brand name">
+                <div class="edit-grid" style="margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Brand</label>
+                        <input type="text" class="perf-brand-input edit-input" placeholder="Enter brand name">
                     </div>
-                    <div class="form-group">
-                        <label>Which Product</label>
-                        <input type="text" class="perf-product-input" placeholder="Enter product name">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Product</label>
+                        <input type="text" class="perf-product-input edit-input" placeholder="Enter product name">
                     </div>
-                    <div class="form-group">
-                        <label>Views</label>
-                        <input type="number" class="perf-views-input" placeholder="Enter total views">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Views</label>
+                        <input type="number" class="perf-views-input edit-input" placeholder="Enter total views">
                     </div>
-                    <div class="form-group">
-                        <label>Uploaded Platforms</label>
-                        <select class="perf-platform-select">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Uploaded Platforms</label>
+                        <select class="perf-platform-select edit-input">
                             <option value="All">All</option>
                             <option value="Instagram">Instagram</option>
                             <option value="Youtube">Youtube</option>
@@ -1960,24 +1960,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="links-section">
-                    <h4 class="mb-10 text-muted">Links</h4>
-                    <div class="grid-3 mb-10">
-                        <div class="form-group ig-link-wrapper">
-                            <label>Instagram Link</label>
-                            <input type="url" class="perf-ig-link" placeholder="https://instagram.com/...">
+                    <h4 class="mb-10 text-muted" style="font-size: 14px; font-weight: 600;">Platform Links</h4>
+                    <div class="brand-links-grid">
+                        <div class="form-group ig-link-wrapper" style="margin-bottom: 0;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Instagram Link</label>
+                            <input type="url" class="perf-ig-link edit-input" placeholder="https://instagram.com/...">
                         </div>
-                        <div class="form-group yt-link-wrapper">
-                            <label>Youtube Link</label>
-                            <input type="url" class="perf-yt-link" placeholder="https://youtube.com/...">
+                        <div class="form-group yt-link-wrapper" style="margin-bottom: 0;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Youtube Link</label>
+                            <input type="url" class="perf-yt-link edit-input" placeholder="https://youtube.com/...">
                         </div>
-                        <div class="form-group fb-link-wrapper">
-                            <label>Facebook Link</label>
-                            <input type="url" class="perf-fb-link" placeholder="https://facebook.com/...">
+                        <div class="form-group fb-link-wrapper" style="margin-bottom: 0;">
+                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Facebook Link</label>
+                            <input type="url" class="perf-fb-link edit-input" placeholder="https://facebook.com/...">
                         </div>
                     </div>
                 </div>
-                <div style="text-align: right; margin-top: 10px;">
-                    <button type="button" class="btn-remove-performance btn-danger">Remove Set</button>
+                <div style="display: flex; justify-content: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn-remove-performance btn-danger" style="padding: 6px 12px; border-radius: 6px; font-size: 12px; margin: 0;">Remove Set</button>
                 </div>
             `;
             performanceContainer.appendChild(newCard);
@@ -2208,18 +2208,31 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             pricingHtml += `</div></div></div>`;
 
-            let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden"><div class="grid-2">`;
+            let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="brand-performance-grid">`;
             if (data.performance && data.performance.length > 0) {
                 data.performance.forEach(p => {
+                    const platforms = Array.isArray(p.uploaded_platforms) ? p.uploaded_platforms.join(', ') : '-';
                     perfHtml += `
-                        <div class="nested-card">
-                            <div class="info-group"><label>Brand & Product</label><div class="info-val">${p.brand_name || '-'} - ${p.product_name || '-'}</div></div>
-                            <div class="info-group"><label>Views</label><div class="info-val">${p.views || '-'}</div></div>
-                            <div class="info-group"><label>Platforms</label><div class="info-val">${Array.isArray(p.uploaded_platforms) ? p.uploaded_platforms.join(', ') : '-'}</div></div>
-                            <div class="flex-row mt-10" style="gap:10px;">
-                                ${p.instagram_link ? `<a href="${p.instagram_link}" target="_blank" style="font-size:12px; color:var(--accent-color);">IG</a>` : ''}
-                                ${p.youtube_link ? `<a href="${p.youtube_link}" target="_blank" style="font-size:12px; color:var(--accent-color);">YT</a>` : ''}
-                                ${p.facebook_link ? `<a href="${p.facebook_link}" target="_blank" style="font-size:12px; color:var(--accent-color);">FB</a>` : ''}
+                        <div class="brand-performance-card">
+                            <div class="performance-meta-row" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Brand Name</div>
+                                    <div style="font-size: 16px; font-weight: 600; color: var(--primary-color);">${p.brand_name || '-'}</div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px; text-align: right;">
+                                    <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Product</div>
+                                    <div style="font-size: 15px; font-weight: 600; color: var(--text-main);">${p.product_name || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="edit-grid" style="margin-bottom: 15px;">
+                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Total Views</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${p.views || '-'}</div></div>
+                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Uploaded Platforms</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${platforms}</div></div>
+                            </div>
+                            <div class="brand-links-grid">
+                                ${p.instagram_link ? `<div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Instagram</label><div class="info-val"><a href="${p.instagram_link}" target="_blank" style="font-weight: 600; font-size: 14px; color: var(--accent-color); text-decoration: none;">View Link</a></div></div>` : ''}
+                                ${p.youtube_link ? `<div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Youtube</label><div class="info-val"><a href="${p.youtube_link}" target="_blank" style="font-weight: 600; font-size: 14px; color: var(--accent-color); text-decoration: none;">View Link</a></div></div>` : ''}
+                                ${p.facebook_link ? `<div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Facebook</label><div class="info-val"><a href="${p.facebook_link}" target="_blank" style="font-weight: 600; font-size: 14px; color: var(--accent-color); text-decoration: none;">View Link</a></div></div>` : ''}
                             </div>
                         </div>`;
                 });
@@ -2539,7 +2552,135 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
 
-                    // For now, complex multi-row editing for Performance is locked.
+                    // Brand Performance Inline Editing
+                    const perfPane = card.querySelector(`#performance-${data.id}`);
+                    if (perfPane) {
+                        const perfContainer = perfPane.querySelector('.brand-performance-grid');
+                        if (perfContainer) {
+                            let perfEditHtml = '';
+                            if (data.performance && data.performance.length > 0) {
+                                data.performance.forEach((p, i) => {
+                                    const plats = Array.isArray(p.uploaded_platforms) ? p.uploaded_platforms.join(' and ') : 'All';
+                                    const opts = ['All', 'Instagram', 'Youtube', 'Facebook', 'Instagram and Youtube', 'Instagram and Facebook', 'Youtube and Facebook'];
+                                    let optionsHtml = '';
+                                    opts.forEach(opt => {
+                                        optionsHtml += `<option value="${opt}" ${plats === opt ? 'selected' : ''}>${opt}</option>`;
+                                    });
+
+                                    perfEditHtml += `
+                                        <div class="performance-card brand-performance-edit-card">
+                                            <div class="edit-grid" style="margin-bottom: 15px;">
+                                                <div class="form-group" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Brand</label>
+                                                    <input type="text" class="perf-brand-input edit-input" placeholder="Enter brand name" value="${(p.brand_name || '').replace(/"/g, '&quot;')}">
+                                                </div>
+                                                <div class="form-group" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Product</label>
+                                                    <input type="text" class="perf-product-input edit-input" placeholder="Enter product name" value="${(p.product_name || '').replace(/"/g, '&quot;')}">
+                                                </div>
+                                                <div class="form-group" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Views</label>
+                                                    <input type="number" class="perf-views-input edit-input" placeholder="Enter total views" value="${p.views || ''}">
+                                                </div>
+                                                <div class="form-group" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Uploaded Platforms</label>
+                                                    <select class="perf-platform-select edit-input">
+                                                        ${optionsHtml}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="links-section">
+                                                <h4 class="mb-10 text-muted" style="font-size: 14px; font-weight: 600;">Platform Links</h4>
+                                                <div class="brand-links-grid">
+                                                    <div class="form-group ig-link-wrapper" style="margin-bottom: 0;">
+                                                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Instagram Link</label>
+                                                        <input type="url" class="perf-ig-link edit-input" placeholder="https://instagram.com/..." value="${(p.instagram_link || '').replace(/"/g, '&quot;')}">
+                                                    </div>
+                                                    <div class="form-group yt-link-wrapper" style="margin-bottom: 0;">
+                                                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Youtube Link</label>
+                                                        <input type="url" class="perf-yt-link edit-input" placeholder="https://youtube.com/..." value="${(p.youtube_link || '').replace(/"/g, '&quot;')}">
+                                                    </div>
+                                                    <div class="form-group fb-link-wrapper" style="margin-bottom: 0;">
+                                                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Facebook Link</label>
+                                                        <input type="url" class="perf-fb-link edit-input" placeholder="https://facebook.com/..." value="${(p.facebook_link || '').replace(/"/g, '&quot;')}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; justify-content: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                                                <button type="button" class="btn-remove-performance btn-danger" style="padding: 6px 12px; border-radius: 6px; font-size: 12px; margin: 0;">Remove Set</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                            } else {
+                                perfEditHtml += `
+                                    <div class="performance-card brand-performance-edit-card">
+                                        <div class="edit-grid" style="margin-bottom: 15px;">
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Brand</label>
+                                                <input type="text" class="perf-brand-input edit-input" placeholder="Enter brand name">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Product</label>
+                                                <input type="text" class="perf-product-input edit-input" placeholder="Enter product name">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Views</label>
+                                                <input type="number" class="perf-views-input edit-input" placeholder="Enter total views">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Uploaded Platforms</label>
+                                                <select class="perf-platform-select edit-input">
+                                                    <option value="All">All</option>
+                                                    <option value="Instagram">Instagram</option>
+                                                    <option value="Youtube">Youtube</option>
+                                                    <option value="Facebook">Facebook</option>
+                                                    <option value="Instagram and Youtube">Instagram and Youtube</option>
+                                                    <option value="Instagram and Facebook">Instagram and Facebook</option>
+                                                    <option value="Youtube and Facebook">Youtube and Facebook</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="links-section">
+                                            <h4 class="mb-10 text-muted" style="font-size: 14px; font-weight: 600;">Platform Links</h4>
+                                            <div class="brand-links-grid">
+                                                <div class="form-group ig-link-wrapper" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Instagram Link</label>
+                                                    <input type="url" class="perf-ig-link edit-input" placeholder="https://instagram.com/...">
+                                                </div>
+                                                <div class="form-group yt-link-wrapper" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Youtube Link</label>
+                                                    <input type="url" class="perf-yt-link edit-input" placeholder="https://youtube.com/...">
+                                                </div>
+                                                <div class="form-group fb-link-wrapper" style="margin-bottom: 0;">
+                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Facebook Link</label>
+                                                    <input type="url" class="perf-fb-link edit-input" placeholder="https://facebook.com/...">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; justify-content: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                                            <button type="button" class="btn-remove-performance btn-danger" style="padding: 6px 12px; border-radius: 6px; font-size: 12px; margin: 0;">Remove Set</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            perfContainer.innerHTML = perfEditHtml;
+                            perfContainer.classList.add('brand-performance-container');
+                            
+                            // Trigger select change events to apply platform visibility logic
+                            const selects = perfContainer.querySelectorAll('.perf-platform-select');
+                            selects.forEach(s => s.dispatchEvent(new Event('change')));
+
+                            if (!perfPane.querySelector('.btn-add-performance')) {
+                                const addBtn = document.createElement('button');
+                                addBtn.type = 'button';
+                                addBtn.className = 'btn-add-performance btn-secondary mt-15 mb-20';
+                                addBtn.style = 'padding: 8px 16px; border-radius: 8px; font-size: 13px;';
+                                addBtn.textContent = '+ Add Performance';
+                                perfPane.appendChild(addBtn);
+                            }
+                        }
+                    }
                 } else {
                     // Turn OFF Edit Mode (Save)
                     btnEdit.textContent = 'Saving...';
@@ -2712,6 +2853,74 @@ document.addEventListener('DOMContentLoaded', () => {
                                     .from('influencer_bargain_history')
                                     .insert(bargainDataToSave);
                                 if (bargInsErr) throw bargInsErr;
+                            }
+                        }
+
+                        // 3. Extract and Update Brand Performance (Delete & Re-insert strategy)
+                        const perfPane = card.querySelector(`#performance-${data.id}`);
+                        let perfDataToSave = [];
+                        let perfValidationFailed = false;
+
+                        if (perfPane) {
+                            const rows = perfPane.querySelectorAll('.brand-performance-grid .performance-card');
+                            rows.forEach(row => {
+                                const brandInput = row.querySelector('.perf-brand-input');
+                                const productInput = row.querySelector('.perf-product-input');
+                                const viewsInput = row.querySelector('.perf-views-input');
+                                const platformSelect = row.querySelector('.perf-platform-select');
+                                
+                                const igLink = row.querySelector('.perf-ig-link');
+                                const ytLink = row.querySelector('.perf-yt-link');
+                                const fbLink = row.querySelector('.perf-fb-link');
+
+                                const bName = brandInput ? brandInput.value.trim() : '';
+                                const pName = productInput ? productInput.value.trim() : '';
+                                const vVal = viewsInput ? viewsInput.value.trim() : '';
+                                const platVal = platformSelect ? platformSelect.value : 'All';
+                                
+                                if (bName || pName || vVal) {
+                                    if (!bName) perfValidationFailed = true;
+                                    
+                                    let uploadedPlatforms = [];
+                                    if (platVal === 'All') {
+                                        uploadedPlatforms = ['Instagram', 'Youtube', 'Facebook'];
+                                    } else {
+                                        uploadedPlatforms = platVal.split(' and ');
+                                    }
+                                    
+                                    perfDataToSave.push({
+                                        influencer_id: data.id,
+                                        brand_name: bName,
+                                        product_name: pName || null,
+                                        views: vVal ? parseInt(vVal) : null,
+                                        uploaded_platforms: uploadedPlatforms,
+                                        instagram_link: igLink ? igLink.value.trim() : null,
+                                        youtube_link: ytLink ? ytLink.value.trim() : null,
+                                        facebook_link: fbLink ? fbLink.value.trim() : null
+                                    });
+                                }
+                            });
+                        }
+
+                        if (perfValidationFailed) {
+                            if (window.showToast) window.showToast('❌ Brand Name is required for all entered performance sets.');
+                            btnEdit.textContent = 'Save Changes';
+                            btnEdit.disabled = false;
+                            return;
+                        }
+
+                        if (perfPane) {
+                            const { error: perfDelErr } = await window.supabase
+                                .from('influencer_brand_performance')
+                                .delete()
+                                .eq('influencer_id', data.id);
+                            if (perfDelErr) throw perfDelErr;
+                            
+                            if (perfDataToSave.length > 0) {
+                                const { error: perfInsErr } = await window.supabase
+                                    .from('influencer_brand_performance')
+                                    .insert(perfDataToSave);
+                                if (perfInsErr) throw perfInsErr;
                             }
                         }
 

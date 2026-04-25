@@ -1778,71 +1778,59 @@
                                         <!-- Brand Performance Tab -->
                                         <div id="tab-brand-performance" class="tab-pane hidden">
                                             <form class="influencer-form" id="form-brand-performance">
-                                                <div id="brand-performance-container"
-                                                    class="brand-performance-container">
+                                                <div id="brand-performance-container" class="brand-performance-container brand-performance-grid">
                                                     <!-- First default brand performance card -->
-                                                    <div class="performance-card popup-card">
-                                                        <div class="grid-2 mb-15">
-                                                            <div class="form-group">
-                                                                <label>Which Brand</label>
-                                                                <input type="text" class="perf-brand-input"
-                                                                    placeholder="Enter brand name">
+                                                    <div class="performance-card brand-performance-edit-card">
+                                                        <div class="edit-grid" style="margin-bottom: 15px;">
+                                                            <div class="form-group" style="margin-bottom: 0;">
+                                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Brand</label>
+                                                                <input type="text" class="perf-brand-input edit-input" placeholder="Enter brand name">
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label>Which Product</label>
-                                                                <input type="text" class="perf-product-input"
-                                                                    placeholder="Enter product name">
+                                                            <div class="form-group" style="margin-bottom: 0;">
+                                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Which Product</label>
+                                                                <input type="text" class="perf-product-input edit-input" placeholder="Enter product name">
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label>Views</label>
-                                                                <input type="number" class="perf-views-input"
-                                                                    placeholder="Enter total views">
+                                                            <div class="form-group" style="margin-bottom: 0;">
+                                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Views</label>
+                                                                <input type="number" class="perf-views-input edit-input" placeholder="Enter total views">
                                                             </div>
-                                                            <div class="form-group">
-                                                                <label>Uploaded Platforms</label>
-                                                                <select class="perf-platform-select">
+                                                            <div class="form-group" style="margin-bottom: 0;">
+                                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Uploaded Platforms</label>
+                                                                <select class="perf-platform-select edit-input">
                                                                     <option value="All">All</option>
                                                                     <option value="Instagram">Instagram</option>
                                                                     <option value="Youtube">Youtube</option>
                                                                     <option value="Facebook">Facebook</option>
-                                                                    <option value="Instagram and Youtube">Instagram and
-                                                                        Youtube</option>
-                                                                    <option value="Instagram and Facebook">Instagram and
-                                                                        Facebook</option>
-                                                                    <option value="Youtube and Facebook">Youtube and
-                                                                        Facebook</option>
+                                                                    <option value="Instagram and Youtube">Instagram and Youtube</option>
+                                                                    <option value="Instagram and Facebook">Instagram and Facebook</option>
+                                                                    <option value="Youtube and Facebook">Youtube and Facebook</option>
                                                                 </select>
                                                             </div>
                                                         </div>
                                                         <div class="links-section">
-                                                            <h4 class="mb-10 text-muted">Links</h4>
-                                                            <div class="grid-3 mb-10">
-                                                                <div class="form-group ig-link-wrapper">
-                                                                    <label>Instagram Link</label>
-                                                                    <input type="url" class="perf-ig-link"
-                                                                        placeholder="https://instagram.com/...">
+                                                            <h4 class="mb-10 text-muted" style="font-size: 14px; font-weight: 600;">Platform Links</h4>
+                                                            <div class="brand-links-grid">
+                                                                <div class="form-group ig-link-wrapper" style="margin-bottom: 0;">
+                                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Instagram Link</label>
+                                                                    <input type="url" class="perf-ig-link edit-input" placeholder="https://instagram.com/...">
                                                                 </div>
-                                                                <div class="form-group yt-link-wrapper">
-                                                                    <label>Youtube Link</label>
-                                                                    <input type="url" class="perf-yt-link"
-                                                                        placeholder="https://youtube.com/...">
+                                                                <div class="form-group yt-link-wrapper" style="margin-bottom: 0;">
+                                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Youtube Link</label>
+                                                                    <input type="url" class="perf-yt-link edit-input" placeholder="https://youtube.com/...">
                                                                 </div>
-                                                                <div class="form-group fb-link-wrapper">
-                                                                    <label>Facebook Link</label>
-                                                                    <input type="url" class="perf-fb-link"
-                                                                        placeholder="https://facebook.com/...">
+                                                                <div class="form-group fb-link-wrapper" style="margin-bottom: 0;">
+                                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Facebook Link</label>
+                                                                    <input type="url" class="perf-fb-link edit-input" placeholder="https://facebook.com/...">
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div style="text-align: right; margin-top: 10px;">
-                                                            <button type="button" class="btn-remove-performance btn-danger">Remove Set</button>
+                                                        <div style="display: flex; justify-content: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                                                            <button type="button" class="btn-remove-performance btn-danger" style="padding: 6px 12px; border-radius: 6px; font-size: 12px; margin: 0;">Remove Set</button>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <button type="button"
-                                                    class="btn-add-performance btn-secondary mt-10 mb-20">+ Add
-                                                    Performance</button>
+                                                <button type="button" class="btn-add-performance btn-secondary mt-15 mb-20" style="padding: 8px 16px; border-radius: 8px; font-size: 13px;">+ Add Performance</button>
 
                                                 <div class="form-footer">
                                                     <button type="button" id="btn-save-influencer"
