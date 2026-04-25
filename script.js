@@ -1746,32 +1746,32 @@ document.addEventListener('DOMContentLoaded', () => {
         let videoInputs = '';
         for (let i = 1; i <= 15; i++) {
             videoInputs += `
-                <div class="form-group">
-                    <label>Video ${i} Views</label>
-                    <input type="number" class="plat-video-input" data-platform="${platformName}" data-index="${i}" placeholder="Views">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: var(--text-muted); font-size: 11px; font-weight: 500; margin-bottom: 4px; display: block;">Video ${i}</label>
+                    <input type="number" class="plat-video-input edit-input compact-input" data-platform="${platformName}" data-index="${i}" placeholder="Views" style="padding: 6px 10px; font-size: 13px; text-align: center;">
                 </div>
             `;
         }
 
         return `
-            <div class="nested-card platform-card" data-platform-id="${platformName}">
+            <div class="nested-card platform-card platform-edit-card" data-platform-id="${platformName}">
                 <div class="platform-header">${platformName}</div>
-                <div class="grid-2 mb-15">
-                    <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" class="plat-username" placeholder="Enter username">
+                <div class="platform-edit-grid mb-15">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Username</label>
+                        <input type="text" class="plat-username edit-input" placeholder="@username">
                     </div>
-                    <div class="form-group">
-                        <label>Link</label>
-                        <input type="url" class="plat-link" placeholder="Enter profile link">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Profile Link</label>
+                        <input type="url" class="plat-link edit-input" placeholder="https://...">
                     </div>
-                    <div class="form-group">
-                        <label>Followers Count</label>
-                        <input type="number" class="plat-followers" placeholder="Total followers">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Followers Count</label>
+                        <input type="number" class="plat-followers edit-input" placeholder="e.g. 100000">
                     </div>
                 </div>
-                <h4 class="mb-10 text-muted">Previous 15 Videos Views</h4>
-                <div class="grid-3">
+                <h4 class="mb-10 text-muted" style="font-size: 13px; margin-bottom: 12px; margin-top: 20px;">Previous 15 Videos Views</h4>
+                <div class="video-views-grid">
                     ${videoInputs}
                 </div>
             </div>
