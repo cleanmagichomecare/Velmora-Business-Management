@@ -1878,19 +1878,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const bargainContainer = wrapper.querySelector('.bargain-history-container');
             if (!bargainContainer) return;
 
+            const currentCount = bargainContainer.querySelectorAll('.bargain-row').length + 1;
             const newRow = document.createElement('div');
-            newRow.className = 'bargain-row popup-card mt-10';
+            newRow.className = 'bargain-row bargain-edit-card mt-15';
             newRow.innerHTML = `
-                <div class="form-group">
-                    <label>Creator Request</label>
-                    <input type="number" class="creator-request-input" placeholder="Amount">
+                <div class="bargain-set-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Set ${currentCount}</span>
+                    <button type="button" class="btn-remove-bargain-set btn-danger" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; margin: 0;">Remove</button>
                 </div>
-                <div class="form-group">
-                    <label>Brand Request</label>
-                    <input type="number" class="brand-request-input" placeholder="Amount">
-                </div>
-                <div class="form-group" style="display: flex; align-items: flex-end;">
-                    <button type="button" class="btn-remove-bargain-set btn-danger" style="margin-top: auto; margin-bottom: 5px;">Remove Set</button>
+                <div class="edit-grid" style="margin-bottom: 0;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
+                        <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
+                        <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount">
+                    </div>
                 </div>
             `;
             bargainContainer.appendChild(newRow);
@@ -2179,27 +2183,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             platformHtml += `</div>`;
 
-            let pricingHtml = `<div id="pricing-${data.id}" class="tab-pane hidden">
-                <div class="grid-2 mb-15">
-                    <div class="info-group"><label>Final Price</label><div class="info-val" data-field="final_price">₹${data.pricing?.final_price || 0}</div></div>
-                    <div class="info-group"><label>Total Videos</label><div class="info-val" data-field="total_videos">${data.pricing?.total_videos || 0}</div></div>
+            let pricingHtml = `<div id="pricing-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="pricing-summary-grid">
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Final Price</label><div class="info-val" data-field="final_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.final_price || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Total Videos</label><div class="info-val" data-field="total_videos" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.total_videos || 0}</div></div>
                 </div>
-                <h4 class="mb-10">Bargain History</h4>
-                <div class="grid-3">
+                <div class="pricing-bargain-section">
+                    <h3 style="font-size: 18px; font-weight: 600; color: var(--primary-color); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">Bargain History</h3>
+                    <div class="bargain-history-grid">
             `;
             if (data.pricing?.bargainHistory && data.pricing.bargainHistory.length > 0) {
                 data.pricing.bargainHistory.forEach((b, i) => {
                     pricingHtml += `
-                        <div class="nested-card">
-                            <div class="platform-header" style="font-size: 12px;">Set ${i+1}</div>
-                            <div class="info-group"><label>Creator Request</label><div class="info-val">₹${b.creator_request || '-'}</div></div>
-                            <div class="info-group"><label>Brand Request</label><div class="info-val">₹${b.brand_request || '-'}</div></div>
+                        <div class="bargain-card">
+                            <div class="bargain-set-title">Set ${i+1}</div>
+                            <div class="pricing-summary-grid" style="margin-bottom: 0;">
+                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Creator Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${b.creator_request || '-'}</div></div>
+                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Brand Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${b.brand_request || '-'}</div></div>
+                            </div>
                         </div>`;
                 });
             } else {
                 pricingHtml += `<div class="text-muted">No bargain history recorded.</div>`;
             }
-            pricingHtml += `</div></div>`;
+            pricingHtml += `</div></div></div>`;
 
             let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden"><div class="grid-2">`;
             if (data.performance && data.performance.length > 0) {

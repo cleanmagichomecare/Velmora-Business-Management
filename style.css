@@ -5232,3 +5232,46 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     font-weight: 600;
     color: var(--text-main);
 }
+
+/* Pricing Info Read-Only & Edit UI */
+.pricing-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+@media (max-width: 768px) {
+    .pricing-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.bargain-history-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+@media (max-width: 1024px) {
+    .bargain-history-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.bargain-card, .bargain-edit-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 24px;
+    width: 100%;
+}
+
+.bargain-set-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}

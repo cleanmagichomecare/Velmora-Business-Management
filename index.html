@@ -1737,40 +1737,36 @@
                                         <!-- Pricing Info Tab -->
                                         <div id="tab-pricing-info" class="tab-pane hidden">
                                             <form class="influencer-form">
-                                                <div class="grid-2">
-                                                    <div class="form-group">
-                                                        <label>Final Price</label>
-                                                        <input type="number" id="pricing-final-price"
-                                                            placeholder="Enter final price">
+                                                <div class="pricing-summary-grid">
+                                                    <div class="form-group" style="margin-bottom: 0;">
+                                                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Final Price</label>
+                                                        <input type="number" id="pricing-final-price" class="edit-input pricing-input" placeholder="Enter final price">
                                                     </div>
-                                                    <div class="form-group">
-                                                        <label>Total Videos</label>
-                                                        <input type="number" id="pricing-total-videos"
-                                                            placeholder="Enter total videos">
+                                                    <div class="form-group" style="margin-bottom: 0;">
+                                                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Total Videos</label>
+                                                        <input type="number" id="pricing-total-videos" class="edit-input pricing-input" placeholder="Enter total videos">
                                                     </div>
                                                 </div>
 
-                                                <div class="pricing-bargain-section">
-                                                    <h3>Bargain History</h3>
-                                                    <div id="bargain-history-container"
-                                                        class="bargain-history-container">
+                                                <div class="pricing-bargain-section mt-20">
+                                                    <h3 style="font-size: 18px; font-weight: 600; color: var(--primary-color); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">Bargain History</h3>
+                                                    <div id="bargain-history-container" class="bargain-history-container bargain-history-grid">
                                                         <!-- First default bargain row -->
-                                                        <div class="bargain-row popup-card">
-                                                            <div class="form-group">
-                                                                <label>Creator Request</label>
-                                                                <input type="number" class="creator-request-input"
-                                                                    placeholder="Amount">
-                                                            </div>
-                                                            <div class="form-group">
-                                                                <label>Brand Request</label>
-                                                                <input type="number" class="brand-request-input"
-                                                                    placeholder="Amount">
+                                                        <div class="bargain-row bargain-edit-card">
+                                                            <div class="bargain-set-title">Set 1</div>
+                                                            <div class="edit-grid">
+                                                                <div class="form-group" style="margin-bottom: 0;">
+                                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
+                                                                    <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount">
+                                                                </div>
+                                                                <div class="form-group" style="margin-bottom: 0;">
+                                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
+                                                                    <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount">
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <button type="button"
-                                                        class="btn-add-bargain-set btn-secondary mt-10">+ Add
-                                                        Set</button>
+                                                    <button type="button" class="btn-add-bargain-set btn-secondary mt-15" style="padding: 8px 16px; border-radius: 8px; font-size: 13px;">+ Add Set</button>
                                                 </div>
 
                                                 <div class="form-footer">
