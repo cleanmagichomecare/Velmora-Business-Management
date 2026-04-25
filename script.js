@@ -1998,7 +1998,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (btnSaveInfluencer) {
-        btnSaveInfluencer.addEventListener('click', () => {
+        btnSaveInfluencer.addEventListener('click', async () => {
             // Loading State ON
             const originalText = btnSaveInfluencer.textContent;
             btnSaveInfluencer.textContent = "Saving...";
@@ -2102,14 +2102,210 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("========================================");
                 console.log(JSON.stringify(window.newInfluencerData, null, 2));
                 
-                if (typeof showToast === 'function') {
-                    showToast('✅ Influencer Data Collected Successfully! Check Console.');
-                } else {
-                    alert('Influencer Data Collected Successfully! Check Console.');
+                // --- SUPABASE INTEGRATION START ---
+                const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
+                const campaignId = activeFolder ? activeFolder.getAttribute('data-campaign-id') : null;
+
+                if (!campaignId) {
+                    throw new Error("No active campaign selected. Please select a campaign folder first.");
                 }
+
+                const basic = d.basicInfo;
+                
+                // 1. Insert into influencers_info
+                const { data: infoData, error: infoError } = await window.supabase
+                    .from('influencers_info')
+                    .insert([{
+                        campaign_id: campaignId,
+                        name: basic.name,
+                        influencer_name: basic.influencer_name,
+                        phone: basic.phone,
+                        alt_phone: basic.alt_phone,
+                        upi: basic.upi,
+                        city: basic.city,
+                        address: basic.address,
+                        state: basic.state,
+                        languages: basic.languages || []
+                    }])
+                    .select();
+
+                if (infoError) {
+                    console.error("Error inserting influencer_info:", infoError);
+                    throw new Error("Failed to save influencer basic info: " + infoError.message);
+                }
+
+                const influencerId = infoData[0].id;
+                console.log("Saved Influencer Info. ID:", influencerId);
+
+                // 2. Insert into influencer_platforms_details
+                const platformInserts = [];
+                const pDetails = d.platformDetails;
+                if (pDetails) {
+                    for (const [platformName, platData] of Object.entries(pDetails)) {
+                        if (platData.username || platData.profileLink) {
+                            platformInserts.push({
+                                influencer_id: influencerId,
+                                platform_name: platformName,
+                                username: platData.username || null,
+                                profile_link: platData.profileLink || null,
+                                followers: platData.followers || null,
+                                video_views: platData.videoViews || []
+                            });
+                        }
+                    }
+                }
+                
+                if (platformInserts.length > 0) {
+                    await Promise.all(platformInserts.map(async (platData) => {
+                        const { error: platError } = await window.supabase
+                            .from('influencer_platforms_details')
+                            .insert([platData]);
+                        if (platError) {
+                            console.error("Error inserting platform details:", platError);
+                            throw new Error("Failed to save platform details: " + platError.message);
+                        }
+                    }));
+                    console.log("Saved Platform Details.");
+                }
+
+                // 3. Insert into influencer_pricing
+                const pricing = d.pricingInfo;
+                const { error: priceError } = await window.supabase
+                    .from('influencer_pricing')
+                    .insert([{
+                        influencer_id: influencerId,
+                        final_price: pricing.finalPrice,
+                        total_videos: pricing.totalVideos
+                    }]);
+                
+                if (priceError) {
+                    console.error("Error inserting pricing info:", priceError);
+                    throw new Error("Failed to save pricing info: " + priceError.message);
+                }
+                console.log("Saved Pricing Info.");
+
+                // 4. Insert into influencer_bargain_history
+                const bargainInserts = [];
+                if (pricing.bargainHistory && pricing.bargainHistory.length > 0) {
+                    pricing.bargainHistory.forEach(b => {
+                        if (b.creatorRequest || b.brandRequest) {
+                            bargainInserts.push({
+                                influencer_id: influencerId,
+                                creator_request: b.creatorRequest,
+                                brand_request: b.brandRequest
+                            });
+                        }
+                    });
+                }
+
+                if (bargainInserts.length > 0) {
+                    await Promise.all(bargainInserts.map(async (bargainData) => {
+                        const { error: bargainError } = await window.supabase
+                            .from('influencer_bargain_history')
+                            .insert([bargainData]);
+                        if (bargainError) {
+                            console.error("Error inserting bargain history:", bargainError);
+                            throw new Error("Failed to save bargain history: " + bargainError.message);
+                        }
+                    }));
+                    console.log("Saved Bargain History.");
+                }
+
+                // 5. Insert into influencer_brand_performance
+                const perfInserts = [];
+                if (d.brandPerformance && d.brandPerformance.length > 0) {
+                    d.brandPerformance.forEach(p => {
+                        perfInserts.push({
+                            influencer_id: influencerId,
+                            brand: p.brand,
+                            product: p.product,
+                            views: p.views,
+                            uploaded_platforms: p.uploadedPlatforms || [],
+                            instagram_link: p.links?.instagram || null,
+                            youtube_link: p.links?.youtube || null,
+                            facebook_link: p.links?.facebook || null
+                        });
+                    });
+                }
+
+                if (perfInserts.length > 0) {
+                    await Promise.all(perfInserts.map(async (perfData) => {
+                        const { error: perfError } = await window.supabase
+                            .from('influencer_brand_performance')
+                            .insert([perfData]);
+                        if (perfError) {
+                            console.error("Error inserting brand performance:", perfError);
+                            throw new Error("Failed to save brand performance: " + perfError.message);
+                        }
+                    }));
+                    console.log("Saved Brand Performance.");
+                }
+
+                if (typeof showToast === 'function') {
+                    showToast('✅ Influencer Data Saved Successfully!');
+                } else {
+                    alert('Influencer Data Saved Successfully!');
+                }
+
+                // --- RESET FULL WIZARD ---
+                // Reset all forms
+                document.querySelectorAll('.tab-pane form').forEach(f => f.reset());
+                document.querySelectorAll('.scoped-pane form').forEach(f => f.reset());
+
+                // Reset custom language dropdown
+                const languageSelectedText = document.getElementById('language-selected-text');
+                if (languageSelectedText) languageSelectedText.textContent = 'Select Language(s)';
+
+                // Clear dynamic platform inputs
+                document.querySelectorAll('.platform-card:not(.hidden) input').forEach(inp => inp.value = '');
+
+                // Reset bargain rows to 1
+                const bargainContainer = document.querySelector('.bargain-history-container');
+                if (bargainContainer) {
+                    const rows = bargainContainer.querySelectorAll('.bargain-row');
+                    rows.forEach((r, idx) => {
+                        if (idx > 0) r.remove();
+                        else {
+                            r.querySelectorAll('input').forEach(inp => inp.value = '');
+                        }
+                    });
+                }
+
+                // Reset performance cards to 1
+                const perfContainer = document.querySelector('.brand-performance-container');
+                if (perfContainer) {
+                    const cards = perfContainer.querySelectorAll('.performance-card');
+                    cards.forEach((c, idx) => {
+                        if (idx > 0) c.remove();
+                        else {
+                            c.querySelectorAll('input').forEach(inp => inp.value = '');
+                            const select = c.querySelector('select');
+                            if (select) {
+                                select.value = 'All';
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        }
+                    });
+                }
+
+                // Go to first tab
+                const firstTabBtn = document.querySelector('.tab-btn[data-tab="tab-basic-info"]');
+                if (firstTabBtn) firstTabBtn.click();
+
+                // Clear temporary wizard state
+                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+
+                // Refresh influencer list UI automatically
+                const btnInfluencerListNav = document.getElementById('btn-influencer-list');
+                if (btnInfluencerListNav) btnInfluencerListNav.click();
 
             } catch (err) {
                 console.warn(err.message);
+                if (typeof showToast === 'function') {
+                    showToast('❌ ' + err.message);
+                } else {
+                    alert('Error: ' + err.message);
+                }
             } finally {
                 // Loading State OFF
                 btnSaveInfluencer.textContent = originalText;
