@@ -1959,8 +1959,349 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dispatchedListView) dispatchedListView.classList.add('hidden');
             const statusTrackingView = document.getElementById('view-status-tracking');
             if (statusTrackingView) statusTrackingView.classList.add('hidden');
+            
+            if (window.selectedCampaignId) {
+                loadCampaignInfluencers(window.selectedCampaignId);
+            } else {
+                if (window.showToast) window.showToast('⚠ No active campaign selected');
+            }
         });
     }
+
+    // --- Campaign Influencer Fetch & Render Logic ---
+    async function loadCampaignInfluencers(campaignId) {
+        const container = document.getElementById('influencer-list-container');
+        if (!container) return;
+
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Loading influencers...</div>';
+
+        try {
+            // 1. Fetch main info
+            const { data: infoData, error: infoError } = await window.supabase
+                .from('influencers_info')
+                .select('*')
+                .eq('campaign_id', campaignId)
+                .neq('is_archived', true)
+                .order('created_at', { ascending: false });
+
+            if (infoError) throw infoError;
+
+            if (!infoData || infoData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📇</div>
+                        <h3 style="color: var(--text-main); margin-bottom: 5px;">No influencers added to this campaign yet.</h3>
+                        <p style="color: var(--text-muted);">Click "+ Add Influencer" to get started.</p>
+                    </div>`;
+                return;
+            }
+
+            const influencerIds = infoData.map(inf => inf.id);
+
+            // 2. Fetch all relational data concurrently
+            const [
+                { data: platformsData },
+                { data: pricingData },
+                { data: bargainData },
+                { data: performanceData }
+            ] = await Promise.all([
+                window.supabase.from('influencer_platforms_details').select('*').in('influencer_id', influencerIds),
+                window.supabase.from('influencer_pricing').select('*').in('influencer_id', influencerIds),
+                window.supabase.from('influencer_bargain_history').select('*'), // Filtered locally via pricing_id
+                window.supabase.from('influencer_brand_performance').select('*').in('influencer_id', influencerIds)
+            ]);
+
+            // Combine data
+            const combinedData = infoData.map(inf => {
+                const platforms = (platformsData || []).filter(p => p.influencer_id === inf.id);
+                const pricing = (pricingData || []).find(p => p.influencer_id === inf.id) || {};
+                const bargainHistory = (bargainData || []).filter(b => b.pricing_id === pricing.id);
+                const performance = (performanceData || []).filter(p => p.influencer_id === inf.id);
+
+                return {
+                    ...inf,
+                    platforms,
+                    pricing: { ...pricing, bargainHistory },
+                    performance
+                };
+            });
+
+            renderInfluencerCards(combinedData, container);
+
+        } catch (error) {
+            console.error("Error loading campaign influencers:", error);
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #ff6b6b;">Failed to load influencers.</div>';
+            if (window.showToast) window.showToast('❌ Error loading influencers: ' + error.message);
+        }
+    }
+
+    function renderInfluencerCards(dataList, container) {
+        container.innerHTML = '';
+        dataList.forEach(data => {
+            const card = document.createElement('div');
+            card.className = 'influencer-profile-card popup-card mb-20';
+            card.setAttribute('data-id', data.id);
+            card.style.position = 'relative';
+
+            // Data storage directly on DOM for easy edit extraction
+            card._influencerData = data;
+
+            // Generate Tabs UI
+            const tabNavHtml = `
+                <div class="tabs-nav mb-15">
+                    <button class="tab-btn active" data-tab="basic-${data.id}">Basic Info</button>
+                    <button class="tab-btn" data-tab="platform-${data.id}">Platform Details</button>
+                    <button class="tab-btn" data-tab="pricing-${data.id}">Pricing Info</button>
+                    <button class="tab-btn" data-tab="performance-${data.id}">Brand Performance</button>
+                </div>
+            `;
+
+            const basicHtml = `
+                <div id="basic-${data.id}" class="tab-pane">
+                    <div class="grid-2">
+                        <div class="info-group"><label>Name</label><div class="info-val" data-field="name">${data.name || '-'}</div></div>
+                        <div class="info-group"><label>Influencer Name</label><div class="info-val" data-field="influencer_name">${data.influencer_name || '-'}</div></div>
+                        <div class="info-group"><label>Phone</label><div class="info-val" data-field="phone_number">${data.phone_number || '-'}</div></div>
+                        <div class="info-group"><label>Alt Phone</label><div class="info-val" data-field="alternative_number">${data.alternative_number || '-'}</div></div>
+                        <div class="info-group"><label>UPI</label><div class="info-val" data-field="upi_number">${data.upi_number || '-'}</div></div>
+                        <div class="info-group"><label>City</label><div class="info-val" data-field="city">${data.city || '-'}</div></div>
+                        <div class="info-group"><label>State</label><div class="info-val" data-field="state">${data.state || '-'}</div></div>
+                        <div class="info-group"><label>Languages</label><div class="info-val" data-field="languages">${Array.isArray(data.languages) ? data.languages.join(', ') : '-'}</div></div>
+                    </div>
+                    <div class="info-group mt-10"><label>Address</label><div class="info-val" data-field="complete_address">${data.complete_address || '-'}</div></div>
+                </div>
+            `;
+
+            let platformHtml = `<div id="platform-${data.id}" class="tab-pane hidden"><div class="grid-3">`;
+            if (data.platforms && data.platforms.length > 0) {
+                data.platforms.forEach(p => {
+                    platformHtml += `
+                        <div class="nested-card">
+                            <div class="platform-header" style="text-transform: capitalize;">${p.platform}</div>
+                            <div class="info-group"><label>Username</label><div class="info-val">${p.username || '-'}</div></div>
+                            <div class="info-group"><label>Followers</label><div class="info-val">${p.followers_count || '-'}</div></div>
+                            ${p.profile_link ? `<div class="info-group"><label>Link</label><a href="${p.profile_link}" target="_blank" style="color:var(--accent-color); word-break: break-all;">View Profile</a></div>` : ''}
+                        </div>
+                    `;
+                });
+            } else {
+                platformHtml += `<div class="text-muted">No platform details added.</div>`;
+            }
+            platformHtml += `</div></div>`;
+
+            let pricingHtml = `<div id="pricing-${data.id}" class="tab-pane hidden">
+                <div class="grid-2 mb-15">
+                    <div class="info-group"><label>Final Price</label><div class="info-val" data-field="final_price">₹${data.pricing?.final_price || 0}</div></div>
+                    <div class="info-group"><label>Total Videos</label><div class="info-val" data-field="total_videos">${data.pricing?.total_videos || 0}</div></div>
+                </div>
+                <h4 class="mb-10">Bargain History</h4>
+                <div class="grid-3">
+            `;
+            if (data.pricing?.bargainHistory && data.pricing.bargainHistory.length > 0) {
+                data.pricing.bargainHistory.forEach((b, i) => {
+                    pricingHtml += `
+                        <div class="nested-card">
+                            <div class="platform-header" style="font-size: 12px;">Set ${i+1}</div>
+                            <div class="info-group"><label>Creator Request</label><div class="info-val">₹${b.creator_request || '-'}</div></div>
+                            <div class="info-group"><label>Brand Request</label><div class="info-val">₹${b.brand_request || '-'}</div></div>
+                        </div>`;
+                });
+            } else {
+                pricingHtml += `<div class="text-muted">No bargain history recorded.</div>`;
+            }
+            pricingHtml += `</div></div>`;
+
+            let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden"><div class="grid-2">`;
+            if (data.performance && data.performance.length > 0) {
+                data.performance.forEach(p => {
+                    perfHtml += `
+                        <div class="nested-card">
+                            <div class="info-group"><label>Brand & Product</label><div class="info-val">${p.brand_name || '-'} - ${p.product_name || '-'}</div></div>
+                            <div class="info-group"><label>Views</label><div class="info-val">${p.views || '-'}</div></div>
+                            <div class="info-group"><label>Platforms</label><div class="info-val">${Array.isArray(p.uploaded_platforms) ? p.uploaded_platforms.join(', ') : '-'}</div></div>
+                            <div class="flex-row mt-10" style="gap:10px;">
+                                ${p.instagram_link ? `<a href="${p.instagram_link}" target="_blank" style="font-size:12px; color:var(--accent-color);">IG</a>` : ''}
+                                ${p.youtube_link ? `<a href="${p.youtube_link}" target="_blank" style="font-size:12px; color:var(--accent-color);">YT</a>` : ''}
+                                ${p.facebook_link ? `<a href="${p.facebook_link}" target="_blank" style="font-size:12px; color:var(--accent-color);">FB</a>` : ''}
+                            </div>
+                        </div>`;
+                });
+            } else {
+                perfHtml += `<div class="text-muted">No brand performance recorded.</div>`;
+            }
+            perfHtml += `</div></div>`;
+
+            card.innerHTML = `
+                <div class="flex-between mb-15">
+                    <div>
+                        <h3 style="margin-bottom: 5px;">${data.name || 'Unknown'}</h3>
+                        <div class="text-muted" style="font-size: 12px;">Handle: ${data.influencer_name || '-'}</div>
+                    </div>
+                    <div class="influencer-card-actions flex-row" style="gap: 10px;">
+                        <button class="btn-secondary btn-dispatch-inf" data-id="${data.id}">Dispatch</button>
+                        <button class="btn-secondary btn-edit-inf" data-id="${data.id}">Edit</button>
+                        <button class="btn-danger btn-archive-inf" data-id="${data.id}">Archive</button>
+                    </div>
+                </div>
+                ${tabNavHtml}
+                <div class="tabs-content">
+                    ${basicHtml}
+                    ${platformHtml}
+                    ${pricingHtml}
+                    ${perfHtml}
+                </div>
+            `;
+
+            // Isolated Tab Logic
+            const localTabBtns = card.querySelectorAll('.tab-btn');
+            const localPanes = card.querySelectorAll('.tab-pane');
+            localTabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    localTabBtns.forEach(b => b.classList.remove('active'));
+                    localPanes.forEach(p => p.classList.add('hidden'));
+                    btn.classList.add('active');
+                    const targetPane = card.querySelector('#' + btn.getAttribute('data-tab'));
+                    if (targetPane) targetPane.classList.remove('hidden');
+                });
+            });
+
+            // Action Buttons
+            const btnDispatch = card.querySelector('.btn-dispatch-inf');
+            const btnEdit = card.querySelector('.btn-edit-inf');
+            const btnArchive = card.querySelector('.btn-archive-inf');
+
+            btnDispatch.addEventListener('click', () => {
+                console.log("Dispatching workflow for influencer ID:", data.id);
+                if (window.showToast) window.showToast("Dispatch workflow coming soon.");
+            });
+
+            btnArchive.addEventListener('click', async () => {
+                if (!confirm("Are you sure you want to archive this influencer?")) return;
+                
+                const originalText = btnArchive.textContent;
+                btnArchive.textContent = 'Archiving...';
+                btnArchive.disabled = true;
+
+                try {
+                    const { error } = await window.supabase
+                        .from('influencers_info')
+                        .update({ is_archived: true })
+                        .eq('id', data.id);
+                    
+                    if (error) throw error;
+                    
+                    if (window.showToast) window.showToast('✅ Influencer archived');
+                    card.remove(); // Remove immediately without refetch
+                    
+                    // Show empty state if this was the last card
+                    if (container.children.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state" style="text-align: center; padding: 40px;">
+                                <div style="font-size: 40px; margin-bottom: 10px;">📇</div>
+                                <h3 style="color: var(--text-main); margin-bottom: 5px;">No influencers added to this campaign yet.</h3>
+                            </div>`;
+                    }
+                } catch (err) {
+                    console.error("Archive error:", err);
+                    if (window.showToast) window.showToast('❌ Failed to archive: ' + err.message);
+                    btnArchive.textContent = originalText;
+                    btnArchive.disabled = false;
+                }
+            });
+
+            btnEdit.addEventListener('click', async () => {
+                const isEditing = card.classList.contains('is-editing');
+                if (!isEditing) {
+                    // Turn ON Edit Mode
+                    card.classList.add('is-editing');
+                    btnEdit.textContent = 'Save Changes';
+                    btnEdit.classList.remove('btn-secondary');
+                    btnEdit.classList.add('btn-primary');
+                    btnArchive.style.display = 'none'; // Hide archive while editing
+
+                    // Convert basic fields to inputs
+                    const editableFields = ['name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state', 'complete_address'];
+                    editableFields.forEach(f => {
+                        const valDiv = card.querySelector(`.info-val[data-field="${f}"]`);
+                        if (valDiv) {
+                            const val = valDiv.textContent === '-' ? '' : valDiv.textContent;
+                            valDiv.innerHTML = `<input type="text" class="edit-input" data-field="${f}" value="${val.replace(/"/g, '&quot;')}" style="width:100%; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: white;">`;
+                        }
+                    });
+
+                    // Pricing final price and total videos
+                    const fpDiv = card.querySelector(`.info-val[data-field="final_price"]`);
+                    if (fpDiv) {
+                        const val = fpDiv.textContent.replace('₹', '') === '-' ? '' : fpDiv.textContent.replace('₹', '');
+                        fpDiv.innerHTML = `<input type="number" class="edit-input" data-field="final_price" value="${val}" style="width:100%; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: white;">`;
+                    }
+                    const tvDiv = card.querySelector(`.info-val[data-field="total_videos"]`);
+                    if (tvDiv) {
+                        const val = tvDiv.textContent === '-' ? '' : tvDiv.textContent;
+                        tvDiv.innerHTML = `<input type="number" class="edit-input" data-field="total_videos" value="${val}" style="width:100%; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg, #1a1a2e); color: white;">`;
+                    }
+
+                    // For now, complex multi-row editing (Platforms, Bargains, Performance) is locked to avoid massive UI complexity inline.
+                    // We only support basic info and pricing top-level fields for inline editing to keep it clean.
+                    
+                } else {
+                    // Turn OFF Edit Mode (Save)
+                    btnEdit.textContent = 'Saving...';
+                    btnEdit.disabled = true;
+
+                    try {
+                        const updates = {};
+                        const editInputs = card.querySelectorAll('.edit-input');
+                        
+                        let priceUpdates = null;
+
+                        editInputs.forEach(inp => {
+                            const field = inp.getAttribute('data-field');
+                            if (field === 'final_price' || field === 'total_videos') {
+                                if (!priceUpdates) priceUpdates = {};
+                                priceUpdates[field] = inp.value ? Number(inp.value) : null;
+                            } else {
+                                updates[field] = inp.value;
+                            }
+                        });
+
+                        // 1. Update basic info
+                        const { error: infoErr } = await window.supabase
+                            .from('influencers_info')
+                            .update(updates)
+                            .eq('id', data.id);
+                        if (infoErr) throw infoErr;
+
+                        // 2. Update pricing info
+                        if (priceUpdates && data.pricing?.id) {
+                            const { error: priceErr } = await window.supabase
+                                .from('influencer_pricing')
+                                .update(priceUpdates)
+                                .eq('id', data.pricing.id);
+                            if (priceErr) throw priceErr;
+                        }
+
+                        if (window.showToast) window.showToast('✅ Influencer updated successfully');
+                        
+                        // Re-fetch only this specific campaign list to refresh UI
+                        // Using targeted refresh to maintain structure
+                        if (window.selectedCampaignId) {
+                            loadCampaignInfluencers(window.selectedCampaignId);
+                        }
+
+                    } catch (err) {
+                        console.error("Edit error:", err);
+                        if (window.showToast) window.showToast('❌ Failed to update: ' + err.message);
+                        btnEdit.textContent = 'Save Changes';
+                        btnEdit.disabled = false;
+                    }
+                }
+            });
+
+            container.appendChild(card);
+        });
+    }
+
 
     // Route from Dashboard to Dispatched List View
     if (btnCampaignDispatch && campaignDashboardView) {
