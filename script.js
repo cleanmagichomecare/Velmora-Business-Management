@@ -2164,19 +2164,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 3. Insert into influencer_pricing
                 const pricing = d.pricingInfo;
-                const { error: priceError } = await window.supabase
+                const { data: priceData, error: priceError } = await window.supabase
                     .from('influencer_pricing')
                     .insert([{
                         influencer_id: influencerId,
                         final_price: pricing.finalPrice,
                         total_videos: pricing.totalVideos
-                    }]);
+                    }])
+                    .select();
                 
-                if (priceError) {
+                if (priceError || !priceData || priceData.length === 0) {
                     console.error("Error inserting pricing info:", priceError);
-                    throw new Error("Failed to save pricing info: " + priceError.message);
+                    throw new Error("Failed to save pricing info: " + (priceError?.message || "No data returned"));
                 }
-                console.log("Saved Pricing Info.");
+                const pricingId = priceData[0].id;
+                console.log("Saved Pricing Info. ID:", pricingId);
 
                 // 4. Insert into influencer_bargain_history
                 const bargainInserts = [];
@@ -2184,7 +2186,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     pricing.bargainHistory.forEach(b => {
                         if (b.creatorRequest || b.brandRequest) {
                             bargainInserts.push({
-                                influencer_id: influencerId,
+                                pricing_id: pricingId,
                                 creator_request: b.creatorRequest,
                                 brand_request: b.brandRequest
                             });
