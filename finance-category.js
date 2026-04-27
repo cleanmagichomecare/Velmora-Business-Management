@@ -447,21 +447,35 @@
 
         
         function loadSubCategory2() {
-            const _globals = window._financeCatGlobals || { sub2: {} };
-            const allSubs = [];
-            for (const sub1 in _globals.sub2) {
-                _globals.sub2[sub1].forEach(sub => {
-                    if (!allSubs.includes(sub)) allSubs.push(sub);
-                });
+            try {
+                const _globals = window._financeCatGlobals || { sub2: {} };
+                const allSubs = [];
+                for (const sub1 in _globals.sub2) {
+                    if (Array.isArray(_globals.sub2[sub1])) {
+                        _globals.sub2[sub1].forEach(sub => {
+                            if (!allSubs.includes(sub)) allSubs.push(sub);
+                        });
+                    }
+                }
+                updateDropdown('financeSubCategory2Select', allSubs, 'Sub Category 2');
+            } catch (err) {
+                console.error("Error in loadSubCategory2:", err);
             }
-            updateDropdown('financeSubCategory2Select', allSubs, 'Sub Category 2');
         }
 
         if (btnSub3Show) btnSub3Show.addEventListener('click', () => {
-            hideAllCategoryForms();
-            loadSubCategory2();
-            resetFormInputs(sub3InputsContainer, 'Enter Sub Category 3 Name');
-            if (sub3Form) sub3Form.classList.remove('hidden');
+            try {
+                hideAllCategoryForms();
+                loadSubCategory2();
+                resetFormInputs(sub3InputsContainer, 'Enter Sub Category 3 Name');
+                if (sub3Form) {
+                    sub3Form.classList.remove('hidden');
+                } else {
+                    console.error("Finance Sub Category 3 Form (sub3Form) not found in DOM");
+                }
+            } catch (err) {
+                console.error("Error displaying Sub Category 3 Form:", err);
+            }
         });
 
         if (addSub3InputBtn) addSub3InputBtn.addEventListener('click', () => createInput(sub3InputsContainer, 'Enter Sub Category 3 Name'));

@@ -444,6 +444,7 @@ console.log('task-category.js Loading...');
     // ARCHIVE LOGIC
     // ==========================================
 
+    window.archiveTaskCategory = async function(main, sub1, sub2, sub3) {
            if (!confirm("Are you sure you want to archive this category? This cannot be undone.")) return;
         
         try {
