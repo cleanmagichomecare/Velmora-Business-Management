@@ -2971,11 +2971,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 dispatchedListView.classList.remove('hidden');
                 dispatchedListView.classList.add('active-view');
 
-                // Get active campaign name
-                const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
-                if (activeFolder) {
-                    const campaignName = activeFolder.getAttribute('data-campaign-id');
-                    showCampaignDispatchRecords(campaignName, dispatchRecords.filter(r => r.campaignName === campaignName));
+                const campaignId = window.selectedCampaignId;
+                if (campaignId) {
+                    loadCampaignDispatchList(campaignId);
+                } else {
+                    if (window.showToast) window.showToast('⚠ No active campaign selected');
                 }
             }
             if (influencerListView) influencerListView.classList.add('hidden');
@@ -3577,163 +3577,160 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Dispatched List Page Rendering Logic ---
     // (Removed global dispatched list folder logic)
 
-    function showCampaignDispatchRecords(campaignName, records) {
+    async function loadCampaignDispatchList(campaignId) {
         const dispatchedInfluencersContainer = document.getElementById('dispatched-influencers-container');
         if (!dispatchedInfluencersContainer) return;
 
         dispatchedInfluencersContainer.classList.remove('hidden');
-        dispatchedInfluencersContainer.innerHTML = '';
+        dispatchedInfluencersContainer.innerHTML = '<div style="text-align: center; width: 100%; padding: 40px; color: var(--text-muted);">Loading dispatch records...</div>';
 
         const dispatchedBreadcrumb = document.getElementById('dispatched-breadcrumb');
-        if (dispatchedBreadcrumb) dispatchedBreadcrumb.textContent = `${campaignName} Dispatched List`;
+        if (dispatchedBreadcrumb) dispatchedBreadcrumb.textContent = `${campaignId} Dispatched List`;
 
-        if (records.length === 0) {
-            dispatchedInfluencersContainer.innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
-                    <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;">📦</div>
-                    <h3 style="color: var(--text-main); margin-bottom: 10px;">No dispatched influencers yet</h3>
-                    <p class="text-muted">Dispatched influencers for this campaign will appear here.</p>
-                </div>
-            `;
-            return;
-        }
+        try {
+            // Fetch records for this campaign
+            const { data: dispatchData, error: dispatchError } = await window.supabase
+                .from('influencer_dispatch_details')
+                .select('*')
+                .eq('campaign_id', campaignId)
+                .order('created_at', { ascending: false });
 
-        records.forEach(record => {
-            const recordCard = document.createElement('div');
-            recordCard.className = 'influencer-profile-card'; // Reuse identical styling block
+            if (dispatchError) throw dispatchError;
 
-            let productsHTML = '';
-            if (record.selectedProducts && record.selectedProducts.length > 0) {
-                record.selectedProducts.forEach(p => {
-                    productsHTML += `<div style="font-size: 0.9rem; margin-bottom: 4px; display: flex; justify-content: space-between;">
-                        <span class="text-muted">• ${p.name}</span>
-                        <strong>Qty: ${p.qty}</strong>
-                    </div>`;
-                });
-            } else {
-                productsHTML = '<span class="text-muted">No products selected</span>';
+            if (!dispatchData || dispatchData.length === 0) {
+                dispatchedInfluencersContainer.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;">📦</div>
+                        <h3 style="color: var(--text-main); margin-bottom: 10px;">No dispatched influencers found for this campaign.</h3>
+                        <p class="text-muted">Dispatched influencers for this campaign will appear here.</p>
+                    </div>
+                `;
+                return;
             }
 
-            const avatarHTML = record.avatar
-                ? `<div class="profile-avatar">${record.avatar}</div>`
-                : `<div class="profile-avatar"><div class="avatar-placeholder"></div></div>`;
+            // Extract unique influencer IDs
+            const influencerIds = [...new Set(dispatchData.map(d => d.influencer_id))];
 
-            recordCard.innerHTML = `
-                <div class="dispatch-card-header">
-                    <div class="dispatch-user">
-                        ${avatarHTML}
+            // Fetch influencer info
+            const { data: infoData, error: infoError } = await window.supabase
+                .from('influencers_info')
+                .select('id, name, avatar')
+                .in('id', influencerIds);
+
+            if (infoError) throw infoError;
+
+            const infoMap = {};
+            if (infoData) {
+                infoData.forEach(info => {
+                    infoMap[info.id] = info;
+                });
+            }
+
+            dispatchedInfluencersContainer.innerHTML = '';
+
+            dispatchData.forEach(record => {
+                const info = infoMap[record.influencer_id] || {};
+                const recordCard = document.createElement('div');
+                recordCard.className = 'dispatch-full-card'; 
+
+                let productsHTML = '';
+                if (record.selected_products && record.selected_products.length > 0) {
+                    record.selected_products.forEach(p => {
+                        productsHTML += `<div style="font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                            <span style="color: #bbb;">• ${p.product_name}</span>
+                            <strong>Qty: ${p.quantity}</strong>
+                        </div>`;
+                    });
+                } else {
+                    productsHTML = '<span style="color: #888;">No products selected</span>';
+                }
+
+                const avatarHTML = info.avatar
+                    ? `<div class="profile-avatar">${info.avatar}</div>`
+                    : `<div class="profile-avatar"><div class="avatar-placeholder"></div></div>`;
+
+                // Missing image placeholder component
+                const imgFallback = `<div class="dispatch-photo-box"><span>No Image</span></div>`;
+
+                const productImg = record.product_photo_url 
+                    ? `<div class="dispatch-photo-box"><img src="${record.product_photo_url}" alt="Product Photo"></div>`
+                    : imgFallback;
+
+                const dispatchImg = record.dispatch_photo_url 
+                    ? `<div class="dispatch-photo-box"><img src="${record.dispatch_photo_url}" alt="Dispatch Photo"></div>`
+                    : imgFallback;
+
+                const safeVal = (v) => v || '-';
+
+                recordCard.innerHTML = `
+                    <div class="dispatch-full-header">
+                        <div class="dispatch-user" style="display: flex; align-items: center; gap: 12px;">
+                            ${avatarHTML}
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.1rem;">${record.creator_name}</h3>
+                                <span style="font-size: 0.8rem; color: #a0a0a0;">Dispatch ID: ${record.id}</span>
+                            </div>
+                        </div>
+                        <button class="btn-move-status" data-dispatch-id="${record.id}">
+                            Move To
+                        </button>
+                    </div>
+                    <div class="dispatch-full-body">
+                        <div class="dispatch-details-grid">
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Phone</span><span class="dispatch-info-val">${safeVal(record.phone_number)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Alt Phone</span><span class="dispatch-info-val">${safeVal(record.alternative_phone_number)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Address</span><span class="dispatch-info-val" style="word-break: break-word;">${safeVal(record.address)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">State</span><span class="dispatch-info-val">${safeVal(record.state)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Dispatch Date</span><span class="dispatch-info-val">${safeVal(record.dispatch_date)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Exp. Delivery Date</span><span class="dispatch-info-val">${safeVal(record.expected_delivery_date)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Campaign Name</span><span class="dispatch-info-val">${safeVal(record.campaign_name)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Courier Partner</span><span class="dispatch-info-val">${safeVal(record.courier_partner)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Track ID</span><span class="dispatch-info-val">${safeVal(record.tracking_id)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Total Value</span><span class="dispatch-info-val">${safeVal(record.total_product_value)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Total Weight</span><span class="dispatch-info-val">${safeVal(record.total_weight)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Total Products</span><span class="dispatch-info-val">${safeVal(record.total_products)}</span></div>
+                        </div>
+
+                        <div style="margin-top: 10px;">
+                            <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 8px;">Products Sent</h4>
+                            <div class="dispatch-products-list">
+                                ${productsHTML}
+                            </div>
+                        </div>
+
                         <div>
-                            <h3>${record.creatorName}</h3>
-                            <span class="dispatch-id text-muted fs-sm">Dispatch ID: ${record.id}</span>
-                        </div>
-                    </div>
-                    <button class="btn-move-status" data-dispatch-id="${record.id}">
-                        Move To
-                    </button>
-                </div>
-                <div class="profile-card-body">
-                    <div style="padding: 16px;">
-                        <div class="grid-2 mb-15">
-                            <div class="form-group">
-                                <label>Phone</label>
-                                <div class="read-only-val">${record.phone || '-'}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Alt Phone</label>
-                                <div class="read-only-val">${record.altPhone || '-'}</div>
-                            </div>
-                        </div>
-
-                        <div class="grid-2 mb-15">
-                            <div class="form-group">
-                                <label>Address</label>
-                                <div class="read-only-val" style="word-break: break-word;">${record.address || '-'}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>State</label>
-                                <div class="read-only-val">${record.state || '-'}</div>
-                            </div>
-                        </div>
-
-                        <div class="grid-2 mb-15">
-                            <div class="form-group">
-                                <label>Dispatch Date</label>
-                                <div class="read-only-val">${record.dispatchDate || '-'}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Expected Delivery Date</label>
-                                <div class="read-only-val">${record.expectedDelivery || '-'}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="grid-2 mb-15">
-                            <div class="form-group">
-                                <label>Campaign Name</label>
-                                <div class="read-only-val">${record.campaignName || '-'}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Product Name</label>
-                                <div class="read-only-val">${record.product || '-'}</div>
-                            </div>
-                        </div>
-
-                        <div class="grid-2 mb-15">
-                            <div class="form-group">
-                                <label>Courier Partner</label>
-                                <div class="read-only-val">${record.courierPartner || '-'}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Track ID</label>
-                                <div class="read-only-val">${record.trackId || '-'}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="grid-3 mb-15">
-                            <div class="form-group">
-                                <label>Total Value</label>
-                                <div class="read-only-val">${record.totalValue || '-'}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Total Weight</label>
-                                <div class="read-only-val">${record.totalWeight || '-'}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Total Products</label>
-                                <div class="read-only-val">${record.totalProducts || '-'}</div>
-                            </div>
-                        </div>
-
-                        <div class="section-heading mb-10" style="margin-top: 15px;">Products Sent</div>
-                        <div style="background: rgba(0,0,0,0.02); padding: 12px; border-radius: 8px; margin-bottom: 20px;">
-                            ${productsHTML}
-                        </div>
-
-                        <div class="section-heading mb-10">Dispatch Photos</div>
-                        <div class="grid-2 mb-15">
-                            <div class="form-group">
-                                <label>Product Photo</label>
-                                ${record.productPhoto ? `<img src="${record.productPhoto}" class="dispatch-img" alt="Product Photo">` : '<div class="read-only-val text-muted">No Image</div>'}
-                            </div>
-                            <div class="form-group">
-                                <label>Dispatch Photo</label>
-                                ${record.dispatchPhoto ? `<img src="${record.dispatchPhoto}" class="dispatch-img" alt="Dispatch Photo">` : '<div class="read-only-val text-muted">No Image</div>'}
+                            <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 0;">Dispatch Photos</h4>
+                            <div class="dispatch-photos-grid">
+                                <div class="dispatch-photo-container">
+                                    <span class="dispatch-photo-title">Product Photo</span>
+                                    ${productImg}
+                                </div>
+                                <div class="dispatch-photo-container">
+                                    <span class="dispatch-photo-title">Dispatch Photo</span>
+                                    ${dispatchImg}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-            // Attach Move To button handler
-            const moveToBtn = recordCard.querySelector('.btn-move-status');
-            if (moveToBtn) {
-                moveToBtn.addEventListener('click', () => {
-                    const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
-                    const campaignName = activeFolder ? activeFolder.getAttribute('data-campaign-id') : record.campaignName;
-                    openStatusTrackingPage(campaignName, record.id);
-                });
-            }
+                `;
 
-            dispatchedInfluencersContainer.appendChild(recordCard);
-        });
+                // Attach Move To button handler
+                const moveToBtn = recordCard.querySelector('.btn-move-status');
+                if (moveToBtn) {
+                    moveToBtn.addEventListener('click', () => {
+                        const campaignName = window.selectedCampaignId || record.campaign_name;
+                        openStatusTrackingPage(campaignName, record.id);
+                    });
+                }
+
+                dispatchedInfluencersContainer.appendChild(recordCard);
+            });
+            
+        } catch (error) {
+            console.error('Error fetching dispatch records:', error);
+            dispatchedInfluencersContainer.innerHTML = '<div style="text-align: center; width: 100%; padding: 40px; color: #ff6b6b;">Error loading dispatch records.</div>';
+            if (window.showToast) window.showToast('❌ Failed to load dispatch list.');
+        }
     }
 
     // --- Status Tracking Page Logic ---
