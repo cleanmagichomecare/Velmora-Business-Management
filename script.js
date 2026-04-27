@@ -2075,12 +2075,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 { data: platformsData },
                 { data: pricingData },
                 { data: bargainData },
-                { data: performanceData }
+                { data: performanceData },
+                { data: dispatchData }
             ] = await Promise.all([
                 window.supabase.from('influencer_platforms_details').select('*').in('influencer_id', influencerIds),
                 window.supabase.from('influencer_pricing').select('*').in('influencer_id', influencerIds),
                 window.supabase.from('influencer_bargain_history').select('*'), // Filtered locally via pricing_id
-                window.supabase.from('influencer_brand_performance').select('*').in('influencer_id', influencerIds)
+                window.supabase.from('influencer_brand_performance').select('*').in('influencer_id', influencerIds),
+                window.supabase.from('influencer_dispatch_details').select('*').in('influencer_id', influencerIds)
             ]);
 
             // Combine data
@@ -2089,12 +2091,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pricing = (pricingData || []).find(p => p.influencer_id === inf.id) || {};
                 const bargainHistory = (bargainData || []).filter(b => b.pricing_id === pricing.id);
                 const performance = (performanceData || []).filter(p => p.influencer_id === inf.id);
+                const dispatchDetails = (dispatchData || []).find(d => d.influencer_id === inf.id && d.campaign_id === activeCampaignId) || null;
 
                 return {
                     ...inf,
                     platforms,
                     pricing: { ...pricing, bargainHistory },
-                    performance
+                    performance,
+                    dispatchDetails
                 };
             });
 
@@ -2254,7 +2258,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="badge" style="background: rgba(40, 167, 69, 0.15); color: #28a745; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; border: 1px solid rgba(40, 167, 69, 0.3);">Active</span>
                     </div>
                     <div class="influencer-card-actions flex-row align-center" style="display: flex; gap: 10px; margin-left: auto;">
-                        <button class="btn-secondary btn-dispatch-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Dispatch</button>
+                        ${data.dispatchDetails 
+                            ? `<button class="btn-secondary btn-dispatch-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background-color: rgba(40, 167, 69, 0.1); color: #28a745; border-color: rgba(40, 167, 69, 0.3); pointer-events: none;" disabled>Dispatched</button>` 
+                            : `<button class="btn-secondary btn-dispatch-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Dispatch</button>`}
                         <button class="btn-secondary btn-edit-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Edit</button>
                         <button class="btn-danger btn-archive-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Archive</button>
                     </div>
@@ -2287,6 +2293,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnArchive = card.querySelector('.btn-archive-inf');
 
             btnDispatch.addEventListener('click', () => {
+                if (btnDispatch.disabled) return;
                 const campaignId = data.campaign_id || window.selectedCampaignId;
                 if (!campaignId) {
                     if (window.showToast) window.showToast("❌ Error: No active campaign found.");
@@ -3314,6 +3321,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const dispatchModal = document.getElementById('dispatch-modal');
         if (!dispatchModal) return;
 
+        window.currentDispatchInfluencerId = influencerId;
+        window.currentDispatchCampaignId = campaignId;
+
         // Reset the form
         const form = document.getElementById('dispatch-form');
         if (form) form.reset();
@@ -3427,98 +3437,139 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        btnSubmitDispatch.addEventListener('click', () => {
-            const targetId = dispatchModal.getAttribute('data-target-card');
-            const targetCard = document.getElementById(`card-${targetId}`);
-            const currentDate = new Date().toISOString().split('T')[0];
+        btnSubmitDispatch.addEventListener('click', async () => {
+            if (!window.currentDispatchInfluencerId || !window.currentDispatchCampaignId) {
+                if (window.showToast) window.showToast('❌ Error: Missing Influencer or Campaign ID.');
+                return;
+            }
 
-            // Get base influencer info
-            const influencer = influencerData.find(inf => inf.id === targetId);
+            const influencerId = window.currentDispatchInfluencerId;
+            const campaignId = window.currentDispatchCampaignId;
 
-            // Helper to get image source from preview
-            const getPreviewSrc = (previewId) => {
-                const previewImg = document.querySelector(`#${previewId} img`);
-                return previewImg ? previewImg.src : null;
-            };
+            // Form references
+            const fCreatorName = document.getElementById('dispatch-creator-name').value;
+            const fDate = document.getElementById('dispatch-date').value;
+            
+            if (!fCreatorName || !fDate) {
+                if (window.showToast) window.showToast('❌ Please fill in Creator Name and Dispatch Date.');
+                return;
+            }
 
-            // Capture Full Form Data into a new Dispatch Record
-            const dispatchRecord = {
-                id: 'dispatch-' + Date.now(),
-                influencerId: targetId,
-                campaignName: document.getElementById('dispatch-campaign').value || 'Unknown Campaign',
-                creatorName: document.getElementById('dispatch-creator-name').value || (influencer ? influencer.name : 'Unknown Creator'),
-                phone: document.getElementById('dispatch-phone').value,
-                altPhone: document.getElementById('dispatch-alt-phone').value,
-                address: document.getElementById('dispatch-address').value,
-                state: document.getElementById('dispatch-state').value,
-                product: document.getElementById('dispatch-product') ? document.getElementById('dispatch-product').value : '',
-                selectedProducts: [],
-                totalProducts: document.getElementById('dispatch-total-products').value,
-                totalValue: document.getElementById('dispatch-total-value').value,
-                totalWeight: document.getElementById('dispatch-total-weight').value,
-                courierPartner: document.getElementById('dispatch-courier').value,
-                trackId: document.getElementById('dispatch-track-id') ? document.getElementById('dispatch-track-id').value : '',
-                dispatchDate: document.getElementById('dispatch-date').value || currentDate,
-                expectedDelivery: document.getElementById('dispatch-delivery-date').value,
-
-                // Image fields
-                productPhoto: getPreviewSrc('preview-pack-photo'),
-                dispatchPhoto: getPreviewSrc('preview-final-photo'),
-
-                status: 'Dispatched',
-                statusStage: 'Delivered',
-                createdAt: Date.now(),
-                avatar: influencer ? influencer.avatar : null,
-                platformAgreed: (() => {
-                    const rawPlatform = targetCard && targetCard.querySelector('#platform-agreed-select')
-                        ? targetCard.querySelector('#platform-agreed-select').value
-                        : 'All';
-                    const platformMap = {
-                        'All': 'Instagram, YouTube, Facebook',
-                        'Instagram': 'Instagram',
-                        'Youtube': 'YouTube',
-                        'Facebook': 'Facebook',
-                        'Instagram and Youtube': 'Instagram, YouTube',
-                        'Instagram and Facebook': 'Instagram, Facebook',
-                        'Youtube and Facebook': 'YouTube, Facebook'
-                    };
-                    return platformMap[rawPlatform] || rawPlatform;
-                })()
-            };
-
-            const productCheckboxes = dispatchModal.querySelectorAll('.product-checkbox:checked');
-            productCheckboxes.forEach(cb => {
+            // Products
+            const selectedProducts = [];
+            document.querySelectorAll('.product-checkbox:checked').forEach(cb => {
                 const qtyInput = cb.closest('.product-item').querySelector('.product-quantity-input');
-                dispatchRecord.selectedProducts.push({
-                    name: cb.getAttribute('data-product'),
-                    qty: qtyInput ? qtyInput.value : 1
+                selectedProducts.push({
+                    product_name: cb.getAttribute('data-product'),
+                    quantity: qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1
                 });
             });
 
-            // Save to Dispatch History
-            dispatchRecords.push(dispatchRecord);
-
-            // Update original influencer data status (for main list)
-            if (influencer) {
-                influencer.status = 'Dispatched';
+            if (selectedProducts.length === 0) {
+                if (window.showToast) window.showToast('❌ Please select at least one product.');
+                return;
             }
 
-            // Update original card UI
-            if (targetCard) {
-                const statusBadge = targetCard.querySelector('.status-badge');
-                if (statusBadge) {
-                    statusBadge.textContent = 'Dispatched';
-                    statusBadge.className = 'profile-status dispatched status-badge';
+            const originalText = btnSubmitDispatch.textContent;
+            btnSubmitDispatch.textContent = 'Saving...';
+            btnSubmitDispatch.disabled = true;
+
+            try {
+                // File uploads helper
+                const uploadPhoto = async (inputId) => {
+                    const input = document.getElementById(inputId);
+                    if (!input || !input.files || input.files.length === 0) return null;
+                    const file = input.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    const filePath = `dispatch/${fileName}`;
+
+                    const { data, error } = await window.supabase.storage
+                        .from('influencer-profiles')
+                        .upload(filePath, file);
+
+                    if (error) throw error;
+
+                    const { data: publicData } = window.supabase.storage
+                        .from('influencer-profiles')
+                        .getPublicUrl(filePath);
+
+                    return publicData.publicUrl;
+                };
+
+                const packPhotoUrl = await uploadPhoto('dispatch-pack-photo');
+                const finalPhotoUrl = await uploadPhoto('dispatch-final-photo');
+
+                // Payload
+                const payload = {
+                    influencer_id: influencerId,
+                    campaign_id: campaignId,
+                    creator_name: fCreatorName,
+                    phone_number: document.getElementById('dispatch-phone').value || null,
+                    alternative_phone_number: document.getElementById('dispatch-alt-phone').value || null,
+                    address: document.getElementById('dispatch-address').value || null,
+                    state: document.getElementById('dispatch-state').value || null,
+                    campaign_name: document.getElementById('dispatch-campaign').value || null,
+                    product_name: document.getElementById('dispatch-product') ? document.getElementById('dispatch-product').value : null,
+                    selected_products: selectedProducts,
+                    total_products: parseInt(document.getElementById('dispatch-total-products').value, 10) || 0,
+                    total_product_value: parseFloat(document.getElementById('dispatch-total-value').value) || null,
+                    total_weight: document.getElementById('dispatch-total-weight').value || null,
+                    product_photo_url: packPhotoUrl,
+                    courier_partner: document.getElementById('dispatch-courier').value || null,
+                    dispatch_photo_url: finalPhotoUrl,
+                    tracking_id: document.getElementById('dispatch-track-id') ? document.getElementById('dispatch-track-id').value : null,
+                    dispatch_date: fDate,
+                    expected_delivery_date: document.getElementById('dispatch-delivery-date').value || null,
+                    dispatch_status: 'Dispatched'
+                };
+
+                const { error } = await window.supabase
+                    .from('influencer_dispatch_details')
+                    .insert([payload]);
+
+                if (error) throw error;
+
+                if (window.showToast) window.showToast('✅ Influencer successfully dispatched!');
+
+                // Update Button UI dynamically without reload
+                const card = document.querySelector(`.influencer-profile-card[data-id="${influencerId}"]`);
+                if (card) {
+                    const btnDispatch = card.querySelector('.btn-dispatch-inf');
+                    if (btnDispatch) {
+                        btnDispatch.textContent = 'Dispatched';
+                        btnDispatch.disabled = true;
+                        btnDispatch.style.pointerEvents = 'none';
+                        btnDispatch.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                        btnDispatch.style.color = '#28a745';
+                        btnDispatch.style.borderColor = 'rgba(40, 167, 69, 0.3)';
+                    }
                 }
-            }
 
-            showToast('Influencer successfully dispatched');
-            dispatchModal.classList.add('hidden');
+                // Reset modal and close
+                const form = document.getElementById('dispatch-form');
+                if (form) form.reset();
+                document.querySelectorAll('.product-quantity-input').forEach(input => {
+                    input.disabled = true;
+                    input.value = '';
+                });
+                const packPreview = document.getElementById('preview-pack-photo');
+                if (packPreview) packPreview.innerHTML = '<span>No Image</span>';
+                
+                const finalPreview = document.getElementById('preview-final-photo');
+                if (finalPreview) finalPreview.innerHTML = '<span>No Image</span>';
 
-            // Render Dispatched List if we are in that view
-            const dispatchedListView = document.getElementById('view-dispatched-list');
-            if (dispatchedListView && dispatchedListView.classList.contains('active-view')) {
-                showDispatchedListView();
+                dispatchModal.classList.add('hidden');
+                
+                window.currentDispatchInfluencerId = null;
+                window.currentDispatchCampaignId = null;
+
+            } catch (err) {
+                console.error("Dispatch Error:", err);
+                if (window.showToast) window.showToast('❌ Dispatch failed: ' + err.message);
+            } finally {
+                btnSubmitDispatch.textContent = originalText;
+                btnSubmitDispatch.disabled = false;
             }
         });
     }
