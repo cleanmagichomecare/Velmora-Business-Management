@@ -28,6 +28,7 @@
                 main: row.main || null,
                 sub1: row.sub1 || null,
                 sub2: row.sub2 || null,
+                sub3: row.sub_sub_sub_category || row.sub3 || null,
                 status: row.status || 'active'
             }));
         } catch (e) {
@@ -46,6 +47,7 @@
                     main: catObj.main || null,
                     sub1: catObj.sub1 || null,
                     sub2: catObj.sub2 || null,
+                    sub_sub_sub_category: catObj.sub3 || null,
                     status: catObj.status || 'active'
                 }]);
 
@@ -76,6 +78,9 @@
             if (catObj.sub2) query = query.eq('sub2', catObj.sub2);
             else query = query.is('sub2', null);
 
+            if (catObj.sub3) query = query.eq('sub_sub_sub_category', catObj.sub3);
+            else query = query.is('sub_sub_sub_category', null);
+
             query = query.eq('status', 'active');
 
             const { error } = await query;
@@ -93,9 +98,10 @@
         const uniqueMains = [];
         const uniqueSub1 = {};
         const uniqueSub2 = {};
+        const uniqueSub3 = {};
 
         window.financeCategories.filter(c => c.status !== 'archived').forEach(cat => {
-            const { main, sub1, sub2 } = cat;
+            const { main, sub1, sub2, sub3 } = cat;
             if (main && main !== '-') {
                 if (!uniqueMains.includes(main)) {
                     uniqueMains.push(main);
@@ -111,6 +117,13 @@
                         if (!uniqueSub2[sub1].includes(sub2)) {
                             uniqueSub2[sub1].push(sub2);
                         }
+                        
+                        if (sub3 && sub3 !== '-') {
+                            if (!uniqueSub3[sub2]) uniqueSub3[sub2] = [];
+                            if (!uniqueSub3[sub2].includes(sub3)) {
+                                uniqueSub3[sub2].push(sub3);
+                            }
+                        }
                     }
                 }
             }
@@ -120,7 +133,8 @@
         window._financeCatGlobals = {
             mains: uniqueMains,
             sub1: uniqueSub1,
-            sub2: uniqueSub2
+            sub2: uniqueSub2,
+            sub3: uniqueSub3
         };
         
         // Populate Finance specific dropdowns if any
@@ -137,9 +151,25 @@
 
     window.populateFinanceCategoryDropdowns = function() {
         const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {} };
+        
+        if (saveSub3Btn) saveSub3Btn.addEventListener('click', async () => {
+            const parentSub2 = subCategory2Select ? subCategory2Select.value : '';
+            if (!parentSub2) { notify("⚠ Select Sub Category 2!", '⚠'); return; }
+            
+            const ref = window.financeCategories.find(c => c.sub2 === parentSub2 && c.status !== 'archived');
+            const parentMain = ref ? ref.main : null;
+            const parentSub1 = ref ? ref.sub1 : null;
+
+            if (await collectAndSaveNew('financeSub3Inputs', 'sub3', [parentMain, parentSub1, parentSub2], "✅ Finance Sub Category 3 saved!")) {
+                hideAllCategoryForms();
+                if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
+            }
+        });
+
         const financeCat = document.getElementById('mainCategory');
         const financeSub1 = document.getElementById('subCategory1');
         const financeSub2 = document.getElementById('subCategory2');
+        const financeSub3 = document.getElementById('subCategory3');
 
         if (!financeCat) return;
 
@@ -147,6 +177,7 @@
         const currentCat = financeCat.value;
         const currentSub1 = financeSub1 ? financeSub1.value : '';
         const currentSub2 = financeSub2 ? financeSub2.value : '';
+        const currentSub3 = financeSub3 ? financeSub3.value : '';
 
         // 1. Populate Main Category
         financeCat.innerHTML = '<option value="">Select Main Category</option>';
@@ -191,7 +222,25 @@
                 financeSub2.disabled = true;
             }
         }
+
+        // 4. Populate Sub 3 based on selected Sub 2
+        if (financeSub3) {
+            financeSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
+            if (financeSub2 && financeSub2.value && _globals.sub3[financeSub2.value]) {
+                financeSub3.disabled = false;
+                _globals.sub3[financeSub2.value].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.textContent = sub;
+                    financeSub3.appendChild(opt);
+                });
+                financeSub3.value = currentSub3; // Restore
+            } else {
+                financeSub3.disabled = true;
+            }
+        }
     };
+
 
 
     async function initFinanceCategoryLogic() {
@@ -206,6 +255,14 @@
         const btnSub2Show = document.getElementById('btn-add-finance-sub-category-2');
         const btnViewShow = document.getElementById('btn-view-finance-category-list');
         const btnRefreshList = document.getElementById('btn-refresh-finance-category-list');
+
+        const btnSub3Show = document.getElementById('btn-add-finance-sub-category-3');
+        const sub3Form = document.getElementById('financeSubCategory3Form');
+        const subCategory2Select = document.getElementById('financeSubCategory2Select');
+        const sub3InputsContainer = document.getElementById('financeSub3Inputs');
+        const addSub3InputBtn = document.getElementById('addFinanceSub3Input');
+        const saveSub3Btn = document.getElementById('saveFinanceSub3');
+
         
         // Forms / Containers
         const mainForm = document.getElementById('financeMainCategoryForm');
@@ -242,7 +299,7 @@
         }
 
         function hideAllCategoryForms() {
-            [mainForm, sub1Form, sub2Form, listView, categoryDefaultState].forEach(f => {
+            [mainForm, sub1Form, sub2Form, sub3Form, listView, categoryDefaultState].forEach(f => {
                 if (f) f.classList.add('hidden');
             });
         }
@@ -290,12 +347,15 @@
             let html = `
                 <table class="vendor-table">
                     <thead>
+                        
                         <tr>
                             <th>Main Category</th>
                             <th>Sub Category 1</th>
                             <th>Sub Category 2</th>
+                            <th>Sub Category 3</th>
                             <th>Actions</th>
                         </tr>
+
                     </thead>
                     <tbody>
             `;
@@ -303,7 +363,7 @@
             const activeCats = window.financeCategories.filter(c => c.status !== 'archived');
 
             if (activeCats.length === 0) {
-                html += '<tr><td colspan="4" style="text-align:center; padding: 40px; color: #888;">No finance categories found.</td></tr>';
+                html += '<tr><td colspan="5" style="text-align:center; padding: 40px; color: #888;">No finance categories found.</td></tr>';
             } else {
                 activeCats.forEach(row => {
                     html += `
@@ -311,6 +371,7 @@
                             <td>${row.main || '-'}</td>
                             <td>${row.sub1 || '-'}</td>
                             <td>${row.sub2 || '-'}</td>
+                            <td>${row.sub3 || '-'}</td>
                             <td>
                                 <div class="category-actions">
                                     <button class="btn-edit" onclick="event.stopPropagation(); window.editFinanceCategoryRow('${row.id}')">Edit</button>
@@ -384,6 +445,27 @@
             if (sub2Form) sub2Form.classList.remove('hidden');
         });
 
+        
+        function loadSubCategory2() {
+            const _globals = window._financeCatGlobals || { sub2: {} };
+            const allSubs = [];
+            for (const sub1 in _globals.sub2) {
+                _globals.sub2[sub1].forEach(sub => {
+                    if (!allSubs.includes(sub)) allSubs.push(sub);
+                });
+            }
+            updateDropdown('financeSubCategory2Select', allSubs, 'Sub Category 2');
+        }
+
+        if (btnSub3Show) btnSub3Show.addEventListener('click', () => {
+            hideAllCategoryForms();
+            loadSubCategory2();
+            resetFormInputs(sub3InputsContainer, 'Enter Sub Category 3 Name');
+            if (sub3Form) sub3Form.classList.remove('hidden');
+        });
+
+        if (addSub3InputBtn) addSub3InputBtn.addEventListener('click', () => createInput(sub3InputsContainer, 'Enter Sub Category 3 Name'));
+
         if (btnViewShow) btnViewShow.addEventListener('click', async () => {
             hideAllCategoryForms();
             if (listView) listView.classList.remove('hidden');
@@ -431,7 +513,8 @@
                 const newCat = {
                     main: level === 'main' ? val : parents[0] || null,
                     sub1: level === 'sub1' ? val : (level === 'sub2' ? parents[1] : null),
-                    sub2: level === 'sub2' ? val : null,
+                    sub2: level === 'sub2' ? val : (level === 'sub3' ? parents[2] : null),
+                    sub3: level === 'sub3' ? val : null,
                     status: 'active'
                 };
 
@@ -481,6 +564,21 @@
         });
 
         // Initial population of dropdowns in Expense Tracker form
+        
+        if (saveSub3Btn) saveSub3Btn.addEventListener('click', async () => {
+            const parentSub2 = subCategory2Select ? subCategory2Select.value : '';
+            if (!parentSub2) { notify("⚠ Select Sub Category 2!", '⚠'); return; }
+            
+            const ref = window.financeCategories.find(c => c.sub2 === parentSub2 && c.status !== 'archived');
+            const parentMain = ref ? ref.main : null;
+            const parentSub1 = ref ? ref.sub1 : null;
+
+            if (await collectAndSaveNew('financeSub3Inputs', 'sub3', [parentMain, parentSub1, parentSub2], "✅ Finance Sub Category 3 saved!")) {
+                hideAllCategoryForms();
+                if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
+            }
+        });
+
         const financeCat = document.getElementById('mainCategory');
         if (financeCat) {
             financeCat.addEventListener('change', window.populateFinanceCategoryDropdowns);
@@ -488,6 +586,11 @@
         const financeSub1 = document.getElementById('subCategory1');
         if (financeSub1) {
             financeSub1.addEventListener('change', window.populateFinanceCategoryDropdowns);
+        }
+
+        const financeSub2Ev = document.getElementById('subCategory2');
+        if (financeSub2Ev) {
+            financeSub2Ev.addEventListener('change', window.populateFinanceCategoryDropdowns);
         }
     }
 

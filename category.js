@@ -159,7 +159,7 @@ console.log('category.js Loading...');
             try {
                 const { data, error } = await window.supabase
                     .from('vendor_categories')
-                    .select('category, sub_category, sub_sub_category')
+                    .select('category, sub_category, sub_sub_category, sub_sub_sub_category')
                     .eq('status', 'active');
 
                 if (error) throw error;
@@ -175,19 +175,19 @@ console.log('category.js Loading...');
                     const main = row.category ? row.category.trim() : null;
                     const sub1 = row.sub_category ? row.sub_category.trim() : null;
                     const sub2 = row.sub_sub_category ? row.sub_sub_category.trim() : null;
+                    const sub3 = row.sub_sub_sub_category ? row.sub_sub_sub_category.trim() : null;
 
                     if (!main) return;
 
-                    if (!hierarchy[main]) {
-                        hierarchy[main] = {};
-                    }
+                    if (!hierarchy[main]) hierarchy[main] = {};
 
                     if (sub1) {
-                        if (!hierarchy[main][sub1]) {
-                            hierarchy[main][sub1] = new Set();
-                        }
+                        if (!hierarchy[main][sub1]) hierarchy[main][sub1] = {};
                         if (sub2) {
-                            hierarchy[main][sub1].add(sub2);
+                            if (!hierarchy[main][sub1][sub2]) hierarchy[main][sub1][sub2] = new Set();
+                            if (sub3) {
+                                hierarchy[main][sub1][sub2].add(sub3);
+                            }
                         }
                     }
                 });
@@ -199,6 +199,7 @@ console.log('category.js Loading...');
                                 <th>Main Category</th>
                                 <th>Sub Category 1</th>
                                 <th>Sub Category 2</th>
+                                <th>Sub Category 3</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -214,45 +215,67 @@ console.log('category.js Loading...');
                                 <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
                                 <td style="color: #94a3b8;">-</td>
                                 <td style="color: #94a3b8;">-</td>
+                                <td style="color: #94a3b8;">-</td>
                                 <td>
                                     <div class="category-actions">
-                                        <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', null, null)">Archive</button>
+                                        <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', null, null, null)">Archive</button>
                                     </div>
                                 </td>
                             </tr>
                         `;
                     } else {
                         sub1Keys.forEach(sub1Cat => {
-                            const sub2Set = hierarchy[mainCat][sub1Cat];
-                            const sub2Arr = Array.from(sub2Set).sort();
+                            const sub2Keys = Object.keys(hierarchy[mainCat][sub1Cat]).sort();
 
-                            if (sub2Arr.length === 0) {
+                            if (sub2Keys.length === 0) {
                                 html += `
                                     <tr class="vendor-category-row">
                                         <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
                                         <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
                                         <td style="color: #94a3b8;">-</td>
+                                        <td style="color: #94a3b8;">-</td>
                                         <td>
                                             <div class="category-actions">
-                                                <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', null)">Archive</button>
+                                                <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', null, null)">Archive</button>
                                             </div>
                                         </td>
                                     </tr>
                                 `;
                             } else {
-                                sub2Arr.forEach(sub2Cat => {
-                                    html += `
-                                        <tr class="vendor-category-row">
-                                            <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
-                                            <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
-                                            <td style="font-weight: 400; color: #475569; padding-left: 40px;">↳↳ ${sub2Cat}</td>
-                                            <td>
-                                                <div class="category-actions">
-                                                    <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}')">Archive</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    `;
+                                sub2Keys.forEach(sub2Cat => {
+                                    const sub3Arr = Array.from(hierarchy[mainCat][sub1Cat][sub2Cat]).sort();
+                                    
+                                    if (sub3Arr.length === 0) {
+                                        html += `
+                                            <tr class="vendor-category-row">
+                                                <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
+                                                <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
+                                                <td style="font-weight: 400; color: #475569; padding-left: 40px;">↳↳ ${sub2Cat}</td>
+                                                <td style="color: #94a3b8;">-</td>
+                                                <td>
+                                                    <div class="category-actions">
+                                                        <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}', null)">Archive</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    } else {
+                                        sub3Arr.forEach(sub3Cat => {
+                                            html += `
+                                                <tr class="vendor-category-row">
+                                                    <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
+                                                    <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
+                                                    <td style="font-weight: 400; color: #475569; padding-left: 40px;">↳↳ ${sub2Cat}</td>
+                                                    <td style="font-weight: 400; color: #64748b; padding-left: 60px;">↳↳↳ ${sub3Cat}</td>
+                                                    <td>
+                                                        <div class="category-actions">
+                                                            <button class="btn-archive" onclick="event.stopPropagation(); window.archiveVendorCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}', '${sub3Cat.replace(/'/g, "\\'")}')">Archive</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        });
+                                    }
                                 });
                             }
                         });
@@ -268,7 +291,7 @@ console.log('category.js Loading...');
             }
         }
 
-        window.archiveVendorCategory = async function(main, sub1, sub2) {
+        window.archiveVendorCategory = async function(main, sub1, sub2, sub3) {
             if (!confirm("Are you sure you want to archive this category? This cannot be undone.")) return;
             
             try {
@@ -283,10 +306,17 @@ console.log('category.js Loading...');
                 if (sub2) query = query.eq('sub_sub_category', sub2);
                 else query = query.is('sub_sub_category', null);
                 
+                if (sub3) query = query.eq('sub_sub_sub_category', sub3);
+                else query = query.is('sub_sub_sub_category', null);
+                
                 const { error } = await query;
                 if (error) throw error;
                 
-                notify('🗑️ Category Archived', '🗑️');
+                if (window.showToast) {
+                    window.showToast('🗑️ Category Archived', '🗑️');
+                } else {
+                    alert('Category Archived');
+                }
                 renderCategoryTable();
             } catch (e) {
                 console.error('Error archiving category:', e);
@@ -317,9 +347,7 @@ console.log('category.js Loading...');
 
         if (btnSub3Show) btnSub3Show.addEventListener('click', () => {
             hideAllCategoryForms();
-            const mainCat = document.getElementById('mainCategorySelect') ? document.getElementById('mainCategorySelect').value : null;
-            const sub1 = document.getElementById('subCategory1Select') ? document.getElementById('subCategory1Select').value : null;
-            if (window.loadVendorSubSubCategories) window.loadVendorSubSubCategories(mainCat, sub1, 'subCategory2Select');
+            if (window.loadAllVendorSubSubCategories) window.loadAllVendorSubSubCategories('subCategory2Select');
             resetFormInputs(sub3InputsContainer, 'Enter Sub Category 3 Name');
             if (sub3Form) sub3Form.classList.remove('hidden');
         });
@@ -448,18 +476,48 @@ console.log('category.js Loading...');
             if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
         });
 
-        if (saveSub3Btn) saveSub3Btn.addEventListener('click', () => {
+        if (saveSub3Btn) saveSub3Btn.addEventListener('click', async () => {
             const parentSub2 = subCategory2Select ? subCategory2Select.value : '';
-            if (!parentSub2) { notify("⚠ Select Sub Category 2!", '⚠'); return; }
+            if (!parentSub2) { alert("Select Sub Category 2!"); return; }
             
-            const ref = window.categories.find(c => c.sub2 === parentSub2 && c.status !== 'archived');
-            const parentMain = ref ? ref.main : null;
-            const parentSub1 = ref ? ref.sub1 : null;
-
-            if (collectAndSaveNew('sub3Inputs', 'sub3', [parentMain, parentSub1, parentSub2], "✅ Sub Category 3 saved!")) {
-                hideAllCategoryForms();
-                if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
+            let parentMain = null;
+            let parentSub1 = null;
+            
+            try {
+                const { data, error } = await window.supabase
+                    .from('vendor_categories')
+                    .select('category, sub_category')
+                    .eq('sub_sub_category', parentSub2)
+                    .limit(1);
+                    
+                if (data && data.length > 0) {
+                    parentMain = data[0].category;
+                    parentSub1 = data[0].sub_category;
+                }
+            } catch (e) {
+                console.error('Error fetching parent categories for Sub Category 2:', e);
             }
+            
+            if (!parentMain || !parentSub1) {
+                alert("Error: Could not resolve parent categories for the selected Sub Category 2.");
+                return;
+            }
+
+            const inputs = document.querySelectorAll('#sub3Inputs input');
+            let savedAny = false;
+            for (let i of inputs) {
+                const v = i.value.trim();
+                if (v) {
+                    await window.insertSubSubSubCategory(parentMain, parentSub1, parentSub2, v);
+                    savedAny = true;
+                }
+            }
+            if (!savedAny) {
+                alert("Please enter at least one name.");
+                return;
+            }
+            hideAllCategoryForms();
+            if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
         });
     }
 
@@ -602,6 +660,38 @@ window.insertSubSubCategory = async function(category, subCategory, subSubCatego
     }
 };
 
+
+window.insertSubSubSubCategory = async function(category, subCategory, subSubCategory, subSubSubCategory) {
+    if (!category || !subCategory || !subSubCategory || !subSubSubCategory) {
+        alert("Category required");
+        return;
+    }
+
+    console.log("Inserting:", category, subCategory, subSubCategory, subSubSubCategory);
+
+    const { data, error } = await window.supabase
+        .from('vendor_categories')
+        .insert([
+            {
+                category: category.trim(),
+                sub_category: subCategory.trim(),
+                sub_sub_category: subSubCategory.trim(),
+                sub_sub_sub_category: subSubSubCategory.trim(),
+                status: 'active'
+            }
+        ]);
+
+    console.log("Response:", data, error);
+
+    if (error) {
+        console.error(error);
+        alert("Insert failed");
+    } else {
+        if(window.showToast) window.showToast("Sub Category 3 saved");
+        else alert("Sub Category 3 saved");
+    }
+};
+
 window.loadVendorMainCategories = async function(dropdownId) {
     const dropdown = document.getElementById(dropdownId);
     if (!dropdown) {
@@ -721,6 +811,42 @@ window.loadAllVendorSubCategories = async function(dropdownId) {
     }
 };
 
+
+window.loadAllVendorSubSubCategories = async function(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return;
+
+    dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
+
+    try {
+        const { data, error } = await window.supabase
+            .from('vendor_categories')
+            .select('sub_sub_category')
+            .not('sub_sub_category', 'is', null);
+            
+        if (error) {
+            console.error("Query issue:", error);
+            return;
+        }
+
+        const unique = [...new Set(
+            data
+                .map(item => item.sub_sub_category)
+                .filter(Boolean)
+                .map(v => v.trim())
+        )];
+
+        unique.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub;
+            opt.textContent = sub;
+            dropdown.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Error loading all vendor sub sub categories:', e);
+    }
+};
+
 window.loadVendorSubSubCategories = async function(category, subCategory, dropdownId) {
     const dropdown = document.getElementById(dropdownId);
     if (!dropdown) {
@@ -767,6 +893,57 @@ window.loadVendorSubSubCategories = async function(category, subCategory, dropdo
         });
     } catch (e) {
         console.error('Error loading vendor sub sub categories:', e);
+    }
+};
+
+
+window.loadVendorSubSubSubCategories = async function(category, subCategory, subSubCategory, dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) {
+        console.error("DOM Binding Error: Dropdown not found with ID:", dropdownId);
+        return;
+    }
+
+    dropdown.innerHTML = '<option value="">Select Sub Category 3</option>';
+
+    if (!category || !subCategory || !subSubCategory) {
+        console.log("Missing parent categories. Cannot load Sub Category 3.");
+        return;
+    }
+
+    try {
+        const { data, error } = await window.supabase
+            .from('vendor_categories')
+            .select('sub_sub_sub_category')
+            .eq('category', category)
+            .eq('sub_category', subCategory)
+            .eq('sub_sub_category', subSubCategory)
+            .not('sub_sub_sub_category', 'is', null);
+            
+        console.log("Supabase fetched data for sub category 3:", data, error);
+
+        if (error) {
+            console.error("Query issue:", error);
+            return;
+        }
+
+        const unique = [...new Set(
+            data
+                .map(item => item.sub_sub_sub_category)
+                .filter(Boolean)
+                .map(v => v.trim())
+        )];
+
+        console.log("Unique sub category 3 to append:", unique);
+
+        unique.forEach(subSubSub => {
+            const opt = document.createElement('option');
+            opt.value = subSubSub;
+            opt.textContent = subSubSub;
+            dropdown.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Error loading vendor sub sub sub categories:', e);
     }
 };
 

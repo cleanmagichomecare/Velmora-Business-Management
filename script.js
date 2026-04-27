@@ -515,20 +515,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (vendorSubCategorySelect && vendorSubSubCategorySelect) {
         vendorSubCategorySelect.addEventListener('change', () => {
-            const selectedSub = vendorSubCategorySelect.value;
-            vendorSubSubCategorySelect.innerHTML = selectedSub
-                ? `<option value="">Select ${selectedSub} Item</option>`
-                : '<option value="">Select Sub Category First</option>';
-            vendorSubSubCategorySelect.disabled = !selectedSub;
-
-            if (selectedSub && window.subCategory2 && window.subCategory2[selectedSub]) {
-                const options = window.subCategory2[selectedSub];
-                options.forEach(opt => {
-                    const optEl = document.createElement('option');
-                    optEl.value = opt;
-                    optEl.textContent = opt;
-                    vendorSubSubCategorySelect.appendChild(optEl);
-                });
+            const mainVal = vendorCategorySelect ? vendorCategorySelect.value : null;
+            const subVal = vendorSubCategorySelect.value;
+            if (window.loadVendorSubSubCategories && mainVal && subVal) {
+                window.loadVendorSubSubCategories(mainVal, subVal, 'subSubCategory');
+            }
+        });
+    }
+    
+    const vendorSubCategory3Select = document.getElementById('vendorSubCategory3');
+    if (vendorSubSubCategorySelect && vendorSubCategory3Select) {
+        vendorSubSubCategorySelect.addEventListener('change', () => {
+            const mainVal = vendorCategorySelect ? vendorCategorySelect.value : null;
+            const subVal = vendorSubCategorySelect.value;
+            const sub2Val = vendorSubSubCategorySelect.value;
+            if (window.loadVendorSubSubSubCategories && mainVal && subVal && sub2Val) {
+                window.loadVendorSubSubSubCategories(mainVal, subVal, sub2Val, 'vendorSubCategory3');
             }
         });
     }
@@ -956,6 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
             vendor_category: document.getElementById('vendorCategory').value || null,
             sub_category: document.getElementById('subCategory').value || null,
             sub_sub_category: document.getElementById('subSubCategory').value || null,
+            sub_sub_sub_category: document.getElementById('vendorSubCategory3') ? document.getElementById('vendorSubCategory3').value : null,
             
             moq: document.getElementById('moq').value ? Number(document.getElementById('moq').value) : null,
             price_per_unit: document.getElementById('pricePerUnit').value ? Number(document.getElementById('pricePerUnit').value) : null,
@@ -1028,7 +1031,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('subCategory').dispatchEvent(subEvent);
 
             setTimeout(() => {
-                document.getElementById('subSubCategory').value = vendor.subSubCategory || '';
+                document.getElementById('subSubCategory').value = vendor.sub_sub_category || vendor.subSubCategory || '';
+                if (document.getElementById('vendorSubCategory3')) document.getElementById('vendorSubCategory3').value = vendor.sub_sub_sub_category || '';
             }, 50);
         }, 50);
 

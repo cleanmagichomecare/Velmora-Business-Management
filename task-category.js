@@ -82,6 +82,94 @@ console.log('task-category.js Loading...');
     // DROPDOWN LOADERS
     // ==========================================
 
+    
+    window.insertTaskSubSubSubCategory = async function(category, subCategory, subSubCategory, subSubSubCategory) {
+        if (!category || !subCategory || !subSubCategory || !subSubSubCategory) return;
+        try {
+            const { error } = await window.supabase
+                .from('task_categories')
+                .insert([{
+                    category: category.trim(),
+                    sub_category: subCategory.trim(),
+                    sub_sub_category: subSubCategory.trim(),
+                    sub_sub_sub_category: subSubSubCategory.trim(),
+                    status: 'active'
+                }]);
+            if (error) throw error;
+            notify("✅ Task Sub Category 3 saved!");
+        } catch (e) {
+            console.error('Error inserting Task Sub Category 3:', e);
+            notify("❌ Failed to save Sub Category 3", '❌');
+            throw e;
+        }
+    };
+
+    window.loadTaskSubSubSubCategories = async function(category, subCategory, subSubCategory, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+
+        const previousValue = dropdown.value;
+        dropdown.innerHTML = '<option value="">Select Sub Category 3</option>';
+        if (!category || !subCategory || !subSubCategory) {
+            dropdown.disabled = true;
+            return;
+        }
+
+        try {
+            const { data, error } = await window.supabase
+                .from('task_categories')
+                .select('sub_sub_sub_category')
+                .eq('category', category)
+                .eq('sub_category', subCategory)
+                .eq('sub_sub_category', subSubCategory)
+                .eq('status', 'active')
+                .not('sub_sub_sub_category', 'is', null);
+
+            if (error) throw error;
+
+            const uniqueSubSubs = Array.from(new Set(
+                data.map(r => r.sub_sub_sub_category).filter(Boolean).map(c => c.trim())
+            )).sort();
+
+            uniqueSubSubs.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                dropdown.appendChild(opt);
+            });
+
+            dropdown.disabled = false;
+            if (previousValue) dropdown.value = previousValue;
+        } catch (e) {
+            console.error('Error loading Task Sub Categories 3:', e);
+        }
+    };
+
+    window.loadAllTaskSubSubCategories = async function(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+
+        dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
+        try {
+            const { data, error } = await window.supabase
+                .from('task_categories')
+                .select('sub_sub_category')
+                .eq('status', 'active')
+                .not('sub_sub_category', 'is', null);
+            if (error) throw error;
+            
+            const uniqueSubs = Array.from(new Set(data.map(d => d.sub_sub_category).filter(Boolean))).sort();
+            uniqueSubs.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                dropdown.appendChild(opt);
+            });
+        } catch(e) {
+            console.error("Error loading All Sub Category 2s", e);
+        }
+    };
+
     window.loadTaskCategories = async function(dropdownId) {
         const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
@@ -220,7 +308,7 @@ console.log('task-category.js Loading...');
         try {
             const { data, error } = await window.supabase
                 .from('task_categories')
-                .select('category, sub_category, sub_sub_category')
+                .select('category, sub_category, sub_sub_category, sub_sub_sub_category')
                 .eq('status', 'active');
 
             if (error) throw error;
@@ -236,19 +324,19 @@ console.log('task-category.js Loading...');
                 const main = row.category ? row.category.trim() : null;
                 const sub1 = row.sub_category ? row.sub_category.trim() : null;
                 const sub2 = row.sub_sub_category ? row.sub_sub_category.trim() : null;
+                const sub3 = row.sub_sub_sub_category ? row.sub_sub_sub_category.trim() : null;
 
                 if (!main) return;
 
-                if (!hierarchy[main]) {
-                    hierarchy[main] = {};
-                }
+                if (!hierarchy[main]) hierarchy[main] = {};
 
                 if (sub1) {
-                    if (!hierarchy[main][sub1]) {
-                        hierarchy[main][sub1] = new Set();
-                    }
+                    if (!hierarchy[main][sub1]) hierarchy[main][sub1] = {};
                     if (sub2) {
-                        hierarchy[main][sub1].add(sub2);
+                        if (!hierarchy[main][sub1][sub2]) hierarchy[main][sub1][sub2] = new Set();
+                        if (sub3) {
+                            hierarchy[main][sub1][sub2].add(sub3);
+                        }
                     }
                 }
             });
@@ -260,6 +348,7 @@ console.log('task-category.js Loading...');
                             <th>Main Category</th>
                             <th>Sub Category 1</th>
                             <th>Sub Category 2</th>
+                            <th>Sub Category 3</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -275,45 +364,67 @@ console.log('task-category.js Loading...');
                             <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
                             <td style="color: #94a3b8;">-</td>
                             <td style="color: #94a3b8;">-</td>
+                            <td style="color: #94a3b8;">-</td>
                             <td>
                                 <div class="category-actions">
-                                    <button class="btn-archive" onclick="event.stopPropagation(); window.archiveTaskCategory('${mainCat.replace(/'/g, "\\'")}', null, null)">Archive</button>
+                                    <button class="btn-archive" onclick="event.stopPropagation(); window.archiveTaskCategory('${mainCat.replace(/'/g, "\\'")}', null, null, null)">Archive</button>
                                 </div>
                             </td>
                         </tr>
                     `;
                 } else {
                     sub1Keys.forEach(sub1Cat => {
-                        const sub2Set = hierarchy[mainCat][sub1Cat];
-                        const sub2Arr = Array.from(sub2Set).sort();
+                        const sub2Keys = Object.keys(hierarchy[mainCat][sub1Cat]).sort();
 
-                        if (sub2Arr.length === 0) {
+                        if (sub2Keys.length === 0) {
                             html += `
                                 <tr class="vendor-category-row">
                                     <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
                                     <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
                                     <td style="color: #94a3b8;">-</td>
+                                    <td style="color: #94a3b8;">-</td>
                                     <td>
                                         <div class="category-actions">
-                                            <button class="btn-archive" onclick="event.stopPropagation(); window.archiveTaskCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', null)">Archive</button>
+                                            <button class="btn-archive" onclick="event.stopPropagation(); window.archiveTaskCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', null, null)">Archive</button>
                                         </div>
                                     </td>
                                 </tr>
                             `;
                         } else {
-                            sub2Arr.forEach(sub2Cat => {
-                                html += `
-                                    <tr class="vendor-category-row">
-                                        <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
-                                        <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
-                                        <td style="font-weight: 400; color: #475569; padding-left: 40px;">↳↳ ${sub2Cat}</td>
-                                        <td>
-                                            <div class="category-actions">
-                                                <button class="btn-archive" onclick="event.stopPropagation(); window.archiveTaskCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}')">Archive</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `;
+                            sub2Keys.forEach(sub2Cat => {
+                                const sub3Arr = Array.from(hierarchy[mainCat][sub1Cat][sub2Cat]).sort();
+                                
+                                if (sub3Arr.length === 0) {
+                                    html += `
+                                        <tr class="vendor-category-row">
+                                            <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
+                                            <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
+                                            <td style="font-weight: 400; color: #475569; padding-left: 40px;">↳↳ ${sub2Cat}</td>
+                                            <td style="color: #94a3b8;">-</td>
+                                            <td>
+                                                <div class="category-actions">
+                                                    <button class="btn-archive" onclick="event.stopPropagation(); window.archiveTaskCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}', null)">Archive</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                } else {
+                                    sub3Arr.forEach(sub3Cat => {
+                                        html += `
+                                            <tr class="vendor-category-row">
+                                                <td style="font-weight: 600; color: #1e293b;">${mainCat}</td>
+                                                <td style="font-weight: 500; color: #334155; padding-left: 20px;">↳ ${sub1Cat}</td>
+                                                <td style="font-weight: 400; color: #475569; padding-left: 40px;">↳↳ ${sub2Cat}</td>
+                                                <td style="font-weight: 400; color: #64748b; padding-left: 60px;">↳↳↳ ${sub3Cat}</td>
+                                                <td>
+                                                    <div class="category-actions">
+                                                        <button class="btn-archive" onclick="event.stopPropagation(); window.archiveTaskCategory('${mainCat.replace(/'/g, "\\'")}', '${sub1Cat.replace(/'/g, "\\'")}', '${sub2Cat.replace(/'/g, "\\'")}', '${sub3Cat.replace(/'/g, "\\'")}')">Archive</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    });
+                                }
                             });
                         }
                     });
@@ -333,8 +444,7 @@ console.log('task-category.js Loading...');
     // ARCHIVE LOGIC
     // ==========================================
 
-    window.archiveTaskCategory = async function(main, sub1, sub2) {
-        if (!confirm("Are you sure you want to archive this category? This cannot be undone.")) return;
+           if (!confirm("Are you sure you want to archive this category? This cannot be undone.")) return;
         
         try {
             let query = window.supabase
@@ -382,6 +492,14 @@ console.log('task-category.js Loading...');
         const mainForm = document.getElementById('taskMainCategoryForm');
         const sub1Form = document.getElementById('taskSubCategory1Form');
         const sub2Form = document.getElementById('taskSubCategory2Form');
+        
+        const btnSub3Show = document.getElementById('btn-add-task-sub-category-3');
+        const sub3Form = document.getElementById('taskSubCategory3Form');
+        const subCategory2Select = document.getElementById('taskSubCategory2Select');
+        const sub3InputsContainer = document.getElementById('taskSub3Inputs');
+        const addSub3InputBtn = document.getElementById('addTaskSub3Input');
+        const saveSub3Btn = document.getElementById('saveTaskSub3');
+
         const listView = document.getElementById('taskCategoryListView');
         const categoryDefaultState = document.getElementById('task-category-default-state');
 
@@ -433,7 +551,7 @@ console.log('task-category.js Loading...');
         }
 
         function hideAllCategoryForms() {
-            [mainForm, sub1Form, sub2Form, listView, categoryDefaultState].forEach(f => {
+            [mainForm, sub1Form, sub2Form, sub3Form, listView, categoryDefaultState].forEach(f => {
                 if (f) f.classList.add('hidden');
             });
         }
@@ -491,6 +609,16 @@ console.log('task-category.js Loading...');
             resetFormInputs(sub2InputsContainer, 'Enter Sub Category 2 Name');
             if (sub2Form) sub2Form.classList.remove('hidden');
         });
+
+        
+        if (btnSub3Show) btnSub3Show.addEventListener('click', () => {
+            hideAllCategoryForms();
+            if (window.loadAllTaskSubSubCategories) window.loadAllTaskSubSubCategories('taskSubCategory2Select');
+            resetFormInputs(sub3InputsContainer, 'Enter Sub Category 3 Name');
+            if (sub3Form) sub3Form.classList.remove('hidden');
+        });
+
+        if (addSub3InputBtn) addSub3InputBtn.addEventListener('click', () => createInput(sub3InputsContainer, 'Enter Sub Category 3 Name'));
 
         if (btnViewShow) btnViewShow.addEventListener('click', () => {
             hideAllCategoryForms();
@@ -604,6 +732,55 @@ console.log('task-category.js Loading...');
             if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
         });
         
+        
+        if (saveSub3Btn) saveSub3Btn.addEventListener('click', async () => {
+            if (!subCategory2Select || !subCategory2Select.value) { 
+                notify("⚠ Select Sub Category 2!", '⚠'); 
+                return; 
+            }
+            
+            const selectedSub2 = subCategory2Select.value;
+            
+            if (!sub3InputsContainer) return;
+            const inputs = sub3InputsContainer.querySelectorAll('input');
+            const values = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+            
+            if (values.length === 0) {
+                notify("⚠ Please enter at least one Sub Category 3 name.", '⚠');
+                return;
+            }
+
+            // Fetch Parent Main and Sub1 Category based on selected Sub2
+            let mainCatValue = null;
+            let sub1CatValue = null;
+            try {
+                const { data, error } = await window.supabase
+                    .from('task_categories')
+                    .select('category, sub_category')
+                    .eq('sub_sub_category', selectedSub2)
+                    .limit(1);
+                    
+                if (data && data.length > 0) {
+                    mainCatValue = data[0].category;
+                    sub1CatValue = data[0].sub_category;
+                }
+            } catch (e) {
+                console.error('Error fetching parent category for Sub Category 2:', e);
+            }
+            
+            if (!mainCatValue || !sub1CatValue) {
+                notify("⚠ Could not resolve parent categories for the selected Sub Category 2.", '⚠');
+                return;
+            }
+
+            for (const val of values) {
+                await window.insertTaskSubSubSubCategory(mainCatValue, sub1CatValue, selectedSub2, val);
+            }
+            
+            hideAllCategoryForms();
+            if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
+        });
+
         // Setup dropdown cascading logic for other potential task forms outside this view
         const taskMainDropdown = document.getElementById('task-category'); // Assuming 'task-category' is main category in Task view
         if (taskMainDropdown) {
@@ -624,6 +801,19 @@ console.log('task-category.js Loading...');
                 }
             });
         }
+
+        const taskSub2Dropdown = document.getElementById('task-sub-category2');
+        if (taskSub2Dropdown) {
+            taskSub2Dropdown.addEventListener('change', async () => {
+                const mainVal = taskMainDropdown ? taskMainDropdown.value : null;
+                const sub1Val = taskSub1Dropdown ? taskSub1Dropdown.value : null;
+                const sub2Val = taskSub2Dropdown.value;
+                if (window.loadTaskSubSubSubCategories && mainVal && sub1Val && sub2Val) {
+                    window.loadTaskSubSubSubCategories(mainVal, sub1Val, sub2Val, 'task-sub-category3');
+                }
+            });
+        }
+
     }
 
     if (document.readyState === 'loading') {
