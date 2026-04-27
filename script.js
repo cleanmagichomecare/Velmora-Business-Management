@@ -2287,8 +2287,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnArchive = card.querySelector('.btn-archive-inf');
 
             btnDispatch.addEventListener('click', () => {
-                console.log("Dispatching workflow for influencer ID:", data.id);
-                if (window.showToast) window.showToast("Dispatch workflow coming soon.");
+                const campaignId = data.campaign_id || window.selectedCampaignId;
+                if (!campaignId) {
+                    if (window.showToast) window.showToast("❌ Error: No active campaign found.");
+                    return;
+                }
+                console.log("Dispatching workflow for influencer ID:", data.id, "Campaign ID:", campaignId);
+                if (typeof openDispatchModal === 'function') {
+                    openDispatchModal(data.id, campaignId);
+                } else {
+                    console.error("openDispatchModal is not defined.");
+                }
             });
 
             btnArchive.addEventListener('click', async () => {
@@ -3298,6 +3307,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnSaveInfluencer.disabled = false;
             }
         });
+    }
+
+    // --- Dispatch Modal Fetch Logic ---
+    async function openDispatchModal(influencerId, campaignId) {
+        const dispatchModal = document.getElementById('dispatch-modal');
+        if (!dispatchModal) return;
+
+        // Reset the form
+        const form = document.getElementById('dispatch-form');
+        if (form) form.reset();
+        
+        // Disable product inputs initially
+        document.querySelectorAll('.product-quantity-input').forEach(input => {
+            input.disabled = true;
+            input.value = '';
+        });
+
+        // Safe fallback helper
+        const safeVal = (val) => (val === null || val === undefined) ? '' : val;
+
+        // Show modal
+        dispatchModal.classList.remove('hidden');
+        
+        try {
+            // Fetch Influencer Data
+            const { data: infData, error: infError } = await window.supabase
+                .from('influencers_info')
+                .select('*')
+                .eq('id', influencerId)
+                .single();
+                
+            if (infError) throw infError;
+
+            // Fetch Campaign Data
+            const { data: campData, error: campError } = await window.supabase
+                .from('influencer_create_campaigns')
+                .select('campaign_name')
+                .eq('id', campaignId)
+                .single();
+                
+            if (campError) throw campError;
+
+            // Map fields
+            const fName = document.getElementById('dispatch-creator-name');
+            const fPhone = document.getElementById('dispatch-phone');
+            const fAltPhone = document.getElementById('dispatch-alt-phone');
+            const fAddress = document.getElementById('dispatch-address');
+            const fState = document.getElementById('dispatch-state');
+            const fCampaign = document.getElementById('dispatch-campaign');
+
+            if (fName) { fName.value = safeVal(infData.name); fName.readOnly = true; }
+            if (fPhone) { fPhone.value = safeVal(infData.phone_number); fPhone.readOnly = true; }
+            if (fAltPhone) { fAltPhone.value = safeVal(infData.alternative_number); fAltPhone.readOnly = true; }
+            if (fAddress) { fAddress.value = safeVal(infData.complete_address); fAddress.readOnly = true; }
+            if (fState) { fState.value = safeVal(infData.state); fState.readOnly = true; }
+            if (fCampaign) { fCampaign.value = safeVal(campData.campaign_name); fCampaign.readOnly = true; }
+
+        } catch (error) {
+            console.error('Error fetching dispatch data:', error);
+            if (window.showToast) window.showToast('❌ Error loading dispatch data.');
+        }
     }
 
     // --- Dispatch Modal Logic ---
