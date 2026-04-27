@@ -120,8 +120,9 @@ body {
     background-color: var(--btn-bg);
     color: var(--btn-text);
     border: none;
-    padding: 0.875rem 2rem;
-    font-size: 1rem;
+    height: 60px;
+    padding: 0 2.5rem;
+    font-size: 1.05rem;
     font-weight: 500;
     border-radius: 8px;
     /* Modern rounded */
@@ -131,12 +132,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 .brand-button-logo {
-    width: 26px;
-    height: 26px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255,255,255,0.8);
@@ -528,7 +529,8 @@ input:checked+.slider:before {
     }
 
     .brand-button {
-        padding: 0.875rem 2.5rem;
+        height: 54px;
+        padding: 0 2rem;
         font-size: 1rem;
     }
 }
