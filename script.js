@@ -3614,7 +3614,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch influencer info
             const { data: infoData, error: infoError } = await window.supabase
                 .from('influencers_info')
-                .select('id, name, avatar')
+                .select('id, name, profile_file_url')
                 .in('id', influencerIds);
 
             if (infoError) throw infoError;
@@ -3645,9 +3645,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     productsHTML = '<span style="color: #888;">No products selected</span>';
                 }
 
-                const avatarHTML = info.avatar
-                    ? `<div class="profile-avatar">${info.avatar}</div>`
-                    : `<div class="profile-avatar"><div class="avatar-placeholder"></div></div>`;
+                const avatarUrl = info.profile_file_url || 'assets/images/default-profile.png';
+                const avatarHTML = `<div class="avatar-wrapper" style="flex-shrink: 0; width: 44px; height: 44px;">
+                    <img src="${avatarUrl}" alt="Profile Image" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #444; background: #2a2a30;">
+                </div>`;
 
                 // Missing image placeholder component
                 const imgFallback = `<div class="dispatch-photo-box"><span>No Image</span></div>`;
