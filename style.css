@@ -136,10 +136,12 @@ body {
 }
 
 .brand-button-logo {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: contain;
+    background-color: #ffffff;
+    padding: 2px;
     border: 2px solid rgba(255,255,255,0.8);
     flex-shrink: 0;
 }
