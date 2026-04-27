@@ -151,20 +151,6 @@
 
     window.populateFinanceCategoryDropdowns = function() {
         const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {} };
-        
-        if (saveSub3Btn) saveSub3Btn.addEventListener('click', async () => {
-            const parentSub2 = subCategory2Select ? subCategory2Select.value : '';
-            if (!parentSub2) { notify("⚠ Select Sub Category 2!", '⚠'); return; }
-            
-            const ref = window.financeCategories.find(c => c.sub2 === parentSub2 && c.status !== 'archived');
-            const parentMain = ref ? ref.main : null;
-            const parentSub1 = ref ? ref.sub1 : null;
-
-            if (await collectAndSaveNew('financeSub3Inputs', 'sub3', [parentMain, parentSub1, parentSub2], "✅ Finance Sub Category 3 saved!")) {
-                hideAllCategoryForms();
-                if (categoryDefaultState) categoryDefaultState.classList.remove('hidden');
-            }
-        });
 
         const financeCat = document.getElementById('mainCategory');
         const financeSub1 = document.getElementById('subCategory1');
