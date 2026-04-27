@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const brandSelectBtns = document.querySelectorAll('.brand-select-btn');
     brandSelectBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            let selectedBrand = e.target.getAttribute('data-brand') || e.target.textContent || 'Clean Magic';
+            let selectedBrand = e.target.getAttribute('data-brand') || e.target.textContent || 'Justmixx';
             window.selectedBrand = selectedBrand;
             console.log('Brand selected:', selectedBrand);
             
