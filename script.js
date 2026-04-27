@@ -3685,6 +3685,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="dispatch-info-item"><span class="dispatch-info-label">Dispatch Date</span><span class="dispatch-info-val">${safeVal(record.dispatch_date)}</span></div>
                             <div class="dispatch-info-item"><span class="dispatch-info-label">Exp. Delivery Date</span><span class="dispatch-info-val">${safeVal(record.expected_delivery_date)}</span></div>
                             <div class="dispatch-info-item"><span class="dispatch-info-label">Campaign Name</span><span class="dispatch-info-val">${safeVal(record.campaign_name)}</span></div>
+                            <div class="dispatch-info-item"><span class="dispatch-info-label">Product Name</span><span class="dispatch-info-val">${safeVal(record.product_name)}</span></div>
                             <div class="dispatch-info-item"><span class="dispatch-info-label">Courier Partner</span><span class="dispatch-info-val">${safeVal(record.courier_partner)}</span></div>
                             <div class="dispatch-info-item"><span class="dispatch-info-label">Track ID</span><span class="dispatch-info-val">${safeVal(record.tracking_id)}</span></div>
                             <div class="dispatch-info-item"><span class="dispatch-info-label">Total Value</span><span class="dispatch-info-val">${safeVal(record.total_product_value)}</span></div>
