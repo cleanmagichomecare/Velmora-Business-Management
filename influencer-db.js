@@ -72,17 +72,22 @@
                 const brand = infBrand.value;
                 infProduct.innerHTML = '<option value="">Select Product</option>';
                 
-                if (brand === "Better Magic") {
+                if (brand === "Justmixx") {
                     infProduct.disabled = false;
-                    ["Magic Gel", "Tiles Cleaner", "Both"].forEach(p => {
-                        const opt = document.createElement('option');
-                        opt.value = p;
-                        opt.textContent = p;
-                        infProduct.appendChild(opt);
-                    });
-                } else if (brand === "Neat Magic") {
-                    infProduct.disabled = false;
-                    ["Sponge"].forEach(p => {
+                    [
+                        "Magic Complete Care Combo",
+                        "DIY Complete Care Combo",
+                        "Magic Home Care Combo",
+                        "DIY Laundry Combo",
+                        "Magic Sponge Combo",
+                        "DIY Home Care Combo",
+                        "DIY Detergent Combo",
+                        "DIY Dishwash Combo",
+                        "Magic Sponge",
+                        "DIY Detergent Liquid",
+                        "DIY Dishwash Liquid",
+                        "DIY Fabric Conditioner"
+                    ].forEach(p => {
                         const opt = document.createElement('option');
                         opt.value = p;
                         opt.textContent = p;

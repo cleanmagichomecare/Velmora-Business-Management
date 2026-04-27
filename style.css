@@ -1980,6 +1980,9 @@ div.modal.hidden {
     font-weight: 500;
     cursor: pointer;
     margin: 0;
+    flex: 1;
+    word-break: break-word;
+    padding-right: 10px;
 }
 
 .product-checkbox {
