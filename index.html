@@ -151,14 +151,24 @@
                 </header>
                 <!-- Dynamic Content Views Container -->
                 <div id="content-views" class="content-container">
-                    <!-- Department Back Button (visible only in focused view) -->
-                    <button id="dept-back-btn" class="dept-back-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m15 18-6-6 6-6" />
-                        </svg>
-                        Back to Home
-                    </button>
+                    <!-- Department Navigation Buttons (visible only in focused view) -->
+                    <div id="dept-nav-group" class="dept-nav-group">
+                        <button id="dept-back-btn" class="dept-nav-btn dept-back-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m15 18-6-6 6-6" />
+                            </svg>
+                            Back
+                        </button>
+                        <button id="dept-home-btn" class="dept-nav-btn dept-home-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                            </svg>
+                            Home
+                        </button>
+                    </div>
 
                     <!-- Home View -->
                     <div id="view-home" class="content-view active-view">
@@ -358,14 +368,21 @@
                     <!-- Operations View -->
                     <div id="view-operations" class="content-view hidden">
                         <div class="logistics-header">
-                            <button class="dept-back-btn"
-                                onclick="document.querySelector('.dashboard-layout').classList.remove('department-view-active'); document.querySelectorAll('.content-view').forEach(v => {v.classList.remove('active-view'); v.classList.add('hidden');}); document.getElementById('view-home').classList.remove('hidden'); document.getElementById('view-home').classList.add('active-view');">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="m15 18-6-6 6-6" />
-                                </svg>
-                                Back to Home
-                            </button>
+                            <div class="dept-nav-group">
+                                <button class="dept-nav-btn dept-back-btn" onclick="window.velmoraNavBack()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m15 18-6-6 6-6" />
+                                    </svg>
+                                    Back
+                                </button>
+                                <button class="dept-nav-btn dept-home-btn" onclick="window.velmoraNavHome()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                        <polyline points="9 22 9 12 15 12 15 22" />
+                                    </svg>
+                                    Home
+                                </button>
+                            </div>
                             <div class="logistics-title-group">
                                 <h1 class="logistics-title">Operations</h1>
                                 <p class="logistics-subtitle">Manage operations, logistics, and procurement</p>
@@ -405,13 +422,21 @@
                     <div id="view-logistics" class="content-view hidden">
                         <!-- Header -->
                         <div class="logistics-header">
-                            <button class="dept-back-btn" id="dept-back-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="m15 18-6-6 6-6" />
-                                </svg>
-                                Back to Home
-                            </button>
+                            <div class="dept-nav-group">
+                                <button class="dept-nav-btn dept-back-btn" onclick="window.velmoraNavBack()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m15 18-6-6 6-6" />
+                                    </svg>
+                                    Back
+                                </button>
+                                <button class="dept-nav-btn dept-home-btn" onclick="window.velmoraNavHome()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                        <polyline points="9 22 9 12 15 12 15 22" />
+                                    </svg>
+                                    Home
+                                </button>
+                            </div>
                             <div class="logistics-title-group">
                                 <h1 class="logistics-title">Logistics</h1>
                                 <p class="logistics-subtitle">Manage logistics operations and shipments</p>

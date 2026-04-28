@@ -6,6 +6,35 @@ window.subCategory2 = window.subCategory2 || {};
 window.subCategory3 = window.subCategory3 || {};
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Global Navigation Injection ---
+    // Remove any hardcoded global nav group to prevent duplicates
+    const globalNav = document.querySelector('#content-views > .dept-nav-group');
+    if (globalNav) globalNav.remove();
+
+    // Inject into all content views except home and dashboard
+    document.querySelectorAll('.content-view').forEach(view => {
+        if (view.id === 'view-home' || view.id === 'view-dashboard') return;
+        
+        // Remove any existing hardcoded ones in specific headers to avoid duplicates
+        const existingNavs = view.querySelectorAll('.dept-nav-group');
+        existingNavs.forEach(nav => nav.remove());
+
+        // Inject the standard dual-button group at the top
+        const navHtml = `
+            <div class="dept-nav-group" style="display:flex;">
+                <button type="button" class="dept-nav-btn dept-back-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                    Back
+                </button>
+                <button type="button" class="dept-nav-btn dept-home-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+                    Home
+                </button>
+            </div>
+        `;
+        view.insertAdjacentHTML('afterbegin', navHtml);
+    });
+
     // --- Core UI Elements ---
     const landingPage = document.getElementById('landing-page');
     const dashboardPage = document.getElementById('dashboard-page');
@@ -373,31 +402,63 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // --- Global Navigation Functions ---
+    window.velmoraNavBack = function() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.velmoraNavHome();
+        }
+    };
 
-    // --- Department Back Button ---
+    window.velmoraNavHome = function() {
+        const dashLayout = document.querySelector('.dashboard-layout');
+        if (dashLayout) dashLayout.classList.remove('department-view-active');
+
+        hideAllSidebars();
+
+        contentViews.forEach(view => {
+            view.classList.remove('active-view');
+            view.classList.add('hidden');
+        });
+        const homeView = document.getElementById('view-home');
+        if (homeView) {
+            homeView.classList.remove('hidden');
+            homeView.classList.add('active-view');
+        }
+
+        // Re-activate Home sidebar item
+        sidebarItems.forEach(i => i.classList.remove('active-item'));
+        const homeBtn = document.querySelector('[data-target="view-home"]');
+        if (homeBtn) homeBtn.classList.add('active-item');
+    };
+
+    // --- Department Navigation Event Delegation ---
+    // If there are buttons dynamically created with these classes
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.dept-back-btn')) {
+            // If it's a specific dynamic component back button, let its own listener handle it
+            if (!e.target.closest('.btn-dept-back')) {
+                window.velmoraNavBack();
+            }
+        }
+        if (e.target.closest('.dept-home-btn')) {
+            window.velmoraNavHome();
+        }
+    });
+
+    // --- Department Back Button (Legacy fallback) ---
     const deptBackBtn = document.getElementById('dept-back-btn');
     if (deptBackBtn) {
         deptBackBtn.addEventListener('click', () => {
-            // Return to Home
-            const dashLayout = document.querySelector('.dashboard-layout');
-            if (dashLayout) dashLayout.classList.remove('department-view-active');
+            window.velmoraNavBack();
+        });
+    }
 
-            hideAllSidebars();
-
-            contentViews.forEach(view => {
-                view.classList.remove('active-view');
-                view.classList.add('hidden');
-            });
-            const homeView = document.getElementById('view-home');
-            if (homeView) {
-                homeView.classList.remove('hidden');
-                homeView.classList.add('active-view');
-            }
-
-            // Re-activate Home sidebar item
-            sidebarItems.forEach(i => i.classList.remove('active-item'));
-            const homeBtn = document.querySelector('[data-target="view-home"]');
-            if (homeBtn) homeBtn.classList.add('active-item');
+    const deptHomeBtn = document.getElementById('dept-home-btn');
+    if (deptHomeBtn) {
+        deptHomeBtn.addEventListener('click', () => {
+            window.velmoraNavHome();
         });
     }
 
@@ -6819,10 +6880,19 @@ window.renderDeptTasks = function (deptName) {
     let html = `
             <div class="dept-task-header">
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <h3>Tasks — ${deptName}</h3>
+                    <h3>Tasks – ${deptName}</h3>
                     <span class="dept-task-count">${tasks.length} task${tasks.length !== 1 ? 's' : ''}</span>
                 </div>
-                <button class="btn-dept-back" data-dept="${deptName}">← Back to Workspace</button>
+                <div class="dept-nav-group" style="display:flex; margin-bottom:0;">
+                    <button class="dept-nav-btn dept-back-btn btn-dept-back" data-dept="${deptName}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                        Back
+                    </button>
+                    <button class="dept-nav-btn dept-home-btn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+                        Home
+                    </button>
+                </div>
             </div>
         `;
 

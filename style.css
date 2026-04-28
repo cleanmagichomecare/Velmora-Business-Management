@@ -4793,9 +4793,21 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     pointer-events: none;
 }
 
-/* Department back button (inside content area) */
-.dept-back-btn {
+/* Department Navigation Button Group (Back + Home) */
+.dept-nav-group {
     display: none;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    width: fit-content;
+}
+
+.department-view-active .dept-nav-group {
+    display: inline-flex;
+}
+
+.dept-nav-btn {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     background: transparent;
@@ -4808,27 +4820,36 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     cursor: pointer;
     font-family: inherit;
     transition: all 0.2s ease;
-    margin-bottom: 20px;
-    width: fit-content;
 }
 
-.dept-back-btn:hover {
+.dept-nav-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* Back button hover */
+.dept-nav-btn.dept-back-btn:hover {
     background: rgba(124, 140, 255, 0.06);
     color: var(--text-main);
     border-color: rgba(124, 140, 255, 0.2);
 }
 
-[data-theme="dark"] .dept-back-btn:hover {
+[data-theme="dark"] .dept-nav-btn.dept-back-btn:hover {
     background: rgba(124, 140, 255, 0.08);
 }
 
-.dept-back-btn svg {
-    width: 14px;
-    height: 14px;
+/* Home button hover */
+.dept-nav-btn.dept-home-btn:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: #6366f1;
+    border-color: rgba(99, 102, 241, 0.25);
 }
 
-.department-view-active .dept-back-btn {
-    display: inline-flex;
+[data-theme="dark"] .dept-nav-btn.dept-home-btn:hover {
+    background: rgba(99, 102, 241, 0.12);
+    color: #818cf8;
+    border-color: rgba(129, 140, 248, 0.3);
 }
 
 /* ===== Logistics View Styles ===== */
