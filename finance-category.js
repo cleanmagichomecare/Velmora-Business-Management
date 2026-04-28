@@ -7,6 +7,7 @@
 (function() {
     // Isolated Data Structure for Finance Categories
     window.financeCategories = [];
+    let currentEditFinanceCatId = null;
 
     // Helper: UUID
     function generateUUID() {
@@ -57,6 +58,55 @@
             console.error("Failed to insert finance category:", e);
             alert("Error saving finance category: " + (e.message || "Unknown error"));
             return false;
+        }
+    }
+
+    // ─── Supabase: Update a single category row ───
+    async function updateFinanceCategory(id, catObj) {
+        try {
+            const { data, error } = await supabase
+                .from('finance_categories')
+                .update({
+                    main: catObj.main || null,
+                    sub1: catObj.sub1 || null,
+                    sub2: catObj.sub2 || null,
+                    sub_sub_sub_category: catObj.sub3 || null,
+                    status: catObj.status || 'active'
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error("Failed to update finance category:", e);
+            alert("Error updating finance category: " + (e.message || "Unknown error"));
+            return false;
+        }
+    }
+
+    // ─── Supabase: Cascade string updates to children ───
+    async function cascadeFinanceCategoryUpdates(oldRow, newCat) {
+        if (!oldRow) return;
+        
+        try {
+            // Update Main Category name in all children
+            if (oldRow.main && newCat.main && oldRow.main !== newCat.main) {
+                await supabase.from('finance_categories').update({ main: newCat.main }).eq('main', oldRow.main);
+                oldRow.main = newCat.main; // Update local ref so subsequent cascaded updates match
+            }
+            // Update Sub1 Category name in all children
+            if (oldRow.sub1 && newCat.sub1 && oldRow.sub1 !== newCat.sub1) {
+                await supabase.from('finance_categories').update({ sub1: newCat.sub1 }).eq('main', oldRow.main).eq('sub1', oldRow.sub1);
+                oldRow.sub1 = newCat.sub1;
+            }
+            // Update Sub2 Category name in all children
+            if (oldRow.sub2 && newCat.sub2 && oldRow.sub2 !== newCat.sub2) {
+                await supabase.from('finance_categories').update({ sub2: newCat.sub2 }).eq('main', oldRow.main).eq('sub1', oldRow.sub1).eq('sub2', oldRow.sub2);
+                oldRow.sub2 = newCat.sub2;
+            }
+            // Sub3 has no children to cascade to in this schema
+        } catch (e) {
+            console.error("Failed to cascade finance category updates:", e);
         }
     }
 
@@ -285,6 +335,7 @@
         }
 
         function hideAllCategoryForms() {
+            currentEditFinanceCatId = null; // Reset edit state
             [mainForm, sub1Form, sub2Form, sub3Form, listView, categoryDefaultState].forEach(f => {
                 if (f) f.classList.add('hidden');
             });
@@ -389,6 +440,7 @@
         };
 
         window.editFinanceCategoryRow = function(id) {
+            currentEditFinanceCatId = id;
             const target = window.financeCategories.find(c => c.id === id);
             if (!target) return;
             
@@ -407,7 +459,7 @@
                 const inputs = document.querySelectorAll('#financeCategoryInputs input');
                 if (inputs[0]) inputs[0].value = target.main;
             }
-            notify('ℹ️ Edit mode active (Currently saves as duplicate)', 'ℹ️');
+            notify('ℹ️ Edit mode active. Modifying existing row.', 'ℹ️');
         };
 
         // --- View Switching ---
@@ -493,7 +545,7 @@
         if (addSub1InputBtn) addSub1InputBtn.addEventListener('click', () => createInput(sub1InputsContainer, 'Enter Sub Category 1 Name'));
         if (addSub2InputBtn) addSub2InputBtn.addEventListener('click', () => createInput(sub2InputsContainer, 'Enter Sub Category 2 Name'));
 
-        // --- Save Handlers (async — insert into Supabase) ---
+        // --- Save Handlers (async — insert/update into Supabase) ---
         async function collectAndSaveNew(containerId, level, parents, successMsg) {
             const inputs = document.querySelectorAll(`#${containerId} input`);
             const values = [];
@@ -508,6 +560,7 @@
             }
 
             let allSuccess = true;
+            let wasEdit = !!currentEditFinanceCatId;
 
             for (const val of values) {
                 const newCat = {
@@ -518,9 +571,21 @@
                     status: 'active'
                 };
 
-                const success = await insertFinanceCategory(newCat);
-                if (!success) {
-                    allSuccess = false;
+                if (currentEditFinanceCatId) {
+                    const oldRow = window.financeCategories.find(c => c.id === currentEditFinanceCatId);
+                    const success = await updateFinanceCategory(currentEditFinanceCatId, newCat);
+                    if (success && oldRow) {
+                        await cascadeFinanceCategoryUpdates(oldRow, newCat);
+                    } else {
+                        allSuccess = false;
+                    }
+                    currentEditFinanceCatId = null;
+                    break; // Only update the single row we are editing
+                } else {
+                    const success = await insertFinanceCategory(newCat);
+                    if (!success) {
+                        allSuccess = false;
+                    }
                 }
             }
 
@@ -528,7 +593,7 @@
                 // Refresh from Supabase to get latest data
                 await refreshFromSupabase();
                 renderCategoryTable();
-                notify(successMsg);
+                notify(wasEdit ? "✅ Finance Category updated successfully!" : successMsg);
             }
 
             return allSuccess;

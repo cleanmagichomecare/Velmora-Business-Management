@@ -20,8 +20,22 @@ console.log('task-category.js Loading...');
     // SUPABASE TASK CATEGORY MANAGEMENT SYSTEM
     // ==========================================
 
-    window.insertTaskCategory = async function(category) {
+        window.insertTaskCategory = async function(category) {
         if (!category) return;
+
+        if (window.currentEditTaskRow) {
+            const oldRow = window.currentEditTaskRow;
+            const newCat = { category: category.trim() };
+            const { error } = await window.supabase.from('task_categories').update(newCat).eq('id', oldRow.id);
+            if (!error) {
+                await window.cascadeTaskUpdates(oldRow, newCat);
+                if(window.showToast) window.showToast("Category updated"); else alert("Category updated");
+                window.currentEditTaskRow = null;
+                if (window.populateTaskCategoryDropdowns) window.populateTaskCategoryDropdowns();
+            } else alert("Update failed");
+            return;
+        }
+
         try {
             const { error } = await window.supabase
                 .from('task_categories')
@@ -39,8 +53,21 @@ console.log('task-category.js Loading...');
         }
     };
 
-    window.insertTaskSubCategory = async function(category, subCategory) {
+        window.insertTaskSubCategory = async function(category, subCategory) {
         if (!category || !subCategory) return;
+
+        if (window.currentEditTaskRow) {
+            const oldRow = window.currentEditTaskRow;
+            const newCat = { category: category.trim(), sub_category: subCategory.trim() };
+            const { error } = await window.supabase.from('task_categories').update(newCat).eq('id', oldRow.id);
+            if (!error) {
+                await window.cascadeTaskUpdates(oldRow, newCat);
+                if(window.showToast) window.showToast("Sub Category updated"); else alert("Sub Category updated");
+                window.currentEditTaskRow = null;
+            } else alert("Update failed");
+            return;
+        }
+
         try {
             const { error } = await window.supabase
                 .from('task_categories')
@@ -58,8 +85,21 @@ console.log('task-category.js Loading...');
         }
     };
 
-    window.insertTaskSubSubCategory = async function(category, subCategory, subSubCategory) {
+        window.insertTaskSubSubCategory = async function(category, subCategory, subSubCategory) {
         if (!category || !subCategory || !subSubCategory) return;
+
+        if (window.currentEditTaskRow) {
+            const oldRow = window.currentEditTaskRow;
+            const newCat = { category: category.trim(), sub_category: subCategory.trim(), sub_sub_category: subSubCategory.trim() };
+            const { error } = await window.supabase.from('task_categories').update(newCat).eq('id', oldRow.id);
+            if (!error) {
+                await window.cascadeTaskUpdates(oldRow, newCat);
+                if(window.showToast) window.showToast("Sub Sub Category updated"); else alert("Sub Sub Category updated");
+                window.currentEditTaskRow = null;
+            } else alert("Update failed");
+            return;
+        }
+
         try {
             const { error } = await window.supabase
                 .from('task_categories')
@@ -83,8 +123,21 @@ console.log('task-category.js Loading...');
     // ==========================================
 
     
-    window.insertTaskSubSubSubCategory = async function(category, subCategory, subSubCategory, subSubSubCategory) {
+        window.insertTaskSubSubSubCategory = async function(category, subCategory, subSubCategory, subSubSubCategory) {
         if (!category || !subCategory || !subSubCategory || !subSubSubCategory) return;
+
+        if (window.currentEditTaskRow) {
+            const oldRow = window.currentEditTaskRow;
+            const newCat = { category: category.trim(), sub_category: subCategory.trim(), sub_sub_category: subSubCategory.trim(), sub_sub_sub_category: subSubSubCategory.trim() };
+            const { error } = await window.supabase.from('task_categories').update(newCat).eq('id', oldRow.id);
+            if (!error) {
+                await window.cascadeTaskUpdates(oldRow, newCat);
+                if(window.showToast) window.showToast("Sub Category 3 updated"); else alert("Sub Category 3 updated");
+                window.currentEditTaskRow = null;
+            } else alert("Update failed");
+            return;
+        }
+
         try {
             const { error } = await window.supabase
                 .from('task_categories')
@@ -444,7 +497,80 @@ console.log('task-category.js Loading...');
     // ARCHIVE LOGIC
     // ==========================================
 
-    window.archiveTaskCategory = async function(main, sub1, sub2, sub3) {
+            window.editTaskCategoryRow = async function(main, sub1, sub2, sub3) {
+            window.currentEditTaskRow = null;
+            let query = window.supabase.from('task_categories').select('id, category, sub_category, sub_sub_category, sub_sub_sub_category').eq('category', main).eq('status', 'active');
+            if (sub1) query = query.eq('sub_category', sub1); else query = query.is('sub_category', null);
+            if (sub2) query = query.eq('sub_sub_category', sub2); else query = query.is('sub_sub_category', null);
+            if (sub3) query = query.eq('sub_sub_sub_category', sub3); else query = query.is('sub_sub_sub_category', null);
+            
+            const { data, error } = await query.limit(1);
+            if (error || !data || data.length === 0) {
+                alert("Error: Could not find the database row for this category.");
+                return;
+            }
+            
+            window.currentEditTaskRow = data[0];
+            
+            if (sub3) {
+                const btn = document.getElementById('btn-add-task-sub-category-3');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const select = document.getElementById('taskSubCategory2Select');
+                    if (select) select.value = sub2;
+                    const inputs = document.querySelectorAll('#taskSub3Inputs input');
+                    if (inputs[0]) inputs[0].value = sub3;
+                }, 500);
+            } else if (sub2) {
+                const btn = document.getElementById('btn-add-task-sub-category-2');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const select = document.getElementById('taskSubCategory1Select');
+                    if (select) select.value = sub1;
+                    const inputs = document.querySelectorAll('#taskSub2Inputs input');
+                    if (inputs[0]) inputs[0].value = sub2;
+                }, 500);
+            } else if (sub1) {
+                const btn = document.getElementById('btn-add-task-sub-category-1');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const select = document.getElementById('taskMainCategorySelect');
+                    if (select) select.value = main;
+                    const inputs = document.querySelectorAll('#taskSub1Inputs input');
+                    if (inputs[0]) inputs[0].value = sub1;
+                }, 500);
+            } else {
+                const btn = document.getElementById('btn-add-task-main-category');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const inputs = document.querySelectorAll('#taskCategoryInputs input');
+                    if (inputs[0]) inputs[0].value = main;
+                }, 100);
+            }
+            if (window.showToast) window.showToast('?? Edit mode active. Modifying existing row.', '??');
+        };
+
+        window.cascadeTaskUpdates = async function(oldRow, newCat) {
+            if (!oldRow) return;
+            try {
+                if (oldRow.category && newCat.category && oldRow.category !== newCat.category) {
+                    await window.supabase.from('task_categories').update({ category: newCat.category }).eq('category', oldRow.category);
+                    oldRow.category = newCat.category;
+                }
+                if (oldRow.sub_category && newCat.sub_category && oldRow.sub_category !== newCat.sub_category) {
+                    await window.supabase.from('task_categories').update({ sub_category: newCat.sub_category }).eq('category', oldRow.category).eq('sub_category', oldRow.sub_category);
+                    oldRow.sub_category = newCat.sub_category;
+                }
+                if (oldRow.sub_sub_category && newCat.sub_sub_category && oldRow.sub_sub_category !== newCat.sub_sub_category) {
+                    await window.supabase.from('task_categories').update({ sub_sub_category: newCat.sub_sub_category }).eq('category', oldRow.category).eq('sub_category', oldRow.sub_category).eq('sub_sub_category', oldRow.sub_sub_category);
+                }
+            } catch (e) {
+                console.error("Cascade failed:", e);
+            }
+        };
+
+
+        window.archiveTaskCategory = async function(main, sub1, sub2, sub3) {
            if (!confirm("Are you sure you want to archive this category? This cannot be undone.")) return;
         
         try {
@@ -552,6 +678,7 @@ console.log('task-category.js Loading...');
         }
 
         function hideAllCategoryForms() {
+            window.currentEditTaskRow = null;
             [mainForm, sub1Form, sub2Form, sub3Form, listView, categoryDefaultState].forEach(f => {
                 if (f) f.classList.add('hidden');
             });
@@ -823,3 +950,7 @@ console.log('task-category.js Loading...');
         initTaskCategoryLogic();
     }
 })();
+
+
+
+

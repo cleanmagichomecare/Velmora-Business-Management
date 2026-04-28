@@ -14,6 +14,7 @@ console.log('category.js Loading...');
     
     // NEW Data Structure: True Row-Based Objects
     window.categories = window.categories || [];
+    window.currentEditVendorRow = null;
 
     // Storage interactions
     function loadCategoryData() {
@@ -136,6 +137,7 @@ console.log('category.js Loading...');
         }
 
         function hideAllCategoryForms() {
+            window.currentEditVendorRow = null;
             [mainForm, sub1Form, sub2Form, sub3Form, listView, categoryDefaultState].forEach(f => {
                 if (f) f.classList.add('hidden');
             });
@@ -290,6 +292,79 @@ console.log('category.js Loading...');
                 container.innerHTML = '<div style="text-align:center; padding: 40px; color: #ff6b6b;">Error loading categories.</div>';
             }
         }
+
+                window.editVendorCategoryRow = async function(main, sub1, sub2, sub3) {
+            window.currentEditVendorRow = null;
+            let query = window.supabase.from('vendor_categories').select('id, category, sub_category, sub_sub_category, sub_sub_sub_category').eq('category', main).eq('status', 'active');
+            if (sub1) query = query.eq('sub_category', sub1); else query = query.is('sub_category', null);
+            if (sub2) query = query.eq('sub_sub_category', sub2); else query = query.is('sub_sub_category', null);
+            if (sub3) query = query.eq('sub_sub_sub_category', sub3); else query = query.is('sub_sub_sub_category', null);
+            
+            const { data, error } = await query.limit(1);
+            if (error || !data || data.length === 0) {
+                alert("Error: Could not find the database row for this category.");
+                return;
+            }
+            
+            window.currentEditVendorRow = data[0];
+            
+            if (sub3) {
+                const btn = document.getElementById('btn-add-sub-category-3');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const select = document.getElementById('subCategory2Select');
+                    if (select) select.value = sub2;
+                    const inputs = document.querySelectorAll('#sub3Inputs input');
+                    if (inputs[0]) inputs[0].value = sub3;
+                }, 500);
+            } else if (sub2) {
+                const btn = document.getElementById('addSubCategory2Btn');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const select = document.getElementById('subCategory1Select');
+                    if (select) select.value = sub1;
+                    const inputs = document.querySelectorAll('#sub2Inputs input');
+                    if (inputs[0]) inputs[0].value = sub2;
+                }, 500);
+            } else if (sub1) {
+                const btn = document.getElementById('btn-add-sub-category-1');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const select = document.getElementById('mainCategorySelect');
+                    if (select) select.value = main;
+                    const inputs = document.querySelectorAll('#sub1Inputs input');
+                    if (inputs[0]) inputs[0].value = sub1;
+                }, 500);
+            } else {
+                const btn = document.getElementById('btn-add-main-category');
+                if (btn) btn.click();
+                setTimeout(() => {
+                    const inputs = document.querySelectorAll('#categoryInputs input');
+                    if (inputs[0]) inputs[0].value = main;
+                }, 100);
+            }
+            if (window.showToast) window.showToast('?? Edit mode active. Modifying existing row.', '??');
+        };
+
+        window.cascadeVendorUpdates = async function(oldRow, newCat) {
+            if (!oldRow) return;
+            try {
+                if (oldRow.category && newCat.category && oldRow.category !== newCat.category) {
+                    await window.supabase.from('vendor_categories').update({ category: newCat.category }).eq('category', oldRow.category);
+                    oldRow.category = newCat.category;
+                }
+                if (oldRow.sub_category && newCat.sub_category && oldRow.sub_category !== newCat.sub_category) {
+                    await window.supabase.from('vendor_categories').update({ sub_category: newCat.sub_category }).eq('category', oldRow.category).eq('sub_category', oldRow.sub_category);
+                    oldRow.sub_category = newCat.sub_category;
+                }
+                if (oldRow.sub_sub_category && newCat.sub_sub_category && oldRow.sub_sub_category !== newCat.sub_sub_category) {
+                    await window.supabase.from('vendor_categories').update({ sub_sub_category: newCat.sub_sub_category }).eq('category', oldRow.category).eq('sub_category', oldRow.sub_category).eq('sub_sub_category', oldRow.sub_sub_category);
+                }
+            } catch (e) {
+                console.error("Cascade failed:", e);
+            }
+        };
+
 
         window.archiveVendorCategory = async function(main, sub1, sub2, sub3) {
             if (!confirm("Are you sure you want to archive this category? This cannot be undone.")) return;
@@ -581,7 +656,18 @@ window.insertCategory = async function(category) {
         return;
     }
 
-    console.log("Inserting:", category);
+    if (window.currentEditVendorRow) {
+        const oldRow = window.currentEditVendorRow;
+        const newCat = { category: category.trim() };
+        const { error } = await window.supabase.from('vendor_categories').update(newCat).eq('id', oldRow.id);
+        if (!error) {
+            await window.cascadeVendorUpdates(oldRow, newCat);
+            alert("Category updated");
+            window.currentEditVendorRow = null;
+            if (window.loadVendorMainCategories) window.loadVendorMainCategories('mainCategorySelect');
+        } else alert("Update failed");
+        return;
+    }
 
     const { data, error } = await window.supabase
         .from('vendor_categories')
@@ -609,7 +695,17 @@ window.insertSubCategory = async function(category, subCategory) {
         return;
     }
 
-    console.log("Inserting:", category, subCategory);
+    if (window.currentEditVendorRow) {
+        const oldRow = window.currentEditVendorRow;
+        const newCat = { category: category.trim(), sub_category: subCategory.trim() };
+        const { error } = await window.supabase.from('vendor_categories').update(newCat).eq('id', oldRow.id);
+        if (!error) {
+            await window.cascadeVendorUpdates(oldRow, newCat);
+            alert("Sub Category updated");
+            window.currentEditVendorRow = null;
+        } else alert("Update failed");
+        return;
+    }
 
     const { data, error } = await window.supabase
         .from('vendor_categories')
@@ -637,7 +733,17 @@ window.insertSubSubCategory = async function(category, subCategory, subSubCatego
         return;
     }
 
-    console.log("Inserting:", category, subCategory, subSubCategory);
+    if (window.currentEditVendorRow) {
+        const oldRow = window.currentEditVendorRow;
+        const newCat = { category: category.trim(), sub_category: subCategory.trim(), sub_sub_category: subSubCategory.trim() };
+        const { error } = await window.supabase.from('vendor_categories').update(newCat).eq('id', oldRow.id);
+        if (!error) {
+            await window.cascadeVendorUpdates(oldRow, newCat);
+            alert("Sub Sub Category updated");
+            window.currentEditVendorRow = null;
+        } else alert("Update failed");
+        return;
+    }
 
     const { data, error } = await window.supabase
         .from('vendor_categories')
@@ -667,7 +773,17 @@ window.insertSubSubSubCategory = async function(category, subCategory, subSubCat
         return;
     }
 
-    console.log("Inserting:", category, subCategory, subSubCategory, subSubSubCategory);
+    if (window.currentEditVendorRow) {
+        const oldRow = window.currentEditVendorRow;
+        const newCat = { category: category.trim(), sub_category: subCategory.trim(), sub_sub_category: subSubCategory.trim(), sub_sub_sub_category: subSubSubCategory.trim() };
+        const { error } = await window.supabase.from('vendor_categories').update(newCat).eq('id', oldRow.id);
+        if (!error) {
+            await window.cascadeVendorUpdates(oldRow, newCat);
+            if(window.showToast) window.showToast("Sub Category 3 updated"); else alert("Sub Category 3 updated");
+            window.currentEditVendorRow = null;
+        } else alert("Update failed");
+        return;
+    }
 
     const { data, error } = await window.supabase
         .from('vendor_categories')
@@ -1012,3 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+
+
+
