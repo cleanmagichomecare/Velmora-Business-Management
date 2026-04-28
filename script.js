@@ -402,10 +402,137 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    // --- Global Navigation Functions ---
+    // --- Global Navigation Functions & Internal SPA History ---
+    window.velmoraNavigationStack = [];
+    let velmoraCurrentStateStr = null;
+
+    function captureVelmoraState() {
+        const state = {};
+        // Capture visibility of any major block with an ID
+        const elements = document.querySelectorAll('main[id], section[id], div[id]');
+        elements.forEach(el => {
+            const h = el.classList.contains('hidden');
+            const a = el.classList.contains('active-view');
+            const d = el.style.display;
+            if (h || a || d || el.classList.contains('content-view')) {
+                state[el.id] = { h, a, d };
+            }
+        });
+        
+        // Capture global layouts
+        const dashLayout = document.querySelector('.dashboard-layout');
+        if (dashLayout) {
+            state['__dashboardLayout'] = dashLayout.classList.contains('department-view-active');
+        }
+        
+        // Capture active sidebar items
+        const activeSidebar = document.querySelector('.sidebar-item.active-item');
+        if (activeSidebar) state['__activeSidebar'] = activeSidebar.getAttribute('data-target');
+        
+        const activeSubSidebar = document.querySelector('.sub-sidebar-item.active');
+        if (activeSubSidebar) state['__activeSubSidebar'] = activeSubSidebar.id;
+        
+        return JSON.stringify(state);
+    }
+
+    function restoreVelmoraState(stateStr) {
+        if (!stateStr) return;
+        const state = JSON.parse(stateStr);
+        
+        const dashLayout = document.querySelector('.dashboard-layout');
+        if (dashLayout) {
+            if (state['__dashboardLayout']) dashLayout.classList.add('department-view-active');
+            else dashLayout.classList.remove('department-view-active');
+        }
+        
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active-item'));
+        if (state['__activeSidebar']) {
+            const btn = document.querySelector(`.sidebar-item[data-target="${state['__activeSidebar']}"]`);
+            if (btn) btn.classList.add('active-item');
+        }
+        
+        document.querySelectorAll('.sub-sidebar-item').forEach(i => i.classList.remove('active'));
+        if (state['__activeSubSidebar']) {
+            const btn = document.getElementById(state['__activeSubSidebar']);
+            if (btn) btn.classList.add('active');
+        }
+        
+        for (const id in state) {
+            if (id.startsWith('__')) continue; // Skip metadata keys
+            const el = document.getElementById(id);
+            if (el) {
+                if (state[id].h) el.classList.add('hidden');
+                else el.classList.remove('hidden');
+                
+                if (state[id].a) el.classList.add('active-view');
+                else el.classList.remove('active-view');
+                
+                if (state[id].d !== undefined) el.style.display = state[id].d;
+            }
+        }
+        velmoraCurrentStateStr = stateStr;
+    }
+
+    // Initialize initial state shortly after load
+    setTimeout(() => { velmoraCurrentStateStr = captureVelmoraState(); }, 200);
+
+    // Intercept clicks to capture SPA forward navigation
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!target) return;
+        
+        // Ignore back/home clicks so we don't corrupt the history
+        if (target.closest('.dept-back-btn') || target.closest('.dept-home-btn') || target.closest('.btn-dept-back')) {
+            return;
+        }
+
+        const btn = target.closest('button');
+        let isForwardNav = false;
+        
+        if (target.closest('.sidebar-item') || target.closest('.home-card') || target.closest('.sub-sidebar-item') || target.closest('.option-card')) {
+            isForwardNav = true;
+        } else if (btn) {
+            const id = btn.id ? btn.id.toLowerCase() : '';
+            const cls = btn.className ? btn.className.toLowerCase() : '';
+            const text = btn.innerText ? btn.innerText.toLowerCase() : '';
+            
+            // Heuristic to ignore reverse/terminating actions
+            const isReverseAction = 
+                id.includes('back') || id.includes('close') || id.includes('cancel') || id.includes('save') || id.includes('submit') ||
+                cls.includes('back') || cls.includes('close') || cls.includes('cancel') || cls.includes('save') || cls.includes('submit') ||
+                text.includes('back') || text.includes('close') || text.includes('cancel') || text.includes('save') || text.includes('submit');
+                
+            if (!isReverseAction) {
+                isForwardNav = true;
+            } else if (isReverseAction) {
+                // If the user clicks "Cancel" or "Close", it is effectively a back action.
+                // We pop the stack so the history doesn't track closed states
+                if (window.velmoraNavigationStack.length > 0) {
+                    window.velmoraNavigationStack.pop();
+                    setTimeout(() => { velmoraCurrentStateStr = captureVelmoraState(); }, 50);
+                }
+                return;
+            }
+        }
+        
+        if (isForwardNav) {
+            if (!velmoraCurrentStateStr) velmoraCurrentStateStr = captureVelmoraState();
+            const preClickState = velmoraCurrentStateStr;
+            
+            setTimeout(() => {
+                const postClickState = captureVelmoraState();
+                if (preClickState !== postClickState) {
+                    window.velmoraNavigationStack.push(preClickState);
+                    velmoraCurrentStateStr = postClickState;
+                }
+            }, 50);
+        }
+    }, true); // Capture phase to see state before click handlers modify DOM
+
     window.velmoraNavBack = function() {
-        if (window.history.length > 1) {
-            window.history.back();
+        if (window.velmoraNavigationStack.length > 0) {
+            const prevState = window.velmoraNavigationStack.pop();
+            restoreVelmoraState(prevState);
         } else {
             window.velmoraNavHome();
         }
@@ -415,7 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const dashLayout = document.querySelector('.dashboard-layout');
         if (dashLayout) dashLayout.classList.remove('department-view-active');
 
-        hideAllSidebars();
+        if (typeof hideAllSidebars === 'function') hideAllSidebars();
+        else document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.add('hidden'));
 
         contentViews.forEach(view => {
             view.classList.remove('active-view');
@@ -428,9 +556,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Re-activate Home sidebar item
-        sidebarItems.forEach(i => i.classList.remove('active-item'));
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active-item'));
         const homeBtn = document.querySelector('[data-target="view-home"]');
         if (homeBtn) homeBtn.classList.add('active-item');
+
+        // Reset history stack since we returned to home
+        window.velmoraNavigationStack = [];
+        setTimeout(() => { velmoraCurrentStateStr = captureVelmoraState(); }, 50);
     };
 
     // --- Department Navigation Event Delegation ---
