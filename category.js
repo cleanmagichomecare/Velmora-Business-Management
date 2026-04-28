@@ -341,7 +341,8 @@ console.log('category.js Loading...');
                     if (inputs[0]) inputs[0].value = main;
                 }, 100);
             }
-            if (window.showToast) window.showToast('?? Edit mode active. Modifying existing row.', '??');
+            window.currentEditVendorRow = data[0];
+            if (window.showToast) window.showToast('? Edit mode active. Modifying existing row.', '?');
         };
 
         window.cascadeVendorUpdates = async function(oldRow, newCat) {
@@ -1126,6 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 
 
 

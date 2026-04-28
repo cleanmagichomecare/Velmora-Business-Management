@@ -545,7 +545,8 @@ console.log('task-category.js Loading...');
                     if (inputs[0]) inputs[0].value = main;
                 }, 100);
             }
-            if (window.showToast) window.showToast('?? Edit mode active. Modifying existing row.', '??');
+            window.currentEditTaskRow = data[0];
+            if (window.showToast) window.showToast('? Edit mode active. Modifying existing row.', '?');
         };
 
         window.cascadeTaskUpdates = async function(oldRow, newCat) {
@@ -948,6 +949,7 @@ console.log('task-category.js Loading...');
         initTaskCategoryLogic();
     }
 })();
+
 
 
 
