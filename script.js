@@ -3939,7 +3939,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (moveToBtn) {
                     moveToBtn.addEventListener('click', () => {
                         const campaignName = window.selectedCampaignId || record.campaign_name;
-                        window.loadCampaignStatusTracking(null, campaignName, record.id);
+                        window.loadCampaignStatusTracking(campaignName, record.id);
                     });
                 }
 
@@ -5420,7 +5420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const campaignName = activeFolder ? activeFolder.getAttribute('data-campaign-id') : null;
 
             if (campaignName) {
-                window.loadCampaignStatusTracking(null, campaignName);
+                window.loadCampaignStatusTracking(campaignName);
             } else {
                 alert("⚠ Please select a campaign folder first.");
             }
