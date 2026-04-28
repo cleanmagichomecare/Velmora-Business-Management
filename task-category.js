@@ -510,8 +510,6 @@ console.log('task-category.js Loading...');
                 return;
             }
             
-            window.currentEditTaskRow = data[0];
-            
             if (sub3) {
                 const btn = document.getElementById('btn-add-task-sub-category-3');
                 if (btn) btn.click();
@@ -950,6 +948,7 @@ console.log('task-category.js Loading...');
         initTaskCategoryLogic();
     }
 })();
+
 
 
 

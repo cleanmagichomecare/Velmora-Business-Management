@@ -440,7 +440,6 @@
         };
 
         window.editFinanceCategoryRow = function(id) {
-            currentEditFinanceCatId = id;
             const target = window.financeCategories.find(c => c.id === id);
             if (!target) return;
             
@@ -665,3 +664,4 @@
         initFinanceCategoryLogic();
     }
 })();
+

@@ -306,8 +306,6 @@ console.log('category.js Loading...');
                 return;
             }
             
-            window.currentEditVendorRow = data[0];
-            
             if (sub3) {
                 const btn = document.getElementById('btn-add-sub-category-3');
                 if (btn) btn.click();
@@ -1128,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 
 
 
