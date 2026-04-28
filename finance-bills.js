@@ -248,31 +248,31 @@
             });
         };
 
-        window.archiveBill = async function(id) {
+                window.archiveBill = async function(id) {
             if (!confirm("Archive this bill?")) return;
             try {
+                console.log("Attempting to archive bill. Table: finance_bills, ID:", id);
                 let response = await window.supabase
                     .from('finance_bills')
                     .update({ status: 'archived' })
                     .eq('id', id);
 
-                if (response.error && response.error.code === '42703') {
-                    console.warn("Column 'status' does not exist. Falling back to delete.");
-                    response = await window.supabase
-                        .from('finance_bills')
-                        .delete()
-                        .eq('id', id);
+                if (response.error) {
+                    console.error("Supabase Error Object:", response.error);
+                    if (response.error.code === '42703') {
+                        console.error("The 'status' column does not exist on finance_bills table. Please add it in Supabase: ALTER TABLE finance_bills ADD COLUMN status text DEFAULT 'active';");
+                    }
+                    throw response.error;
                 }
 
-                const { error } = response;
-                if (error) throw error;
-                if (window.showToast) window.showToast('Bill archived', '✅');
+                if (window.showToast) window.showToast('? Bill archived', '?'); else alert('Bill archived');
                 await window.fetchBillsData();
             } catch (err) {
                 console.error("Error archiving bill:", err);
                 alert("Failed to archive bill");
             }
         };
+
 
         // --- Bindings ---
         const billSearchInput = document.getElementById('bill-search');
@@ -434,3 +434,5 @@
         initFinanceBillsLogic();
     }
 })();
+
+
