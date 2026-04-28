@@ -26,8 +26,8 @@
             window.financeCategories = (data || []).map(row => ({
                 id: row.id ? String(row.id) : generateUUID(),
                 main: row.main || null,
-                sub1: row.sub1 || null,
-                sub2: row.sub2 || null,
+                sub1: row.sub_category || row.sub1 || null,
+                sub2: row.sub_sub_category || row.sub2 || null,
                 sub3: row.sub_sub_sub_category || row.sub3 || null,
                 status: row.status || 'active'
             }));
@@ -45,8 +45,8 @@
                 .from('finance_categories')
                 .insert([{
                     main: catObj.main || null,
-                    sub1: catObj.sub1 || null,
-                    sub2: catObj.sub2 || null,
+                    sub_category: catObj.sub1 || null,
+                    sub_sub_category: catObj.sub2 || null,
                     sub_sub_sub_category: catObj.sub3 || null,
                     status: catObj.status || 'active'
                 }]);
@@ -72,11 +72,11 @@
             if (catObj.main) query = query.eq('main', catObj.main);
             else query = query.is('main', null);
 
-            if (catObj.sub1) query = query.eq('sub1', catObj.sub1);
-            else query = query.is('sub1', null);
+            if (catObj.sub1) query = query.eq('sub_category', catObj.sub1);
+            else query = query.is('sub_category', null);
 
-            if (catObj.sub2) query = query.eq('sub2', catObj.sub2);
-            else query = query.is('sub2', null);
+            if (catObj.sub2) query = query.eq('sub_sub_category', catObj.sub2);
+            else query = query.is('sub_sub_category', null);
 
             if (catObj.sub3) query = query.eq('sub_sub_sub_category', catObj.sub3);
             else query = query.is('sub_sub_sub_category', null);
