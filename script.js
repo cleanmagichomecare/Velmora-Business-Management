@@ -3939,7 +3939,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (moveToBtn) {
                     moveToBtn.addEventListener('click', () => {
                         const campaignName = window.selectedCampaignId || record.campaign_name;
-                        openStatusTrackingPage(campaignName, record.id);
+                        window.loadCampaignStatusTracking(null, campaignName, record.id);
                     });
                 }
 
@@ -3991,7 +3991,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function openStatusTrackingPage(campaignName, targetDispatchId = null) {
+    window.loadCampaignStatusTracking = async function(campaignName, targetDispatchId = null) {
         // Hide all other views in the right panel
         const viewsToHide = [
             'campaign-dashboard-view',
@@ -4023,30 +4023,90 @@ document.addEventListener('DOMContentLoaded', () => {
         const stCardsContainer = document.getElementById('st-cards-container');
         if (!stCardsContainer) return;
 
-        // Filter records for this campaign
-        const campaignRecords = dispatchRecords.filter(r => r.campaignName === campaignName);
+        stCardsContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">Loading tracking records...</p>';
 
-        if (campaignRecords.length === 0) {
-            stCardsContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">No dispatched influencers to track.</p>';
-            return;
-        }
+        try {
+            // Fetch tracking records joined with dispatch details and info
+            const { data: trackingData, error: trackingError } = await window.supabase
+                .from('influencer_status_tracking')
+                .select('*, influencer_dispatch_details!inner(*), influencers_info(name, profile_file_url)');
+                
+            if (trackingError) throw trackingError;
 
-        // Render all records
-        stCardsContainer.innerHTML = '';
-        campaignRecords.forEach(record => {
-            renderStatusTrackingCard(record, stCardsContainer);
-        });
+            // Filter for campaignName
+            const campaignRecords = trackingData.filter(t => t.influencer_dispatch_details && t.influencer_dispatch_details.campaign_name === campaignName);
 
-        // Scroll to specific card if requested
-        if (targetDispatchId) {
-            setTimeout(() => {
-                const targetCard = document.getElementById(`st-card-${targetDispatchId}`);
-                if (targetCard) {
-                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetCard.classList.add('highlight-flash');
-                    setTimeout(() => targetCard.classList.remove('highlight-flash'), 2000);
-                }
-            }, 100);
+            if (campaignRecords.length === 0) {
+                stCardsContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">No dispatched influencers to track.</p>';
+                return;
+            }
+
+            // Render all records
+            stCardsContainer.innerHTML = '';
+            campaignRecords.forEach(tracking => {
+                // Map to match the template structure
+                const dispatch = tracking.influencer_dispatch_details;
+                const info = tracking.influencers_info;
+                const record = {
+                    id: tracking.id,
+                    dispatchId: dispatch.id,
+                    influencerId: tracking.influencer_id,
+                    campaignId: tracking.campaign_id,
+                    campaignName: dispatch.campaign_name,
+                    creatorName: info.name,
+                    address: dispatch.address,
+                    state: dispatch.state,
+                    phoneNumber: dispatch.phone_number,
+                    altPhoneNumber: dispatch.alternative_phone_number,
+                    dispatchDate: dispatch.dispatch_date,
+                    expectedDelivery: dispatch.expected_delivery_date,
+                    productName: dispatch.product_name,
+                    totalProducts: dispatch.total_products,
+                    totalValue: dispatch.total_product_value,
+                    courierPartner: dispatch.courier_partner,
+                    trackingIdStr: dispatch.tracking_id,
+                    avatar: info.profile_file_url,
+                    
+                    // Status tracking state mapped
+                    current_step: tracking.current_step,
+                    deliveredConfirmed: tracking.delivered_confirmed,
+                    payAdvanceCompleted: tracking.pay_advance_completed,
+                    payAdvancePhoto: tracking.delivery_photo_url,
+                    refVideosCompleted: tracking.reference_video_received,
+                    draftTimelineCompleted: tracking.expected_delivery_completed,
+                    draftCompleted: tracking.draft_received,
+                    payRemainingCompleted: tracking.payment_remaining_completed,
+                    finalPostCompleted: tracking.final_post_completed,
+                    
+                    // Missing UI specific mappings to prevent null errors
+                    refConcept: '-',
+                    refScript: '-',
+                    refKeyPoints: '-',
+                    refOffer: '-',
+                    refLink: '-',
+                    refCallExplanation: false,
+                    workflowState: { hasRework: false }
+                };
+                renderStatusTrackingCard(record, stCardsContainer);
+                
+                // Add Save workflow event listeners
+                attachTrackingSaveListeners(tracking.id);
+            });
+
+            // Scroll to specific card if requested
+            if (targetDispatchId) {
+                setTimeout(() => {
+                    const targetCard = document.getElementById(`st-card-${targetDispatchId}`);
+                    if (targetCard) {
+                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetCard.classList.add('highlight-flash');
+                        setTimeout(() => targetCard.classList.remove('highlight-flash'), 2000);
+                    }
+                }, 100);
+            }
+        } catch (e) {
+            console.error("Error loading status tracking:", e);
+            stCardsContainer.innerHTML = '<p class="text-danger" style="text-align:center; padding:40px;">Failed to load tracking data.</p>';
         }
     }
 
@@ -5360,7 +5420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const campaignName = activeFolder ? activeFolder.getAttribute('data-campaign-id') : null;
 
             if (campaignName) {
-                openStatusTrackingPage(campaignName);
+                window.loadCampaignStatusTracking(null, campaignName);
             } else {
                 alert("⚠ Please select a campaign folder first.");
             }
@@ -7994,3 +8054,138 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
 });
 
+
+
+
+
+
+    window.attachTrackingSaveListeners = function(trackingId) {
+        // Upload helper
+        const uploadPhoto = async (inputId) => {
+            const input = document.getElementById(inputId);
+            if (!input || !input.files || input.files.length === 0) return null;
+            const file = input.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `status-tracking/${fileName}`;
+
+            const { data, error } = await window.supabase.storage
+                .from('influencer-profiles')
+                .upload(filePath, file);
+
+            if (error) throw error;
+
+            const { data: publicData } = window.supabase.storage
+                .from('influencer-profiles')
+                .getPublicUrl(filePath);
+
+            return publicData.publicUrl;
+        };
+
+        const executeSave = async (btn, stepIndex, payload) => {
+            const originalText = btn.textContent;
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                // Auto advance step logic
+                let nextStep = payload.current_step || stepIndex;
+                if (stepIndex === 1 && payload.delivered_confirmed) nextStep = 2;
+                if (stepIndex === 2 && payload.pay_advance_completed) nextStep = 3;
+                if (stepIndex === 3 && payload.reference_video_received) nextStep = 4;
+                if (stepIndex === 4 && payload.expected_delivery_completed) nextStep = 5;
+                if (stepIndex === 5 && payload.draft_received) nextStep = 6;
+                if (stepIndex === 6 && payload.payment_remaining_completed) nextStep = 7;
+                
+                payload.current_step = nextStep;
+
+                const { error } = await window.supabase
+                    .from('influencer_status_tracking')
+                    .update(payload)
+                    .eq('id', trackingId);
+
+                if (error) throw error;
+
+                if (window.showToast) window.showToast('? Progress Saved!', '?');
+
+                // Find campaign name to reload only this UI
+                const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
+                const campaignName = activeFolder ? activeFolder.getAttribute('data-campaign-id') : null;
+                if (campaignName) {
+                    window.loadCampaignStatusTracking(campaignName, trackingId);
+                }
+            } catch (err) {
+                console.error("Save Tracking Error:", err);
+                if (window.showToast) window.showToast('? Save failed: ' + err.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // 1. Delivered
+        const btnDelivered = document.getElementById(`btn-save-delivered-${trackingId}`);
+        if (btnDelivered) {
+            btnDelivered.addEventListener('click', async () => {
+                const confirmed = document.getElementById(`delivered-confirmed-${trackingId}`)?.checked || false;
+                await executeSave(btnDelivered, 1, { delivered_confirmed: confirmed });
+            });
+        }
+
+        // 2. Pay Advance
+        const btnAdvance = document.getElementById(`btn-save-pay-advance-${trackingId}`);
+        if (btnAdvance) {
+            btnAdvance.addEventListener('click', async () => {
+                let photoUrl = await uploadPhoto(`pay-advance-photo-input-${trackingId}`);
+                let payload = { pay_advance_completed: true };
+                if (photoUrl) payload.delivery_photo_url = photoUrl;
+                await executeSave(btnAdvance, 2, payload);
+            });
+        }
+
+        // 3. Send Reference Videos
+        const btnRef = document.getElementById(`btn-save-ref-videos-${trackingId}`);
+        if (btnRef) {
+            btnRef.addEventListener('click', async () => {
+                await executeSave(btnRef, 3, { reference_video_received: true });
+            });
+        }
+
+        // 4. Expected Delivery Timeline
+        const btnTimeline = document.getElementById(`btn-save-timeline-${trackingId}`);
+        if (btnTimeline) {
+            btnTimeline.addEventListener('click', async () => {
+                await executeSave(btnTimeline, 4, { expected_delivery_completed: true });
+            });
+        }
+
+        // 5. Draft
+        const btnDraft = document.getElementById(`btn-save-draft-${trackingId}`);
+        if (btnDraft) {
+            btnDraft.addEventListener('click', async () => {
+                let videoUrl = await uploadPhoto(`draft-video-input-${trackingId}`);
+                let payload = { draft_received: true };
+                if (videoUrl) payload.draft_video_url = videoUrl;
+                await executeSave(btnDraft, 5, payload);
+            });
+        }
+
+        // 6. Pay Remaining
+        const btnRemaining = document.getElementById(`btn-save-remaining-payment-${trackingId}`);
+        if (btnRemaining) {
+            btnRemaining.addEventListener('click', async () => {
+                await executeSave(btnRemaining, 6, { payment_remaining_completed: true });
+            });
+        }
+
+        // 7. Final Post Date
+        const btnFinal = document.getElementById(`btn-save-final-post-date-${trackingId}`);
+        if (btnFinal) {
+            btnFinal.addEventListener('click', async () => {
+                let postUrl = await uploadPhoto(`final-post-date-link-input-${trackingId}`); // just using the file input if any
+                let payload = { final_post_completed: true };
+                if (postUrl) payload.final_post_url = postUrl;
+                await executeSave(btnFinal, 7, payload);
+            });
+        }
+    };
