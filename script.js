@@ -539,30 +539,51 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.velmoraNavHome = function() {
-        const dashLayout = document.querySelector('.dashboard-layout');
-        if (dashLayout) dashLayout.classList.remove('department-view-active');
+        try {
+            // 1. Force main dashboard container visible and landing page hidden
+            const dashboardPage = document.getElementById('dashboard-page');
+            if (dashboardPage) {
+                dashboardPage.classList.remove('hidden');
+                dashboardPage.style.display = 'flex';
+            }
+            const landingPage = document.getElementById('landing-page');
+            if (landingPage) landingPage.classList.add('hidden');
 
-        if (typeof hideAllSidebars === 'function') hideAllSidebars();
-        else document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.add('hidden'));
+            // 2. Reset layout state (brings back main sidebar)
+            const dashLayout = document.querySelector('.dashboard-layout');
+            if (dashLayout) dashLayout.classList.remove('department-view-active');
 
-        contentViews.forEach(view => {
-            view.classList.remove('active-view');
-            view.classList.add('hidden');
-        });
-        const homeView = document.getElementById('view-home');
-        if (homeView) {
-            homeView.classList.remove('hidden');
-            homeView.classList.add('active-view');
+            // 3. Hide all sub-sidebars safely
+            if (typeof hideAllSidebars === 'function') {
+                hideAllSidebars();
+            } else {
+                document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.add('hidden'));
+            }
+
+            // 4. Live query all content views to hide them (prevents stale NodeList issues)
+            document.querySelectorAll('.content-view').forEach(view => {
+                view.classList.remove('active-view');
+                view.classList.add('hidden');
+            });
+
+            // 5. Explicitly activate and show the Home view
+            const homeView = document.getElementById('view-home');
+            if (homeView) {
+                homeView.classList.remove('hidden');
+                homeView.classList.add('active-view');
+            }
+
+            // 6. Reset sidebar item active states
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active-item'));
+            const homeBtn = document.querySelector('[data-target="view-home"]');
+            if (homeBtn) homeBtn.classList.add('active-item');
+
+            // 7. Clear the navigation stack to start fresh
+            window.velmoraNavigationStack = [];
+            setTimeout(() => { velmoraCurrentStateStr = captureVelmoraState(); }, 50);
+        } catch (error) {
+            console.error("Error in velmoraNavHome execution:", error);
         }
-
-        // Re-activate Home sidebar item
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active-item'));
-        const homeBtn = document.querySelector('[data-target="view-home"]');
-        if (homeBtn) homeBtn.classList.add('active-item');
-
-        // Reset history stack since we returned to home
-        window.velmoraNavigationStack = [];
-        setTimeout(() => { velmoraCurrentStateStr = captureVelmoraState(); }, 50);
     };
 
     // --- Department Navigation Event Delegation ---
