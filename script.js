@@ -4029,7 +4029,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch tracking records joined with dispatch details and info
             const { data: trackingData, error: trackingError } = await window.supabase
                 .from('influencer_status_tracking')
-                .select('*, influencer_dispatch_details!inner(*), influencers_info(name, profile_file_url)');
+                .select('*, influencer_dispatch_details!inner(*, influencers_info(name, profile_file_url))');
                 
             if (trackingError) throw trackingError;
 
@@ -4046,7 +4046,7 @@ document.addEventListener('DOMContentLoaded', () => {
             campaignRecords.forEach(tracking => {
                 // Map to match the template structure
                 const dispatch = tracking.influencer_dispatch_details;
-                const info = tracking.influencers_info;
+                const info = dispatch.influencers_info || {};
                 const record = {
                     id: tracking.id,
                     dispatchId: dispatch.id,
