@@ -3764,8 +3764,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     expected_delivery_completed: false,
                     draft_received: false,
                     payment_remaining_completed: false,
-                    final_post_completed: false,
-                    status: 'active'
+                    final_post_completed: false
                 };
                 
                 console.log("[Dispatch Flow] Status Tracking payload:", trackingPayload);
