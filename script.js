@@ -4168,9 +4168,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 
                 console.log(`Rendering Tracking Card ID: ${record.id}`);
-                console.log(`DB delivery_photo_url:`, tracking.delivery_photo_url);
-                console.log(`Mapped record.deliveryPhoto:`, record.deliveryPhoto);
-
+                if (record.workflowState.hasRework) {
+                    console.log(`[Rework Flow] Hydrated rework data for ${record.id}:`, {
+                        reDraftDate: record.reDraftDate,
+                        reDraftApproved: record.reDraftApproved,
+                        rePostingTimeline: record.rePostingTimeline
+                    });
+                }
+                
                 renderStatusTrackingCard(record, stCardsContainer);
                 
                 // Add Save workflow event listeners
@@ -4884,6 +4889,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const newCard = tempDiv.firstElementChild;
                         trackingCard.parentElement.replaceChild(newCard, trackingCard);
                         tempDiv.remove();
+                        
+                        // IMPORTANT: Re-attach Supabase backend persistence listeners after DOM replacement
+                        if (typeof window.attachTrackingSaveListeners === 'function') {
+                            window.attachTrackingSaveListeners(record.id);
+                        }
                     }
                 } else {
                     renderStatusTracker(record, `tracker-container-${record.id}`);
@@ -8221,7 +8231,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Saving...';
             btn.disabled = true;
 
-            console.log("=== SAVING STATUS TRACKING ===");
+            const isReworkSave = stepIndex === null;
+            const logPrefix = isReworkSave ? '[Rework Flow]' : '=== SAVING STATUS TRACKING ===';
+
+            console.log(logPrefix);
             console.log("Tracking ID:", trackingId);
             console.log("Payload:", payload);
 
@@ -8239,10 +8252,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     payload.current_step = nextStep;
                 }
 
-                const { error } = await window.supabase
+                const { error, data } = await window.supabase
                     .from('influencer_status_tracking')
                     .update(payload)
-                    .eq('id', trackingId);
+                    .eq('id', trackingId)
+                    .select();
+
+                console.log(`${logPrefix} Supabase update result:`, { data, error });
 
                 if (error) throw error;
 
