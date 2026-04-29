@@ -4081,8 +4081,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Status tracking state mapped
                     current_step: tracking.current_step,
                     deliveredConfirmed: tracking.delivered_confirmed,
+                    deliveryPhoto: tracking.delivery_photo_url,
                     payAdvanceCompleted: tracking.pay_advance_completed,
-                    payAdvancePhoto: tracking.delivery_photo_url,
+                    payAdvancePhoto: tracking.pay_advance_photo_url,
                     refVideosCompleted: tracking.reference_video_received,
                     draftTimelineCompleted: tracking.expected_delivery_completed,
                     draftCompleted: tracking.draft_received,
@@ -8080,15 +8081,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `status-tracking/${fileName}`;
 
+            console.log("=== UPLOADING PHOTO ===");
+            console.log("Bucket: influencer-profiles, Path:", filePath);
+
             const { data, error } = await window.supabase.storage
                 .from('influencer-profiles')
                 .upload(filePath, file);
 
-            if (error) throw error;
+            if (error) {
+                console.error("Upload Error:", error);
+                throw error;
+            }
+
+            console.log("Upload Response Data:", data);
 
             const { data: publicData } = window.supabase.storage
                 .from('influencer-profiles')
                 .getPublicUrl(filePath);
+
+            console.log("Generated Public URL:", publicData.publicUrl);
 
             return publicData.publicUrl;
         };
@@ -8097,6 +8108,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalText = btn.textContent;
             btn.textContent = 'Saving...';
             btn.disabled = true;
+
+            console.log("=== SAVING STATUS TRACKING ===");
+            console.log("Tracking ID:", trackingId);
+            console.log("Payload:", payload);
 
             try {
                 // Auto advance step logic
@@ -8139,7 +8154,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnDelivered) {
             btnDelivered.addEventListener('click', async () => {
                 const confirmed = document.getElementById(`delivered-confirmed-${trackingId}`)?.checked || false;
-                await executeSave(btnDelivered, 1, { delivered_confirmed: confirmed });
+                let payload = { delivered_confirmed: confirmed };
+                let photoUrl = await uploadPhoto(`delivery-photo-input-${trackingId}`);
+                if (photoUrl) {
+                    payload.delivery_photo_url = photoUrl;
+                }
+                await executeSave(btnDelivered, 1, payload);
             });
         }
 
@@ -8149,7 +8169,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnAdvance.addEventListener('click', async () => {
                 let photoUrl = await uploadPhoto(`pay-advance-photo-input-${trackingId}`);
                 let payload = { pay_advance_completed: true };
-                if (photoUrl) payload.delivery_photo_url = photoUrl;
+                // Prevent incorrectly overwriting delivery_photo_url here
+                // Note: If you add a pay_advance_photo_url column to DB, set it here.
                 await executeSave(btnAdvance, 2, payload);
             });
         }
