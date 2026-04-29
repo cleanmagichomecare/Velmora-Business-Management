@@ -4308,8 +4308,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderStatusTrackingCard(record, container) {
         // Build avatar content
         let avatarContent = record.creatorName ? record.creatorName.charAt(0).toUpperCase() : '?';
-        if (record.avatar && record.avatar.startsWith('<')) {
-            avatarContent = record.avatar;
+        if (record.avatar) {
+            if (record.avatar.startsWith('<')) {
+                avatarContent = record.avatar;
+            } else if (record.avatar.trim() !== '') {
+                avatarContent = `<img src="${record.avatar}" alt="${record.creatorName || 'Avatar'}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+            }
         }
 
         const cardId = `st-card-${record.id}`;
