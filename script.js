@@ -4511,12 +4511,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="form-group mb-15">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <label class="st-label" style="margin-bottom: 0;">Total Amount</label>
-                                    <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="document.getElementById('pay-remaining-paid-${record.id}').click()">
-                                        <label class="st-minimal-checkbox">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <label class="st-minimal-checkbox" style="cursor: pointer;">
                                             <input id="pay-remaining-paid-${record.id}" type="checkbox" ${record.payRemainingPaid ? 'checked' : ''}>
                                             <span class="checkmark"></span>
                                         </label>
-                                        <span class="fs-xs" style="color: var(--text-main); font-weight: 600; letter-spacing: 0.3px;">PAID</span>
+                                        <label for="pay-remaining-paid-${record.id}" class="fs-xs" style="color: var(--text-main); font-weight: 600; letter-spacing: 0.3px; cursor: pointer;">PAID</label>
                                     </div>
                                 </div>
                                 <input type="number" id="pay-remaining-total-${record.id}" value="${record.payAdvanceTotal || ''}" readonly class="st-input" style="opacity: 0.7; cursor: not-allowed;">
