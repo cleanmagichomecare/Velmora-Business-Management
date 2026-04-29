@@ -3742,13 +3742,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     dispatch_status: 'Dispatched'
                 };
 
-                const { error } = await window.supabase
+                const { data: insertedDispatch, error } = await window.supabase
                     .from('influencer_dispatch_details')
-                    .insert([payload]);
+                    .insert([payload])
+                    .select()
+                    .single();
 
                 if (error) throw error;
+                
+                console.log("[Dispatch Flow] Dispatch insert success:", insertedDispatch);
 
-                if (window.showToast) window.showToast('✅ Influencer successfully dispatched!');
+                // Insert corresponding status tracking row
+                const trackingPayload = {
+                    dispatch_id: insertedDispatch.id,
+                    influencer_id: insertedDispatch.influencer_id,
+                    campaign_id: insertedDispatch.campaign_id,
+                    current_step: 1,
+                    delivered_confirmed: false,
+                    pay_advance_completed: false,
+                    reference_video_received: false,
+                    expected_delivery_completed: false,
+                    draft_received: false,
+                    payment_remaining_completed: false,
+                    final_post_completed: false,
+                    status: 'active'
+                };
+                
+                console.log("[Dispatch Flow] Status Tracking payload:", trackingPayload);
+
+                const { data: insertedTracking, error: trackingError } = await window.supabase
+                    .from('influencer_status_tracking')
+                    .insert([trackingPayload])
+                    .select()
+                    .single();
+
+                if (trackingError) {
+                    console.error("[Dispatch Flow] Tracking insert failure:", trackingError);
+                    if (window.showToast) window.showToast('⚠️ Dispatch saved, but Tracking setup failed!', 'error');
+                } else {
+                    console.log("[Dispatch Flow] Tracking insert success:", insertedTracking);
+                    if (window.showToast) window.showToast('✅ Influencer successfully dispatched & tracked!');
+                }
 
                 // Update Button UI dynamically without reload
                 const card = document.querySelector(`.influencer-profile-card[data-id="${influencerId}"]`);
