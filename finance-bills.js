@@ -24,6 +24,7 @@
         const billMainCat = document.getElementById('bill-main-category');
         const billSub1 = document.getElementById('bill-sub-category1');
         const billSub2 = document.getElementById('bill-sub-category2');
+        const billSub3 = document.getElementById('bill-sub-category3');
 
         function hideAllBillViews() {
             [addBillFormContainer, billListContainer, billDefaultState].forEach(el => {
@@ -34,8 +35,10 @@
         function populateBillCategories() {
             if (!billMainCat) return;
 
-            const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {} };
+            const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
             
+            console.log("Finance Globals (mains, sub1, sub2, sub3):", _globals);
+
             // Populate Main
             billMainCat.innerHTML = '<option value="">Select Main Category</option>';
             _globals.mains.forEach(cat => {
@@ -47,10 +50,14 @@
 
             // Listen for changes
             billMainCat.onchange = () => {
+                console.log("billMainCat changed to:", billMainCat.value);
                 const mainVal = billMainCat.value;
                 billSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
                 billSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+                if (billSub3) billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
+                
                 billSub2.disabled = true;
+                if (billSub3) billSub3.disabled = true;
 
                 if (mainVal && _globals.sub1[mainVal]) {
                     billSub1.disabled = false;
@@ -66,8 +73,11 @@
             };
 
             billSub1.onchange = () => {
+                console.log("billSub1 changed to:", billSub1.value);
                 const sub1Val = billSub1.value;
                 billSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+                if (billSub3) billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
+                if (billSub3) billSub3.disabled = true;
 
                 if (sub1Val && _globals.sub2[sub1Val]) {
                     billSub2.disabled = false;
@@ -79,6 +89,28 @@
                     });
                 } else {
                     billSub2.disabled = true;
+                }
+            };
+
+            billSub2.onchange = () => {
+                console.log("billSub2 changed to:", billSub2.value);
+                const sub2Val = billSub2.value;
+                if (!billSub3) return;
+
+                billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
+
+                if (sub2Val && _globals.sub3[sub2Val]) {
+                    billSub3.disabled = false;
+                    _globals.sub3[sub2Val].forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub;
+                        opt.textContent = sub;
+                        billSub3.appendChild(opt);
+                    });
+                    console.log(`Populated billSub3 with options for ${sub2Val}:`, _globals.sub3[sub2Val]);
+                } else {
+                    billSub3.disabled = true;
+                    console.log(`No sub3 options found for sub2: ${sub2Val}`);
                 }
             };
         }
@@ -347,6 +379,7 @@
 
             const sub1 = getVal('bill-sub-category1');
             const sub2 = getVal('bill-sub-category2');
+            const sub3 = getVal('bill-sub-category3');
             const billingCycle = getVal('bill-cycle');
             const payMode = getVal('bill-pay-mode');
             const account = getVal('bill-account');
@@ -361,6 +394,7 @@
                 main_category: mainCat,
                 sub_category1: sub1,
                 sub_category2: sub2,
+                sub_sub_sub_category: sub3,
                 amount: amount,
                 due_date: dueDate,
                 billing_cycle: billingCycle,
@@ -401,6 +435,10 @@
                 if (billSub2) {
                     billSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
                     billSub2.disabled = true;
+                }
+                if (billSub3) {
+                    billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
+                    billSub3.disabled = true;
                 }
 
                 // Hide form, show default
