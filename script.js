@@ -1056,11 +1056,81 @@ document.addEventListener('DOMContentLoaded', () => {
                 folderItem.setAttribute('data-id', campaign.id);
 
                 folderItem.innerHTML = `
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    <span class="folder-name">${campaign.campaign_name || 'Untitled Campaign'}</span>
+                    <div style="display: flex; align-items: center; width: 100%; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            <span class="folder-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${campaign.campaign_name || 'Untitled Campaign'}</span>
+                        </div>
+                        <button class="btn-archive-campaign" style="background: none; border: none; padding: 4px; border-radius: 4px; cursor: pointer; color: var(--text-muted); opacity: 0.6; transition: all 0.2s; flex-shrink: 0;" title="Archive Campaign">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                                <rect x="1" y="3" width="22" height="5"></rect>
+                                <line x1="10" y1="12" x2="14" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
                 `;
+
+                // Add hover effect specifically for the archive button via JS since it's inline styled
+                const archiveBtn = folderItem.querySelector('.btn-archive-campaign');
+                if (archiveBtn) {
+                    archiveBtn.addEventListener('mouseenter', () => {
+                        archiveBtn.style.opacity = '1';
+                        archiveBtn.style.color = '#ef4444';
+                        archiveBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+                    });
+                    archiveBtn.addEventListener('mouseleave', () => {
+                        archiveBtn.style.opacity = '0.6';
+                        archiveBtn.style.color = 'var(--text-muted)';
+                        archiveBtn.style.background = 'none';
+                    });
+
+                    archiveBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation(); // Prevent folder selection
+                        
+                        if (!confirm(`Archive campaign "${campaign.campaign_name || 'Untitled Campaign'}"?`)) return;
+
+                        archiveBtn.style.pointerEvents = 'none';
+                        archiveBtn.style.opacity = '0.3';
+
+                        try {
+                            const { error } = await window.supabase
+                                .from('influencer_create_campaigns')
+                                .update({ status: 'archived' })
+                                .eq('id', campaign.id);
+
+                            if (error) throw error;
+
+                            if (typeof showToast === 'function') {
+                                showToast('✅ Campaign archived');
+                            }
+                            
+                            // If archived campaign was currently selected, clear selection view
+                            if (window.selectedCampaignId === campaign.id) {
+                                window.selectedCampaignId = null;
+                                window.selectedCampaign = null;
+                                localStorage.removeItem('selectedCampaignId');
+                                const contentPlaceholder = document.getElementById('content-viewer-placeholder');
+                                const dashboardView = document.getElementById('campaign-dashboard-view');
+                                if (dashboardView) dashboardView.classList.add('hidden');
+                                if (contentPlaceholder) contentPlaceholder.classList.remove('hidden');
+                            }
+
+                            // Re-render list
+                            renderCampaignList();
+
+                        } catch (err) {
+                            console.error("Archive campaign error:", err);
+                            if (typeof showToast === 'function') {
+                                showToast('❌ Failed to archive campaign');
+                            }
+                            archiveBtn.style.pointerEvents = 'auto';
+                            archiveBtn.style.opacity = '0.6';
+                        }
+                    });
+                }
 
                 folderItem.addEventListener('click', () => {
                     emptyCampaignList.querySelectorAll('.campaign-folder-item').forEach(f => f.classList.remove('active-folder'));
