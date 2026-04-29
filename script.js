@@ -4033,12 +4033,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             if (trackingError) throw trackingError;
 
-            // Filter for campaignName
-            const campaignRecords = trackingData.filter(t => t.influencer_dispatch_details && t.influencer_dispatch_details.campaign_name === campaignName);
+            // Filter for campaign: handle cases where campaignIdentifier is either ID or Name
+            const campaignRecords = trackingData.filter(t => {
+                const matchId = String(t.campaign_id) === String(campaignName) || 
+                               (t.influencer_dispatch_details && String(t.influencer_dispatch_details.campaign_id) === String(campaignName));
+                const matchName = t.influencer_dispatch_details && t.influencer_dispatch_details.campaign_name === campaignName;
+                return matchId || matchName;
+            });
 
             if (campaignRecords.length === 0) {
                 stCardsContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">No dispatched influencers to track.</p>';
                 return;
+            }
+
+            // Fix breadcrumb to display actual campaign name if an ID was passed
+            if (breadcrumb && campaignRecords.length > 0 && campaignRecords[0].influencer_dispatch_details) {
+                const actualName = campaignRecords[0].influencer_dispatch_details.campaign_name;
+                breadcrumb.textContent = `${actualName || 'Campaign'} — Status Tracking`;
             }
 
             // Render all records
