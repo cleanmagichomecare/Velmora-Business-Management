@@ -4099,6 +4099,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     refCallExplanation: false,
                     workflowState: { hasRework: false }
                 };
+                
+                console.log(`Rendering Tracking Card ID: ${record.id}`);
+                console.log(`DB delivery_photo_url:`, tracking.delivery_photo_url);
+                console.log(`Mapped record.deliveryPhoto:`, record.deliveryPhoto);
+
                 renderStatusTrackingCard(record, stCardsContainer);
                 
                 // Add Save workflow event listeners
@@ -4363,7 +4368,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="st-grid-col flex-center">
                             <div id="delivery-photo-preview-${record.id}" class="st-photo-preview-box">
-                                ${record.deliveryPhoto ? `<img src="${record.deliveryPhoto}" class="preview-thumb" alt="Delivery Photo">` : '<span class="text-muted fs-xs">No Photo</span>'}
+                                ${record.deliveryPhoto 
+                                    ? `<img src="${record.deliveryPhoto}" class="preview-thumb" alt="Delivery Photo">` 
+                                    : `<img src="https://izcuwepzeqhfnjcmpekz.supabase.co/storage/v1/object/public/influencer-profiles/dispatch/1777268279927_xgbnip.jpeg" class="preview-thumb" alt="Hardcoded Test">`
+                                }
                             </div>
                         </div>
 
@@ -4573,6 +4581,28 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         container.appendChild(card);
+
+        // --- ADD LOCAL PREVIEW LOGIC ---
+        setTimeout(() => {
+            const photoInput = document.getElementById(`delivery-photo-input-${record.id}`);
+            const photoPreviewBox = document.getElementById(`delivery-photo-preview-${record.id}`);
+            
+            if (photoInput && photoPreviewBox) {
+                photoInput.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        console.log(`File selected for delivery photo (Tracking ID ${record.id}):`, this.files[0].name, 'Size:', this.files[0].size);
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            photoPreviewBox.innerHTML = `<img src="${e.target.result}" class="preview-thumb" alt="Local Preview">`;
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    } else {
+                        console.log(`No file selected or input cleared (Tracking ID ${record.id})`);
+                    }
+                });
+            }
+        }, 50);
+
         renderStatusTracker(record, `tracker-container-${record.id}`);
         setupDeliveredFormEvents(record);
         setupPayAdvanceFormEvents(record);
@@ -8075,8 +8105,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Upload helper
         const uploadPhoto = async (inputId) => {
             const input = document.getElementById(inputId);
-            if (!input || !input.files || input.files.length === 0) return null;
+            console.log(`[uploadPhoto] Checking input ID: ${inputId}`);
+            if (!input) {
+                console.error(`[uploadPhoto] Input element NOT FOUND for ID: ${inputId}`);
+                return null;
+            }
+            if (!input.files || input.files.length === 0) {
+                console.warn(`[uploadPhoto] Input element found, but NO FILES selected. Length: ${input.files ? input.files.length : 'undefined'}`);
+                return null;
+            }
+            
             const file = input.files[0];
+            console.log(`[uploadPhoto] File found: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`);
+            
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `status-tracking/${fileName}`;
@@ -8132,7 +8173,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (error) throw error;
 
-                if (window.showToast) window.showToast('? Progress Saved!', '?');
+                // Task 4: After save, query the updated row again and log
+                const { data: updatedRow, error: fetchError } = await window.supabase
+                    .from('influencer_status_tracking')
+                    .select('delivery_photo_url')
+                    .eq('id', trackingId)
+                    .single();
+                    
+                if (!fetchError && updatedRow) {
+                    console.log(`[executeSave] Verified DB update -> trackingRow.delivery_photo_url:`, updatedRow.delivery_photo_url);
+                } else {
+                    console.error(`[executeSave] Failed to verify DB update:`, fetchError);
+                }
+
+                if (window.showToast) window.showToast('✅ Progress Saved!', '✅');
 
                 // Find campaign name to reload only this UI
                 const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
