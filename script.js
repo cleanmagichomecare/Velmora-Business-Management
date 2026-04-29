@@ -4088,6 +4088,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     draftTimelineCompleted: tracking.expected_delivery_completed,
                     draftCompleted: tracking.draft_received,
                     payRemainingCompleted: tracking.payment_remaining_completed,
+                    payRemainingPaid: tracking.payment_remaining_completed, // Maps UI checkbox correctly to backend
                     finalPostCompleted: tracking.final_post_completed,
                     
                     // Missing UI specific mappings to prevent null errors
@@ -8261,10 +8262,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 6. Pay Remaining
-        const btnRemaining = document.getElementById(`btn-save-remaining-payment-${trackingId}`);
+        const btnRemaining = document.getElementById(`btn-save-pay-remaining-${trackingId}`);
         if (btnRemaining) {
             btnRemaining.addEventListener('click', async () => {
-                await executeSave(btnRemaining, 6, { payment_remaining_completed: true });
+                const paidCheckbox = document.getElementById(`pay-remaining-paid-${trackingId}`);
+                const isPaid = paidCheckbox ? paidCheckbox.checked : false;
+                
+                console.log("[Step 6] PAID Checkbox element:", paidCheckbox);
+                console.log("[Step 6] PAID Checkbox checked:", isPaid);
+                
+                let payload = { payment_remaining_completed: isPaid };
+                
+                console.log("[Step 6] Final update payload:", payload);
+                
+                await executeSave(btnRemaining, 6, payload);
             });
         }
 
