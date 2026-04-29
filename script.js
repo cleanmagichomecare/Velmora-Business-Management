@@ -4091,14 +4091,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     payRemainingPaid: tracking.payment_remaining_completed, // Maps UI checkbox correctly to backend
                     finalPostCompleted: tracking.final_post_completed,
                     
-                    // Missing UI specific mappings to prevent null errors
-                    refConcept: '-',
-                    refScript: '-',
-                    refKeyPoints: '-',
-                    refOffer: '-',
-                    refLink: '-',
-                    refCallExplanation: false,
-                    workflowState: { hasRework: false }
+                    // New Persistence Mappings
+                    payAdvanceGPay: tracking.advance_gpay_number || '',
+                    payAdvanceTotal: tracking.advance_total_amount || '',
+                    payAdvanceAmount: tracking.advance_paid_amount || '',
+
+                    refConcept: tracking.ref_concept || '',
+                    refScript: tracking.ref_script || '',
+                    refKeyPoints: tracking.ref_keypoints || '',
+                    refOffer: tracking.ref_offer || '',
+                    refLink: tracking.ref_link || '',
+                    refCallExplanation: tracking.ref_call_explanation_required || false,
+                    referenceVideos: tracking.reference_videos_list || [''],
+
+                    draftDate: tracking.draft_expected_date || '',
+                    draftTime: tracking.draft_expected_time || '',
+                    postingTimeline: tracking.posting_timelines || [],
+
+                    draftVideo: tracking.draft_video_url || '',
+                    draftApproved: tracking.draft_approval_status || '',
+                    draftTiming: tracking.draft_timing_status || '',
+                    draftCorrections: tracking.draft_corrections_required || '',
+                    draftFinalLink: tracking.draft_final_product_link || '',
+                    draftFinalDesc: tracking.draft_final_description || '',
+
+                    payRemainingPhoto: tracking.payment_remaining_photo_url || '',
+
+                    finalPostLink: tracking.final_post_link || '',
+                    actualPostTime: tracking.final_post_actual_datetime || null,
+                    finalPostConfirmed: !!tracking.final_post_actual_datetime,
+
+                    reDraftDate: tracking.re_draft_expected_date || '',
+                    reDraftTime: tracking.re_draft_expected_time || '',
+                    rePostingTimeline: tracking.re_posting_timelines || [],
+                    reDraftVideo: tracking.re_draft_video_url || '',
+                    reDraftApproved: tracking.re_draft_approval_status || '',
+                    reDraftTiming: tracking.re_draft_timing_status || '',
+                    reDraftCorrections: tracking.re_draft_corrections_required || '',
+                    reDraftFinalLink: tracking.re_draft_final_product_link || '',
+                    reDraftFinalDesc: tracking.re_draft_final_description || '',
+
+                    workflowState: { hasRework: !!tracking.re_draft_expected_date || !!tracking.re_draft_approval_status }
                 };
                 
                 console.log(`Rendering Tracking Card ID: ${record.id}`);
@@ -8161,15 +8194,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // Auto advance step logic
-                let nextStep = payload.current_step || stepIndex;
-                if (stepIndex === 1 && payload.delivered_confirmed) nextStep = 2;
-                if (stepIndex === 2 && payload.pay_advance_completed) nextStep = 3;
-                if (stepIndex === 3 && payload.reference_video_received) nextStep = 4;
-                if (stepIndex === 4 && payload.expected_delivery_completed) nextStep = 5;
-                if (stepIndex === 5 && payload.draft_received) nextStep = 6;
-                if (stepIndex === 6 && payload.payment_remaining_completed) nextStep = 7;
-                
-                payload.current_step = nextStep;
+                if (stepIndex !== null) {
+                    let nextStep = payload.current_step || stepIndex;
+                    if (stepIndex === 1 && payload.delivered_confirmed) nextStep = 2;
+                    if (stepIndex === 2 && payload.pay_advance_completed) nextStep = 3;
+                    if (stepIndex === 3 && payload.reference_video_received) nextStep = 4;
+                    if (stepIndex === 4 && payload.expected_delivery_completed) nextStep = 5;
+                    if (stepIndex === 5 && payload.draft_received) nextStep = 6;
+                    if (stepIndex === 6 && payload.payment_remaining_completed) nextStep = 7;
+                    
+                    payload.current_step = nextStep;
+                }
 
                 const { error } = await window.supabase
                     .from('influencer_status_tracking')
@@ -8228,8 +8263,16 @@ document.addEventListener('DOMContentLoaded', () => {
             btnAdvance.addEventListener('click', async () => {
                 let photoUrl = await uploadPhoto(`pay-advance-photo-input-${trackingId}`);
                 let payload = { pay_advance_completed: true };
-                // Prevent incorrectly overwriting delivery_photo_url here
-                // Note: If you add a pay_advance_photo_url column to DB, set it here.
+                
+                const gpayInp = document.getElementById(`pay-advance-gpay-${trackingId}`);
+                const totalInp = document.getElementById(`pay-advance-total-${trackingId}`);
+                const amountInp = document.getElementById(`pay-advance-amount-${trackingId}`);
+                
+                if (gpayInp) payload.advance_gpay_number = gpayInp.value;
+                if (totalInp) payload.advance_total_amount = totalInp.value ? parseFloat(totalInp.value) : null;
+                if (amountInp) payload.advance_paid_amount = amountInp.value ? parseFloat(amountInp.value) : null;
+                if (photoUrl) payload.pay_advance_photo_url = photoUrl;
+                
                 await executeSave(btnAdvance, 2, payload);
             });
         }
@@ -8238,7 +8281,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnRef = document.getElementById(`btn-save-ref-videos-${trackingId}`);
         if (btnRef) {
             btnRef.addEventListener('click', async () => {
-                await executeSave(btnRef, 3, { reference_video_received: true });
+                let payload = { reference_video_received: true };
+                
+                const concept = document.getElementById(`ref-concept-${trackingId}`);
+                const script = document.getElementById(`ref-script-${trackingId}`);
+                const keypoints = document.getElementById(`ref-keypoints-${trackingId}`);
+                const offer = document.getElementById(`ref-offer-${trackingId}`);
+                const link = document.getElementById(`ref-link-${trackingId}`);
+                const callExp = document.getElementById(`ref-call-explanation-${trackingId}`);
+                
+                if (concept) payload.ref_concept = concept.value;
+                if (script) payload.ref_script = script.value;
+                if (keypoints) payload.ref_keypoints = keypoints.value;
+                if (offer) payload.ref_offer = offer.value;
+                if (link) payload.ref_link = link.value;
+                if (callExp) payload.ref_call_explanation_required = callExp.checked;
+                
+                const container = document.getElementById(`dynamic-videos-container-${trackingId}`);
+                if (container) {
+                    const inputs = container.querySelectorAll('input[type="text"]');
+                    payload.reference_videos_list = Array.from(inputs).map(inp => inp.value.trim()).filter(v => v !== '');
+                }
+                
+                await executeSave(btnRef, 3, payload);
             });
         }
 
@@ -8246,7 +8311,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnTimeline = document.getElementById(`btn-save-timeline-${trackingId}`);
         if (btnTimeline) {
             btnTimeline.addEventListener('click', async () => {
-                await executeSave(btnTimeline, 4, { expected_delivery_completed: true });
+                let payload = { expected_delivery_completed: true };
+                
+                const dateInp = document.getElementById(`draft-date-${trackingId}`);
+                const timeInp = document.getElementById(`draft-time-${trackingId}`);
+                if (dateInp) payload.draft_expected_date = dateInp.value || null;
+                if (timeInp) payload.draft_expected_time = timeInp.value || null;
+                
+                const platformBlocks = document.querySelectorAll(`#posting-platforms-container-${trackingId} .posting-platform-block`);
+                const postingData = [];
+                platformBlocks.forEach(block => {
+                    const platform = block.getAttribute('data-platform');
+                    const dateVal = block.querySelector('.posting-date').value;
+                    const timeVal = block.querySelector('.posting-time').value;
+                    if (dateVal && timeVal) postingData.push({ platform, date: dateVal, time: timeVal });
+                });
+                payload.posting_timelines = postingData;
+                
+                await executeSave(btnTimeline, 4, payload);
             });
         }
 
@@ -8257,6 +8339,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 let videoUrl = await uploadPhoto(`draft-video-input-${trackingId}`);
                 let payload = { draft_received: true };
                 if (videoUrl) payload.draft_video_url = videoUrl;
+                
+                const approvedStatus = document.getElementById(`draft-status-value-${trackingId}`);
+                const timingStatus = document.querySelector(`input[name="draft-timing-${trackingId}"]:checked`);
+                const corrections = document.getElementById(`draft-correction-input-${trackingId}`);
+                const finalLink = document.getElementById(`draft-final-link-${trackingId}`);
+                const finalDesc = document.getElementById(`draft-final-desc-${trackingId}`);
+                
+                if (approvedStatus) payload.draft_approval_status = approvedStatus.value;
+                if (timingStatus) payload.draft_timing_status = timingStatus.value;
+                if (corrections) payload.draft_corrections_required = corrections.value;
+                if (finalLink) payload.draft_final_product_link = finalLink.value;
+                if (finalDesc) payload.draft_final_description = finalDesc.value;
+                
                 await executeSave(btnDraft, 5, payload);
             });
         }
@@ -8268,25 +8363,80 @@ document.addEventListener('DOMContentLoaded', () => {
                 const paidCheckbox = document.getElementById(`pay-remaining-paid-${trackingId}`);
                 const isPaid = paidCheckbox ? paidCheckbox.checked : false;
                 
-                console.log("[Step 6] PAID Checkbox element:", paidCheckbox);
-                console.log("[Step 6] PAID Checkbox checked:", isPaid);
-                
                 let payload = { payment_remaining_completed: isPaid };
-                
-                console.log("[Step 6] Final update payload:", payload);
+                let photoUrl = await uploadPhoto(`pay-remaining-photo-input-${trackingId}`);
+                if (photoUrl) payload.payment_remaining_photo_url = photoUrl;
                 
                 await executeSave(btnRemaining, 6, payload);
             });
         }
 
         // 7. Final Post Date
-        const btnFinal = document.getElementById(`btn-save-final-post-date-${trackingId}`);
+        const btnFinal = document.getElementById(`btn-save-final-post-${trackingId}`);
         if (btnFinal) {
             btnFinal.addEventListener('click', async () => {
-                let postUrl = await uploadPhoto(`final-post-date-link-input-${trackingId}`); // just using the file input if any
                 let payload = { final_post_completed: true };
-                if (postUrl) payload.final_post_url = postUrl;
+                
+                const linkInp = document.getElementById(`final-post-link-${trackingId}`);
+                const confirmCheck = document.getElementById(`final-post-confirmed-${trackingId}`);
+                
+                if (linkInp) payload.final_post_link = linkInp.value;
+                if (confirmCheck && confirmCheck.checked) {
+                    payload.final_post_actual_datetime = new Date().toISOString();
+                } else {
+                    payload.final_post_actual_datetime = null;
+                }
+                
                 await executeSave(btnFinal, 7, payload);
+            });
+        }
+        
+        // 8. Re-Timeline
+        const btnReTimeline = document.getElementById(`btn-save-re-timeline-${trackingId}`);
+        if (btnReTimeline) {
+            btnReTimeline.addEventListener('click', async () => {
+                let payload = {};
+                const dateInp = document.getElementById(`re-draft-date-${trackingId}`);
+                const timeInp = document.getElementById(`re-draft-time-${trackingId}`);
+                if (dateInp) payload.re_draft_expected_date = dateInp.value || null;
+                if (timeInp) payload.re_draft_expected_time = timeInp.value || null;
+                
+                const platformBlocks = document.querySelectorAll(`#re-posting-platforms-container-${trackingId} .posting-platform-block`);
+                const postingData = [];
+                platformBlocks.forEach(block => {
+                    const platform = block.getAttribute('data-platform');
+                    const dateVal = block.querySelector('.posting-date').value;
+                    const timeVal = block.querySelector('.posting-time').value;
+                    if (dateVal && timeVal) postingData.push({ platform, date: dateVal, time: timeVal });
+                });
+                payload.re_posting_timelines = postingData;
+                
+                // Keep the current step if it's rework
+                await executeSave(btnReTimeline, null, payload); 
+            });
+        }
+        
+        // 9. Re-Draft
+        const btnReDraft = document.getElementById(`btn-save-re-draft-${trackingId}`);
+        if (btnReDraft) {
+            btnReDraft.addEventListener('click', async () => {
+                let videoUrl = await uploadPhoto(`re-draft-video-input-${trackingId}`);
+                let payload = {};
+                if (videoUrl) payload.re_draft_video_url = videoUrl;
+                
+                const approvedStatus = document.getElementById(`re-draft-status-value-${trackingId}`);
+                const timingStatus = document.querySelector(`input[name="re-draft-timing-${trackingId}"]:checked`);
+                const corrections = document.getElementById(`re-draft-correction-input-${trackingId}`);
+                const finalLink = document.getElementById(`re-draft-final-link-${trackingId}`);
+                const finalDesc = document.getElementById(`re-draft-final-desc-${trackingId}`);
+                
+                if (approvedStatus) payload.re_draft_approval_status = approvedStatus.value;
+                if (timingStatus) payload.re_draft_timing_status = timingStatus.value;
+                if (corrections) payload.re_draft_corrections_required = corrections.value;
+                if (finalLink) payload.re_draft_final_product_link = finalLink.value;
+                if (finalDesc) payload.re_draft_final_description = finalDesc.value;
+                
+                await executeSave(btnReDraft, null, payload);
             });
         }
     };
