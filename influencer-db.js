@@ -221,8 +221,8 @@
                 const brand = infBrand.value;
 
                 if (!name || !brand) {
-                    if (window.showToast) window.showToast('Please enter Name and Brand.', '⚠');
-                    else alert('Please enter Name and Brand.');
+                    if (window.showToast) window.showToast('Please enter User Name and Brand.', '⚠');
+                    else alert('Please enter User Name and Brand.');
                     return;
                 }
 
@@ -289,7 +289,7 @@
                 <table class="vendor-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>User Name</th>
                             <th>Brand</th>
                             <th>Product</th>
                             <th>Payment</th>

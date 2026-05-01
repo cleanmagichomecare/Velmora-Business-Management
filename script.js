@@ -1692,9 +1692,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Validate required fields
             if (!infName || !infPhone) {
                 if (typeof showToast === 'function') {
-                    showToast('❌ Please fill Name and Phone Number');
+                    showToast('❌ Please fill User Name and Phone Number');
                 } else {
-                    alert('Please fill Name and Phone Number');
+                    alert('Please fill User Name and Phone Number');
                 }
                 return;
             }
@@ -2423,7 +2423,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const basicHtml = `
                 <div id="basic-${data.id}" class="tab-pane">
                     <div class="grid-2">
-                        <div class="info-group"><label>Name</label><div class="info-val" data-field="name">${data.name || '-'}</div></div>
+                        <div class="info-group"><label>User Name</label><div class="info-val" data-field="name">${data.name || '-'}</div></div>
                         <div class="info-group"><label>Influencer Name</label><div class="info-val" data-field="influencer_name">${data.influencer_name || '-'}</div></div>
                         <div class="info-group"><label>Phone</label><div class="info-val" data-field="phone_number">${data.phone_number || '-'}</div></div>
                         <div class="info-group"><label>Alt Phone</label><div class="info-val" data-field="alternative_number">${data.alternative_number || '-'}</div></div>
@@ -4474,7 +4474,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="st-value">${record.campaignName || '-'}</span>
                         </div>
                         <div class="st-info-item">
-                            <span class="st-label">Influencer Name</span>
+                            <span class="st-label">User Name</span>
                             <span class="st-value">${record.creatorName || '-'}</span>
                         </div>
                         <div class="st-info-item">
