@@ -171,7 +171,7 @@
             // Filter in memory
             const activeBills = window.financeBills.filter(bill => {
                 if (searchTerm) {
-                    const haystack = `${bill.main_category} ${bill.sub_category1} ${bill.sub_category2} ${bill.payment_type}`.toLowerCase();
+                    const haystack = `${bill.main_category} ${bill.sub_category1} ${bill.sub_category2} ${bill.sub_category3 || ''} ${bill.payment_type}`.toLowerCase();
                     if (!haystack.includes(searchTerm)) return false;
                 }
                 return true;
@@ -211,23 +211,25 @@
                 <div class="finance-bills-table-wrapper" style="overflow-x: auto; padding-bottom: 10px;">
                     <table class="vendor-table finance-bills-table" style="table-layout: fixed; width: 100%; min-width: 900px;">
                         <colgroup>
-                            <col style="width: 12%;">
-                            <col style="width: 10%;">
-                            <col style="width: 10%;">
+                            <col style="width: 11%;">
+                            <col style="width: 9%;">
                             <col style="width: 9%;">
                             <col style="width: 9%;">
                             <col style="width: 8%;">
-                            <col style="width: 9%;">
-                            <col style="width: 9%;">
-                            <col style="width: 10%;">
                             <col style="width: 8%;">
+                            <col style="width: 7%;">
+                            <col style="width: 8%;">
+                            <col style="width: 8%;">
+                            <col style="width: 9%;">
+                            <col style="width: 7%;">
                             <col style="width: 80px;">
                         </colgroup>
                         <thead>
                             <tr>
                                 <th>Main Category</th>
-                                <th>Sub Category 1</th>
-                                <th>Sub Category 2</th>
+                                <th>Sub Cat 1</th>
+                                <th>Sub Cat 2</th>
+                                <th>Sub Cat 3</th>
                                 <th>Amount</th>
                                 <th>Due Date</th>
                                 <th>Cycle</th>
@@ -252,6 +254,7 @@
                         <td title="${bill.main_category || '-'}"><strong>${bill.main_category || '-'}</strong></td>
                         <td title="${bill.sub_category1 || '-'}">${bill.sub_category1 || '-'}</td>
                         <td title="${bill.sub_category2 || '-'}">${bill.sub_category2 || '-'}</td>
+                        <td title="${bill.sub_category3 || '-'}">${bill.sub_category3 || '-'}</td>
                         <td title="₹${bill.amount != null ? bill.amount : '-'}">₹${bill.amount != null ? bill.amount : '-'}</td>
                         <td title="${formatDate(bill.due_date)}">${formatDate(bill.due_date)}</td>
                         <td title="${bill.billing_cycle || '-'}">${bill.billing_cycle || '-'}</td>
@@ -394,7 +397,7 @@
                 main_category: mainCat,
                 sub_category1: sub1,
                 sub_category2: sub2,
-                sub_sub_sub_category: sub3,
+                sub_category3: sub3,
                 amount: amount,
                 due_date: dueDate,
                 billing_cycle: billingCycle,
