@@ -2024,6 +2024,53 @@ div.modal.hidden {
     background-color: rgba(255, 255, 255, 0.05);
 }
 
+/* ===== Influencer Products Tab (Scoped) ===== */
+.products-tab-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.products-tab-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bg-color);
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.products-tab-item:hover {
+    border-color: var(--primary-color);
+}
+
+.products-tab-item .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+    flex: 1;
+    word-break: break-word;
+    padding-right: 10px;
+}
+
+.products-tab-item .product-qty-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .products-tab-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Responsive adjustments */
 
 /* Dispatched List View Styles */

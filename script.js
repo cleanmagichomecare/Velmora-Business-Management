@@ -1920,7 +1920,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const productsPane = document.getElementById('tab-products');
             const products = [];
             if (productsPane) {
-                productsPane.querySelectorAll('.product-item').forEach(item => {
+                productsPane.querySelectorAll('.products-tab-item').forEach(item => {
                     const checkbox = item.querySelector('.product-checkbox');
                     const qtyInput = item.querySelector('.product-quantity-input');
                     products.push({
@@ -1950,7 +1950,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (productsTabPane) {
         productsTabPane.addEventListener('change', (e) => {
             if (e.target.classList.contains('product-checkbox')) {
-                const item = e.target.closest('.product-item');
+                const item = e.target.closest('.products-tab-item');
                 const qtyInput = item ? item.querySelector('.product-quantity-input') : null;
                 if (qtyInput) {
                     if (e.target.checked) {
@@ -2604,13 +2604,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const defaultProducts = ['DIY Dishwash Liquid', 'DIY Fabric Conditioner', 'DIY Detergent Liquid', 'Magic Sponge'];
             const savedProducts = data.products || [];
             let productsHtml = `<div id="products-${data.id}" class="tab-pane hidden">
-                <div class="grid-2 product-selection-grid" style="gap: 15px;">`;
+                <div class="products-tab-grid">`;
             defaultProducts.forEach(productName => {
                 const saved = savedProducts.find(p => p.product_name === productName);
                 const isChecked = saved ? saved.selected : false;
                 const qtyVal = saved ? (saved.qty || 0) : 0;
                 productsHtml += `
-                    <div class="product-item">
+                    <div class="products-tab-item">
                         <label class="checkbox-label">
                             <input type="checkbox" class="product-checkbox" data-product="${productName}" ${isChecked ? 'checked' : ''}>
                             ${productName}
@@ -2743,7 +2743,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (productsPane) {
                 productsPane.addEventListener('change', (e) => {
                     if (e.target.classList.contains('product-checkbox')) {
-                        const item = e.target.closest('.product-item');
+                        const item = e.target.closest('.products-tab-item');
                         const qtyInput = item ? item.querySelector('.product-quantity-input') : null;
                         if (qtyInput) {
                             if (e.target.checked) {
@@ -3423,7 +3423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const editProductsPane = card.querySelector(`#products-${data.id}`);
                         if (editProductsPane) {
                             const productDataToSave = [];
-                            editProductsPane.querySelectorAll('.product-item').forEach(item => {
+                            editProductsPane.querySelectorAll('.products-tab-item').forEach(item => {
                                 const checkbox = item.querySelector('.product-checkbox');
                                 const qtyInput = item.querySelector('.product-quantity-input');
                                 if (checkbox) {
