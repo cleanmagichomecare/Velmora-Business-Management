@@ -2207,6 +2207,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.body.addEventListener('click', (e) => {
+        // Bargain History Read-Only Toggle (View More / View Less)
+        if (e.target && e.target.classList.contains('btn-toggle-bargain-history')) {
+            const btn = e.target;
+            const infId = btn.getAttribute('data-inf-id');
+            if (!infId) return;
+            const card = btn.closest('.influencer-profile-card');
+            if (!card) return;
+            const wrapper = card.querySelector(`.bargain-history-wrapper[data-bargain-wrap="${infId}"]`);
+            if (!wrapper) return;
+            const isCollapsed = wrapper.classList.contains('bargain-history-collapsed');
+            if (isCollapsed) {
+                wrapper.classList.remove('bargain-history-collapsed');
+                wrapper.classList.add('bargain-history-expanded');
+                btn.textContent = 'View Less';
+            } else {
+                wrapper.classList.remove('bargain-history-expanded');
+                wrapper.classList.add('bargain-history-collapsed');
+                btn.textContent = 'View More';
+            }
+            return;
+        }
+
+        // Video Views Read-Only Toggle (View More / View Less)
+        if (e.target && e.target.classList.contains('btn-toggle-video-views')) {
+            const btn = e.target;
+            const vidId = btn.getAttribute('data-vid-id');
+            if (!vidId) return;
+            const card = btn.closest('.influencer-profile-card');
+            if (!card) return;
+            const wrapper = card.querySelector(`.video-views-wrapper[data-vid-wrap="${vidId}"]`);
+            if (!wrapper) return;
+            const isCollapsed = wrapper.classList.contains('video-views-collapsed');
+            if (isCollapsed) {
+                wrapper.classList.remove('video-views-collapsed');
+                wrapper.classList.add('video-views-expanded');
+                btn.textContent = 'View Less';
+            } else {
+                wrapper.classList.remove('video-views-expanded');
+                wrapper.classList.add('video-views-collapsed');
+                btn.textContent = 'View More';
+            }
+            return;
+        }
+
         // 2. Pricing Info - Dynamic Bargain Rows
         if (e.target && e.target.classList.contains('btn-add-bargain-set')) {
             // Check if within a read-only profile card (edit mode OFF checks)
@@ -2217,7 +2261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const wrapper = e.target.closest('.pricing-bargain-section');
             if (!wrapper) return;
-            const bargainContainer = wrapper.querySelector('.bargain-history-container');
+            const bargainContainer = wrapper.querySelector('.bargain-history-container') || wrapper.querySelector('.bargain-history-grid');
             if (!bargainContainer) return;
 
             const currentCount = bargainContainer.querySelectorAll('.bargain-row').length + 1;
@@ -2695,44 +2739,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // Bargain History Toggle Logic (per card, lightweight DOM toggle)
-            const btnToggleBargain = card.querySelector('.btn-toggle-bargain-history');
-            if (btnToggleBargain) {
-                btnToggleBargain.addEventListener('click', () => {
-                    const wrapper = card.querySelector(`.bargain-history-wrapper[data-bargain-wrap="${data.id}"]`);
-                    if (!wrapper) return;
-                    const isCollapsed = wrapper.classList.contains('bargain-history-collapsed');
-                    if (isCollapsed) {
-                        wrapper.classList.remove('bargain-history-collapsed');
-                        wrapper.classList.add('bargain-history-expanded');
-                        btnToggleBargain.textContent = 'View Less';
-                    } else {
-                        wrapper.classList.remove('bargain-history-expanded');
-                        wrapper.classList.add('bargain-history-collapsed');
-                        btnToggleBargain.textContent = 'View More';
-                    }
-                });
-            }
 
-            // Video Views Toggle Logic (per platform card, independent)
-            const videoToggleBtns = card.querySelectorAll('.btn-toggle-video-views');
-            videoToggleBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const vidId = btn.getAttribute('data-vid-id');
-                    const wrapper = card.querySelector(`.video-views-wrapper[data-vid-wrap="${vidId}"]`);
-                    if (!wrapper) return;
-                    const isCollapsed = wrapper.classList.contains('video-views-collapsed');
-                    if (isCollapsed) {
-                        wrapper.classList.remove('video-views-collapsed');
-                        wrapper.classList.add('video-views-expanded');
-                        btn.textContent = 'View Less';
-                    } else {
-                        wrapper.classList.remove('video-views-expanded');
-                        wrapper.classList.add('video-views-collapsed');
-                        btn.textContent = 'View More';
-                    }
-                });
-            });
 
             // Products Tab Checkbox Toggle (per influencer card)
             const productsPane = card.querySelector(`#products-${data.id}`);
