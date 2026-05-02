@@ -1630,6 +1630,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     basicInfo: {},
                     platformDetails: {},
                     pricingInfo: {},
+                    products: [],
                     brandPerformance: {}
                 };
             }
@@ -1641,6 +1642,7 @@ document.addEventListener('DOMContentLoaded', () => {
         basicInfo: {},
         platformDetails: {},
         pricingInfo: {},
+        products: [],
         brandPerformance: {}
     };
 
@@ -1813,7 +1815,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Save to memory
             if (!window.newInfluencerData) {
-                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, products: [], brandPerformance: {} };
             }
             window.newInfluencerData.platformDetails = platformDetails;
 
@@ -1891,7 +1893,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Save state
             if (!window.newInfluencerData) {
-                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, products: [], brandPerformance: {} };
             }
             
             window.newInfluencerData.pricingInfo = {
@@ -1902,10 +1904,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log("window.newInfluencerData:", window.newInfluencerData);
 
+            // Move to Products Tab
+            const nextTabBtn = document.querySelector('.tab-btn[data-tab="tab-products"]');
+            if (nextTabBtn) {
+                nextTabBtn.click();
+            }
+        });
+    }
+
+    // Products Tab Next Button Logic
+    const btnNextProducts = document.getElementById('btn-next-products');
+    if (btnNextProducts) {
+        btnNextProducts.addEventListener('click', () => {
+            // Collect product data from the Products tab
+            const productsPane = document.getElementById('tab-products');
+            const products = [];
+            if (productsPane) {
+                productsPane.querySelectorAll('.product-item').forEach(item => {
+                    const checkbox = item.querySelector('.product-checkbox');
+                    const qtyInput = item.querySelector('.product-quantity-input');
+                    products.push({
+                        product_name: checkbox.getAttribute('data-product'),
+                        selected: checkbox.checked,
+                        qty: checkbox.checked ? parseInt(qtyInput.value) || 0 : 0
+                    });
+                });
+            }
+
+            if (!window.newInfluencerData) {
+                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, products: [], brandPerformance: {} };
+            }
+            window.newInfluencerData.products = products;
+            console.log("Products Data:", products);
+
             // Move to Brand Performance Tab
             const nextTabBtn = document.querySelector('.tab-btn[data-tab="tab-brand-performance"]');
             if (nextTabBtn) {
                 nextTabBtn.click();
+            }
+        });
+    }
+
+    // Products Tab Checkbox Toggle Logic (Add Influencer Wizard)
+    const productsTabPane = document.getElementById('tab-products');
+    if (productsTabPane) {
+        productsTabPane.addEventListener('change', (e) => {
+            if (e.target.classList.contains('product-checkbox')) {
+                const item = e.target.closest('.product-item');
+                const qtyInput = item ? item.querySelector('.product-quantity-input') : null;
+                if (qtyInput) {
+                    if (e.target.checked) {
+                        qtyInput.disabled = false;
+                    } else {
+                        qtyInput.value = 0;
+                        qtyInput.disabled = true;
+                    }
+                }
             }
         });
     }
@@ -1992,7 +2046,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Next Button Navigation ---
     const nextBtns = document.querySelectorAll('.btn-next');
-    const tabOrder = ['tab-basic-info', 'tab-platform-details', 'tab-pricing-info', 'tab-brand-performance'];
+    const tabOrder = ['tab-basic-info', 'tab-platform-details', 'tab-pricing-info', 'tab-products', 'tab-brand-performance'];
 
     nextBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2364,13 +2418,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 { data: pricingData },
                 { data: bargainData },
                 { data: performanceData },
-                { data: dispatchData }
+                { data: dispatchData },
+                { data: productsData }
             ] = await Promise.all([
                 window.supabase.from('influencer_platforms_details').select('*').in('influencer_id', influencerIds),
                 window.supabase.from('influencer_pricing').select('*').in('influencer_id', influencerIds),
                 window.supabase.from('influencer_bargain_history').select('*'), // Filtered locally via pricing_id
                 window.supabase.from('influencer_brand_performance').select('*').in('influencer_id', influencerIds),
-                window.supabase.from('influencer_dispatch_details').select('*').in('influencer_id', influencerIds)
+                window.supabase.from('influencer_dispatch_details').select('*').in('influencer_id', influencerIds),
+                window.supabase.from('influencer_products').select('*').in('influencer_id', influencerIds)
             ]);
 
             // Combine data
@@ -2380,12 +2436,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bargainHistory = (bargainData || []).filter(b => b.pricing_id === pricing.id);
                 const performance = (performanceData || []).filter(p => p.influencer_id === inf.id);
                 const dispatchDetails = (dispatchData || []).find(d => d.influencer_id === inf.id && d.campaign_id === activeCampaignId) || null;
+                const products = (productsData || []).filter(p => p.influencer_id === inf.id);
 
                 return {
                     ...inf,
                     platforms,
                     pricing: { ...pricing, bargainHistory },
                     performance,
+                    products,
                     dispatchDetails
                 };
             });
@@ -2542,20 +2600,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             pricingHtml += `</div></div>`;
 
-            // Products Tab (static, frontend-only)
-            const productsTabItems = ['DIY Dishwash Liquid', 'DIY Fabric Conditioner', 'DIY Detergent Liquid', 'Magic Sponge'];
+            // Products Tab (dynamic from DB)
+            const defaultProducts = ['DIY Dishwash Liquid', 'DIY Fabric Conditioner', 'DIY Detergent Liquid', 'Magic Sponge'];
+            const savedProducts = data.products || [];
             let productsHtml = `<div id="products-${data.id}" class="tab-pane hidden">
                 <div class="grid-2 product-selection-grid" style="gap: 15px;">`;
-            productsTabItems.forEach(productName => {
+            defaultProducts.forEach(productName => {
+                const saved = savedProducts.find(p => p.product_name === productName);
+                const isChecked = saved ? saved.selected : false;
+                const qtyVal = saved ? (saved.qty || 0) : 0;
                 productsHtml += `
                     <div class="product-item">
                         <label class="checkbox-label">
-                            <input type="checkbox" class="product-checkbox" data-product="${productName}">
+                            <input type="checkbox" class="product-checkbox" data-product="${productName}" ${isChecked ? 'checked' : ''}>
                             ${productName}
                         </label>
                         <div class="product-qty-wrapper">
                             <label>Qty</label>
-                            <input type="number" class="product-quantity-input" value="0" min="0" step="1">
+                            <input type="number" class="product-quantity-input" value="${qtyVal}" min="0" step="1" ${isChecked ? '' : 'disabled'}>
                         </div>
                     </div>`;
             });
@@ -2675,6 +2737,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             });
+
+            // Products Tab Checkbox Toggle (per influencer card)
+            const productsPane = card.querySelector(`#products-${data.id}`);
+            if (productsPane) {
+                productsPane.addEventListener('change', (e) => {
+                    if (e.target.classList.contains('product-checkbox')) {
+                        const item = e.target.closest('.product-item');
+                        const qtyInput = item ? item.querySelector('.product-quantity-input') : null;
+                        if (qtyInput) {
+                            if (e.target.checked) {
+                                qtyInput.disabled = false;
+                            } else {
+                                qtyInput.value = 0;
+                                qtyInput.disabled = true;
+                            }
+                        }
+                    }
+                });
+            }
 
             // Action Buttons
             const btnDispatch = card.querySelector('.btn-dispatch-inf');
@@ -3338,6 +3419,37 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
 
+                        // 4. Extract and Update Products (Delete & Re-insert strategy)
+                        const editProductsPane = card.querySelector(`#products-${data.id}`);
+                        if (editProductsPane) {
+                            const productDataToSave = [];
+                            editProductsPane.querySelectorAll('.product-item').forEach(item => {
+                                const checkbox = item.querySelector('.product-checkbox');
+                                const qtyInput = item.querySelector('.product-quantity-input');
+                                if (checkbox) {
+                                    productDataToSave.push({
+                                        influencer_id: data.id,
+                                        product_name: checkbox.getAttribute('data-product'),
+                                        selected: checkbox.checked,
+                                        qty: checkbox.checked ? (parseInt(qtyInput?.value) || 0) : 0
+                                    });
+                                }
+                            });
+
+                            const { error: prodDelErr } = await window.supabase
+                                .from('influencer_products')
+                                .delete()
+                                .eq('influencer_id', data.id);
+                            if (prodDelErr) throw prodDelErr;
+
+                            if (productDataToSave.length > 0) {
+                                const { error: prodInsErr } = await window.supabase
+                                    .from('influencer_products')
+                                    .insert(productDataToSave);
+                                if (prodInsErr) throw prodInsErr;
+                            }
+                        }
+
                         if (window.showToast) window.showToast('✅ Influencer updated successfully');
                         
                         // Re-fetch only this specific campaign list to refresh UI
@@ -3470,7 +3582,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Save to state
                 if (!window.newInfluencerData) {
-                    window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+                    window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, products: [], brandPerformance: {} };
                 }
                 window.newInfluencerData.brandPerformance = brandPerformance;
 
@@ -3636,6 +3748,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log("Saved Brand Performance.");
                 }
 
+                // 6. Insert into influencer_products
+                const productsToSave = d.products || [];
+                if (productsToSave.length > 0) {
+                    const productInserts = productsToSave.map(p => ({
+                        influencer_id: influencerId,
+                        product_name: p.product_name,
+                        selected: p.selected || false,
+                        qty: p.selected ? (p.qty || 0) : 0
+                    }));
+                    const { error: prodError } = await window.supabase
+                        .from('influencer_products')
+                        .insert(productInserts);
+                    if (prodError) {
+                        console.error("Error inserting products:", prodError);
+                        throw new Error("Failed to save products: " + prodError.message);
+                    }
+                    console.log("Saved Products.");
+                }
+
                 if (typeof showToast === 'function') {
                     showToast('✅ Influencer Data Saved Successfully!');
                 } else {
@@ -3683,12 +3814,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
 
+                // Reset products tab checkboxes and qty inputs
+                const productsResetPane = document.getElementById('tab-products');
+                if (productsResetPane) {
+                    productsResetPane.querySelectorAll('.product-checkbox').forEach(cb => {
+                        cb.checked = false;
+                    });
+                    productsResetPane.querySelectorAll('.product-quantity-input').forEach(inp => {
+                        inp.value = 0;
+                        inp.disabled = true;
+                    });
+                }
+
                 // Go to first tab
                 const firstTabBtn = document.querySelector('.tab-btn[data-tab="tab-basic-info"]');
                 if (firstTabBtn) firstTabBtn.click();
 
                 // Clear temporary wizard state
-                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, brandPerformance: {} };
+                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, products: [], brandPerformance: {} };
                 window.uploadedProfileUrl = null;
 
                 // Reset upload msg
