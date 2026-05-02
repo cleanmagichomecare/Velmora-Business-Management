@@ -1832,25 +1832,52 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pricing Info Next Button Logic
     const btnNextPricingInfo = document.getElementById('btn-next-pricing-info');
     if (btnNextPricingInfo) {
+        const vid1CountInput = document.getElementById('pricing-vid1-count');
+        const vid1PriceInput = document.getElementById('pricing-vid1-price');
+        const vid2CountInput = document.getElementById('pricing-vid2-count');
+        const vid2PriceInput = document.getElementById('pricing-vid2-price');
+        const finalPriceInput = document.getElementById('pricing-final-price');
+        const totalVideosInput = document.getElementById('pricing-total-videos');
+
+        function updatePricingTotals() {
+            if (!finalPriceInput || !totalVideosInput) return;
+            const v1c = parseInt(vid1CountInput?.value) || 0;
+            const v1p = parseFloat(vid1PriceInput?.value) || 0;
+            const v2c = parseInt(vid2CountInput?.value) || 0;
+            const v2p = parseFloat(vid2PriceInput?.value) || 0;
+            
+            const totalV = v1c + v2c;
+            const finalP = (v1c * v1p) + (v2c * v2p);
+            
+            totalVideosInput.value = totalV;
+            finalPriceInput.value = finalP;
+        }
+
+        if (vid1CountInput) vid1CountInput.addEventListener('input', updatePricingTotals);
+        if (vid1PriceInput) vid1PriceInput.addEventListener('input', updatePricingTotals);
+        if (vid2CountInput) vid2CountInput.addEventListener('input', updatePricingTotals);
+        if (vid2PriceInput) vid2PriceInput.addEventListener('input', updatePricingTotals);
+
         btnNextPricingInfo.addEventListener('click', () => {
             const form = document.querySelector('#tab-pricing-info form');
             if (!form) return;
-
-            const finalPriceInput = document.getElementById('pricing-final-price');
-            const totalVideosInput = document.getElementById('pricing-total-videos');
 
             const finalPriceStr = finalPriceInput ? finalPriceInput.value.trim() : "";
             const totalVideosStr = totalVideosInput ? totalVideosInput.value.trim() : "";
 
             if (!finalPriceStr || !totalVideosStr) {
                 if (typeof showToast === 'function') {
-                    showToast('❌ Please fill Final Price and Total Videos.');
+                    showToast('❌ Pricing calculation failed. Please enter Video 1 or Video 2 quantities.');
                 } else {
-                    alert('Please fill Final Price and Total Videos.');
+                    alert('Pricing calculation failed. Please enter Video 1 or Video 2 quantities.');
                 }
                 return;
             }
 
+            const video1Count = parseInt(vid1CountInput?.value) || 0;
+            const video1Price = parseFloat(vid1PriceInput?.value) || 0;
+            const video2Count = parseInt(vid2CountInput?.value) || 0;
+            const video2Price = parseFloat(vid2PriceInput?.value) || 0;
             const finalPrice = parseFloat(finalPriceStr);
             const totalVideos = parseInt(totalVideosStr);
 
@@ -1897,6 +1924,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             window.newInfluencerData.pricingInfo = {
+                video1Count: Number.isNaN(video1Count) ? null : video1Count,
+                video1Price: Number.isNaN(video1Price) ? null : video1Price,
+                video2Count: Number.isNaN(video2Count) ? null : video2Count,
+                video2Price: Number.isNaN(video2Price) ? null : video2Price,
                 finalPrice: Number.isNaN(finalPrice) ? null : finalPrice,
                 totalVideos: Number.isNaN(totalVideos) ? null : totalVideos,
                 bargainHistory: bargainHistory
@@ -2604,8 +2635,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let pricingHtml = `<div id="pricing-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="pricing-summary-grid">
-                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Final Price</label><div class="info-val" data-field="final_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.final_price || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 1</label><div class="info-val" data-field="video1_count" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.video1_count || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 1 Price</label><div class="info-val" data-field="video1_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.video1_price || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 2</label><div class="info-val" data-field="video2_count" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.video2_count || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 2 Price</label><div class="info-val" data-field="video2_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.video2_price || 0}</div></div>
                     <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Total Videos</label><div class="info-val" data-field="total_videos" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.total_videos || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Final Price</label><div class="info-val" data-field="final_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.final_price || 0}</div></div>
                 </div>
                 <div class="pricing-bargain-section">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
@@ -2846,17 +2881,50 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
-                    // Pricing final price and total videos
+                    // Pricing auto-calc fields
+                    const pricingFields = ['video1_count', 'video1_price', 'video2_count', 'video2_price'];
+                    pricingFields.forEach(f => {
+                        const valDiv = card.querySelector(`.info-val[data-field="${f}"]`);
+                        if (valDiv) {
+                            const val = valDiv.textContent.replace('₹', '') === '-' ? '' : valDiv.textContent.replace('₹', '').trim();
+                            valDiv.innerHTML = `<input type="number" class="edit-input pricing-calc-input" data-field="${f}" value="${val}">`;
+                        }
+                    });
+
+                    // Read-only total fields
                     const fpDiv = card.querySelector(`.info-val[data-field="final_price"]`);
                     if (fpDiv) {
-                        const val = fpDiv.textContent.replace('₹', '') === '-' ? '' : fpDiv.textContent.replace('₹', '');
-                        fpDiv.innerHTML = `<input type="number" class="edit-input" data-field="final_price" value="${val}">`;
+                        const val = fpDiv.textContent.replace('₹', '') === '-' ? '' : fpDiv.textContent.replace('₹', '').trim();
+                        fpDiv.innerHTML = `<input type="number" class="edit-input" data-field="final_price" value="${val}" readonly style="background-color: var(--bg-hover); cursor: not-allowed;">`;
                     }
                     const tvDiv = card.querySelector(`.info-val[data-field="total_videos"]`);
                     if (tvDiv) {
-                        const val = tvDiv.textContent === '-' ? '' : tvDiv.textContent;
-                        tvDiv.innerHTML = `<input type="number" class="edit-input" data-field="total_videos" value="${val}">`;
+                        const val = tvDiv.textContent === '-' ? '' : tvDiv.textContent.trim();
+                        tvDiv.innerHTML = `<input type="number" class="edit-input" data-field="total_videos" value="${val}" readonly style="background-color: var(--bg-hover); cursor: not-allowed;">`;
                     }
+
+                    // Attach auto-calculation listeners for inline edit
+                    const inlineCalcInputs = card.querySelectorAll('.pricing-calc-input');
+                    inlineCalcInputs.forEach(input => {
+                        input.addEventListener('input', () => {
+                            const v1cInput = card.querySelector(`.edit-input[data-field="video1_count"]`);
+                            const v1pInput = card.querySelector(`.edit-input[data-field="video1_price"]`);
+                            const v2cInput = card.querySelector(`.edit-input[data-field="video2_count"]`);
+                            const v2pInput = card.querySelector(`.edit-input[data-field="video2_price"]`);
+                            const tvInput = card.querySelector(`.edit-input[data-field="total_videos"]`);
+                            const fpInput = card.querySelector(`.edit-input[data-field="final_price"]`);
+                            
+                            if (tvInput && fpInput) {
+                                const v1c = parseInt(v1cInput?.value) || 0;
+                                const v1p = parseFloat(v1pInput?.value) || 0;
+                                const v2c = parseInt(v2cInput?.value) || 0;
+                                const v2p = parseFloat(v2pInput?.value) || 0;
+                                
+                                tvInput.value = v1c + v2c;
+                                fpInput.value = (v1c * v1p) + (v2c * v2p);
+                            }
+                        });
+                    });
 
                     // Append File Upload for Edit Mode
                     const editHeader = card.querySelector('.influencer-header-section');
@@ -3180,7 +3248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         editInputs.forEach(inp => {
                             const field = inp.getAttribute('data-field');
                             if (field) {
-                                if (field === 'final_price' || field === 'total_videos') {
+                                if (['final_price', 'total_videos', 'video1_count', 'video1_price', 'video2_count', 'video2_price'].includes(field)) {
                                     if (!priceUpdates) priceUpdates = {};
                                     priceUpdates[field] = inp.value ? Number(inp.value) : null;
                                 } else {
@@ -3669,6 +3737,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     .from('influencer_pricing')
                     .insert([{
                         influencer_id: influencerId,
+                        video1_count: pricing.video1Count,
+                        video1_price: pricing.video1Price,
+                        video2_count: pricing.video2Count,
+                        video2_price: pricing.video2Price,
                         final_price: pricing.finalPrice,
                         total_videos: pricing.totalVideos
                     }])
