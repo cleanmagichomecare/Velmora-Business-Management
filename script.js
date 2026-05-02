@@ -2222,21 +2222,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const currentCount = bargainContainer.querySelectorAll('.bargain-row').length + 1;
             const newRow = document.createElement('div');
-            newRow.className = 'bargain-row bargain-edit-card mt-15';
+            newRow.className = 'bargain-row popup-card mt-15';
+            newRow.style.position = 'relative';
             newRow.innerHTML = `
-                <div class="bargain-set-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>Set ${currentCount}</span>
-                    <button type="button" class="btn-remove-bargain-set btn-danger" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; margin: 0;">Remove</button>
+                <button type="button" class="btn-remove-bargain-set btn-danger" style="position: absolute; top: -10px; right: -10px; width: 24px; height: 24px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 2;">&times;</button>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
+                    <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount">
                 </div>
-                <div class="edit-grid" style="margin-bottom: 0;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
-                        <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
-                        <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount">
-                    </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
+                    <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount">
                 </div>
             `;
             bargainContainer.appendChild(newRow);
@@ -2985,40 +2981,29 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (data.pricing?.bargainHistory && data.pricing.bargainHistory.length > 0) {
                                 data.pricing.bargainHistory.forEach((b, i) => {
                                     bargainEditHtml += `
-                                        <div class="bargain-row bargain-edit-card">
-                                            <div class="bargain-set-title" style="display: flex; justify-content: space-between; align-items: center;">
-                                                <span>Set ${i+1}</span>
-                                                <button type="button" class="btn-remove-bargain-set btn-danger" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; margin: 0;">Remove</button>
+                                        <div class="bargain-row popup-card ${i > 0 ? 'mt-15' : ''}" style="position: relative;">
+                                            ${i > 0 ? `<button type="button" class="btn-remove-bargain-set btn-danger" style="position: absolute; top: -10px; right: -10px; width: 24px; height: 24px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 2;">&times;</button>` : ''}
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
+                                                <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount" value="${b.creator_request !== null ? b.creator_request : ''}">
                                             </div>
-                                            <div class="edit-grid" style="margin-bottom: 0;">
-                                                <div class="form-group" style="margin-bottom: 0;">
-                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
-                                                    <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount" value="${b.creator_request !== null ? b.creator_request : ''}">
-                                                </div>
-                                                <div class="form-group" style="margin-bottom: 0;">
-                                                    <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
-                                                    <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount" value="${b.brand_request !== null ? b.brand_request : ''}">
-                                                </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
+                                                <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount" value="${b.brand_request !== null ? b.brand_request : ''}">
                                             </div>
                                         </div>
                                     `;
                                 });
                             } else {
                                 bargainEditHtml += `
-                                    <div class="bargain-row bargain-edit-card">
-                                        <div class="bargain-set-title" style="display: flex; justify-content: space-between; align-items: center;">
-                                            <span>Set 1</span>
-                                            <button type="button" class="btn-remove-bargain-set btn-danger" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; margin: 0;">Remove</button>
+                                    <div class="bargain-row popup-card" style="position: relative;">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
+                                            <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount">
                                         </div>
-                                        <div class="edit-grid" style="margin-bottom: 0;">
-                                            <div class="form-group" style="margin-bottom: 0;">
-                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Creator Request</label>
-                                                <input type="number" class="creator-request-input edit-input pricing-input" placeholder="Amount">
-                                            </div>
-                                            <div class="form-group" style="margin-bottom: 0;">
-                                                <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
-                                                <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount">
-                                            </div>
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label style="color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 6px; display: block;">Brand Request</label>
+                                            <input type="number" class="brand-request-input edit-input pricing-input" placeholder="Amount">
                                         </div>
                                     </div>
                                 `;
