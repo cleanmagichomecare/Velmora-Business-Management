@@ -5355,8 +5355,10 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 14px;
-    padding: 24px;
+    padding: 16px 20px;
     width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
 }
 
 .bargain-set-title {
