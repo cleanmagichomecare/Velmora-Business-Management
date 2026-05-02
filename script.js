@@ -2207,48 +2207,54 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.body.addEventListener('click', (e) => {
-        // Bargain History Read-Only Toggle (View More / View Less)
-        if (e.target && e.target.classList.contains('btn-toggle-bargain-history')) {
-            const btn = e.target;
-            const infId = btn.getAttribute('data-inf-id');
-            if (!infId) return;
-            const card = btn.closest('.influencer-profile-card');
-            if (!card) return;
-            const wrapper = card.querySelector(`.bargain-history-wrapper[data-bargain-wrap="${infId}"]`);
-            if (!wrapper) return;
-            const isCollapsed = wrapper.classList.contains('bargain-history-collapsed');
-            if (isCollapsed) {
-                wrapper.classList.remove('bargain-history-collapsed');
-                wrapper.classList.add('bargain-history-expanded');
-                btn.textContent = 'View Less';
-            } else {
-                wrapper.classList.remove('bargain-history-expanded');
-                wrapper.classList.add('bargain-history-collapsed');
-                btn.textContent = 'View More';
-            }
-            return;
-        }
-
         // Video Views Read-Only Toggle (View More / View Less)
         if (e.target && e.target.classList.contains('btn-toggle-video-views')) {
             const btn = e.target;
             const vidId = btn.getAttribute('data-vid-id');
-            if (!vidId) return;
-            const card = btn.closest('.influencer-profile-card');
-            if (!card) return;
-            const wrapper = card.querySelector(`.video-views-wrapper[data-vid-wrap="${vidId}"]`);
-            if (!wrapper) return;
-            const isCollapsed = wrapper.classList.contains('video-views-collapsed');
-            if (isCollapsed) {
-                wrapper.classList.remove('video-views-collapsed');
-                wrapper.classList.add('video-views-expanded');
-                btn.textContent = 'View Less';
-            } else {
-                wrapper.classList.remove('video-views-expanded');
-                wrapper.classList.add('video-views-collapsed');
-                btn.textContent = 'View More';
+            if (vidId) {
+                const card = btn.closest('.influencer-profile-card');
+                if (card) {
+                    const wrapper = card.querySelector(`.video-views-wrapper[data-vid-wrap="${vidId}"]`);
+                    if (wrapper) {
+                        const isCollapsed = wrapper.classList.contains('video-views-collapsed');
+                        if (isCollapsed) {
+                            wrapper.classList.remove('video-views-collapsed');
+                            wrapper.classList.add('video-views-expanded');
+                            btn.textContent = 'View Less';
+                        } else {
+                            wrapper.classList.remove('video-views-expanded');
+                            wrapper.classList.add('video-views-collapsed');
+                            btn.textContent = 'View More';
+                        }
+                    }
+                }
             }
-            return;
+            return; // Handled
+        }
+
+        // Bargain History Read-Only Toggle (View More / View Less)
+        if (e.target && e.target.classList.contains('btn-toggle-bargain-history')) {
+            const btn = e.target;
+            const infId = btn.getAttribute('data-inf-id');
+            if (infId) {
+                const card = btn.closest('.influencer-profile-card');
+                if (card) {
+                    const wrapper = card.querySelector(`.bargain-history-wrapper[data-bargain-wrap="${infId}"]`);
+                    if (wrapper) {
+                        const isCollapsed = wrapper.classList.contains('bargain-history-collapsed');
+                        if (isCollapsed) {
+                            wrapper.classList.remove('bargain-history-collapsed');
+                            wrapper.classList.add('bargain-history-expanded');
+                            btn.textContent = 'View Less';
+                        } else {
+                            wrapper.classList.remove('bargain-history-expanded');
+                            wrapper.classList.add('bargain-history-collapsed');
+                            btn.textContent = 'View More';
+                        }
+                    }
+                }
+            }
+            return; // Handled
         }
 
         // 2. Pricing Info - Dynamic Bargain Rows
