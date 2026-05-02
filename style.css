@@ -2025,6 +2025,21 @@ div.modal.hidden {
 }
 
 /* ===== Influencer Products Tab (Scoped) ===== */
+#products-dynamic-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.video-product-section {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.video-product-section:last-child {
+    margin-bottom: 0;
+}
+
 .products-tab-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
