@@ -5294,6 +5294,10 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     gap: 16px;
 }
 
+.bargain-first-card {
+    margin-bottom: 16px;
+}
+
 @media (max-width: 1024px) {
     .bargain-history-grid {
         grid-template-columns: 1fr;

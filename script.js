@@ -2483,26 +2483,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="pricing-bargain-section">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
                         <h3 style="font-size: 18px; font-weight: 600; color: var(--primary-color); margin: 0; padding: 0; border: none;">Bargain History</h3>
-                        <button type="button" class="btn-toggle-bargain-history" data-inf-id="${data.id}">View History</button>
+                        <button type="button" class="btn-toggle-bargain-history" data-inf-id="${data.id}" style="${(!data.pricing?.bargainHistory || data.pricing.bargainHistory.length <= 1) ? 'display: none;' : ''}">View More</button>
                     </div>
-                    <div class="bargain-history-wrapper bargain-history-collapsed" data-bargain-wrap="${data.id}">
-                    <div class="bargain-history-grid">
             `;
             if (data.pricing?.bargainHistory && data.pricing.bargainHistory.length > 0) {
-                data.pricing.bargainHistory.forEach((b, i) => {
-                    pricingHtml += `
+                // First card always visible
+                const firstB = data.pricing.bargainHistory[0];
+                pricingHtml += `
+                    <div class="bargain-history-grid bargain-first-card">
                         <div class="bargain-card">
-                            <div class="bargain-set-title">Set ${i+1}</div>
+                            <div class="bargain-set-title">Set 1</div>
                             <div class="pricing-summary-grid" style="margin-bottom: 0;">
-                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Creator Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${b.creator_request || '-'}</div></div>
-                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Brand Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${b.brand_request || '-'}</div></div>
+                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Creator Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${firstB.creator_request || '-'}</div></div>
+                                <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Brand Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${firstB.brand_request || '-'}</div></div>
                             </div>
-                        </div>`;
-                });
+                        </div>
+                    </div>`;
+                // Remaining cards inside collapsible wrapper
+                if (data.pricing.bargainHistory.length > 1) {
+                    pricingHtml += `<div class="bargain-history-wrapper bargain-history-collapsed" data-bargain-wrap="${data.id}"><div class="bargain-history-grid">`;
+                    data.pricing.bargainHistory.slice(1).forEach((b, i) => {
+                        pricingHtml += `
+                            <div class="bargain-card">
+                                <div class="bargain-set-title">Set ${i+2}</div>
+                                <div class="pricing-summary-grid" style="margin-bottom: 0;">
+                                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Creator Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${b.creator_request || '-'}</div></div>
+                                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Brand Request</label><div class="info-val" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${b.brand_request || '-'}</div></div>
+                                </div>
+                            </div>`;
+                    });
+                    pricingHtml += `</div></div>`;
+                }
             } else {
                 pricingHtml += `<div class="text-muted">No bargain history recorded.</div>`;
             }
-            pricingHtml += `</div></div></div></div>`;
+            pricingHtml += `</div></div>`;
 
             let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="brand-performance-grid">`;
@@ -2589,11 +2604,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (isCollapsed) {
                         wrapper.classList.remove('bargain-history-collapsed');
                         wrapper.classList.add('bargain-history-expanded');
-                        btnToggleBargain.textContent = 'Hide History';
+                        btnToggleBargain.textContent = 'View Less';
                     } else {
                         wrapper.classList.remove('bargain-history-expanded');
                         wrapper.classList.add('bargain-history-collapsed');
-                        btnToggleBargain.textContent = 'View History';
+                        btnToggleBargain.textContent = 'View More';
                     }
                 });
             }
@@ -2874,7 +2889,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 bargainWrapper.classList.add('bargain-history-expanded');
                             }
                             const toggleBtn = card.querySelector('.btn-toggle-bargain-history');
-                            if (toggleBtn) toggleBtn.textContent = 'Hide History';
+                            if (toggleBtn) toggleBtn.textContent = 'View Less';
                             
                             const bargainSection = pricingPane.querySelector('.pricing-bargain-section');
                             if (bargainSection && !bargainSection.querySelector('.btn-add-bargain-set')) {
