@@ -2656,7 +2656,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Error loading campaign influencers:", error);
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #ff6b6b;">Failed to load influencers.</div>';
+            console.error("Error stack:", error.stack);
+            container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ff6b6b;">Failed to load influencers.<br><small style="color: #999; font-size: 12px;">${error.message || 'Unknown error'}</small></div>`;
             if (window.showToast) window.showToast('❌ Error loading influencers: ' + error.message);
         }
     }
@@ -2822,7 +2823,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let productsHtml = `<div id="products-${data.id}" class="tab-pane hidden">`;
             
             // Determine how many video sections to show
-            const maxVideoNum = Math.max(videoCount, ...Object.keys(productsByVideo).map(Number).filter(n => !isNaN(n)), 0);
+            const videoKeys = Object.keys(productsByVideo).map(Number).filter(n => !isNaN(n) && n > 0);
+            const maxVideoNum = videoKeys.length > 0 ? Math.max(videoCount, ...videoKeys) : videoCount;
             const sectionsToShow = maxVideoNum > 0 ? maxVideoNum : 1;
 
             for (let v = 1; v <= sectionsToShow; v++) {
