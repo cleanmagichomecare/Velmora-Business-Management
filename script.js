@@ -2440,9 +2440,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.platforms && data.platforms.length > 0) {
                 data.platforms.forEach(p => {
                     let videoViewsHtml = '';
+                    const platUid = `${data.id}-${p.platform.replace(/\s+/g, '')}`;
                     if (p.video_views && Array.isArray(p.video_views) && p.video_views.length > 0) {
+                        const totalVids = p.video_views.length;
+                        const showToggle = totalVids > 3;
+                        // First 3 always visible
                         videoViewsHtml = `<div class="video-views-grid mt-15">`;
-                        p.video_views.forEach((view, idx) => {
+                        p.video_views.slice(0, 3).forEach((view, idx) => {
                             videoViewsHtml += `
                                 <div class="video-metric-card">
                                     <div class="video-metric-label">Video ${idx + 1}</div>
@@ -2451,9 +2455,24 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
                         });
                         videoViewsHtml += `</div>`;
+                        // Remaining inside collapsible wrapper
+                        if (showToggle) {
+                            videoViewsHtml += `<div class="video-views-wrapper video-views-collapsed" data-vid-wrap="${platUid}"><div class="video-views-grid mt-15">`;
+                            p.video_views.slice(3).forEach((view, idx) => {
+                                videoViewsHtml += `
+                                    <div class="video-metric-card">
+                                        <div class="video-metric-label">Video ${idx + 4}</div>
+                                        <div class="video-metric-val">${view}</div>
+                                    </div>
+                                `;
+                            });
+                            videoViewsHtml += `</div></div>`;
+                        }
                     } else {
                         videoViewsHtml = `<div class="text-muted mt-10" style="font-size: 13px;">No video views recorded.</div>`;
                     }
+
+                    const showVidToggle = p.video_views && Array.isArray(p.video_views) && p.video_views.length > 3;
 
                     platformHtml += `
                         <div class="platform-display-card">
@@ -2465,7 +2484,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="info-group"><label>Username</label><div class="info-val">${p.username || '-'}</div></div>
                                 <div class="info-group"><label>Followers</label><div class="info-val">${p.followers_count || '-'}</div></div>
                             </div>
-                            <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Previous 15 Videos Views</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Previous 15 Videos Views</div>
+                                ${showVidToggle ? `<button type="button" class="btn-toggle-video-views btn-toggle-bargain-history" data-vid-id="${platUid}">View More</button>` : ''}
+                            </div>
                             ${videoViewsHtml}
                         </div>
                     `;
@@ -2612,6 +2634,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             }
+
+            // Video Views Toggle Logic (per platform card, independent)
+            const videoToggleBtns = card.querySelectorAll('.btn-toggle-video-views');
+            videoToggleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const vidId = btn.getAttribute('data-vid-id');
+                    const wrapper = card.querySelector(`.video-views-wrapper[data-vid-wrap="${vidId}"]`);
+                    if (!wrapper) return;
+                    const isCollapsed = wrapper.classList.contains('video-views-collapsed');
+                    if (isCollapsed) {
+                        wrapper.classList.remove('video-views-collapsed');
+                        wrapper.classList.add('video-views-expanded');
+                        btn.textContent = 'View Less';
+                    } else {
+                        wrapper.classList.remove('video-views-expanded');
+                        wrapper.classList.add('video-views-collapsed');
+                        btn.textContent = 'View More';
+                    }
+                });
+            });
 
             // Action Buttons
             const btnDispatch = card.querySelector('.btn-dispatch-inf');

@@ -5362,6 +5362,24 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     pointer-events: auto;
 }
 
+/* Video Views Wrapper - Collapse / Expand Animation */
+.video-views-wrapper {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.video-views-wrapper.video-views-collapsed {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.video-views-wrapper.video-views-expanded {
+    max-height: 2000px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
 /* --- Dispatched Full Card Dark Theme --- */
 .dispatch-full-card {
     background: #1e1e24;
