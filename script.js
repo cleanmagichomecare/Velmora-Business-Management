@@ -1141,6 +1141,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('selectedCampaignId', campaign.id);
                     
                     console.log("Selected Campaign:", window.selectedCampaign);
+
+                    // Reset Add Influencer wizard state when switching campaigns
+                    resetAddInfluencerWizard();
                     
                     if (typeof renderCampaignDashboard === 'function') {
                         renderCampaignDashboard(campaign);
@@ -1624,27 +1627,91 @@ document.addEventListener('DOMContentLoaded', () => {
             campaignDashboardView.classList.add('hidden');
             addInfluencerView.classList.remove('hidden');
             
-            // Initialize fresh state if opening Add Influencer form
-            if (!window.newInfluencerData) {
-                window.newInfluencerData = {
-                    basicInfo: {},
-                    platformDetails: {},
-                    pricingInfo: {},
-                    products: [],
-                    brandPerformance: {}
-                };
-            }
+            // Always force-reset wizard state when opening Add Influencer
+            resetAddInfluencerWizard();
         });
     }
 
-    // --- Add Influencer Wizard State ---
-    window.newInfluencerData = {
-        basicInfo: {},
-        platformDetails: {},
-        pricingInfo: {},
-        products: [],
-        brandPerformance: {}
-    };
+    // --- Add Influencer Wizard State & Reset ---
+    function resetAddInfluencerWizard() {
+        // 1. Clear the global wizard state
+        window.newInfluencerData = {
+            basicInfo: {},
+            platformDetails: {},
+            pricingInfo: {},
+            products: [],
+            brandPerformance: {}
+        };
+        window.uploadedProfileUrl = null;
+
+        // 2. Reset all wizard forms
+        document.querySelectorAll('#add-influencer-view .tab-pane form').forEach(f => f.reset());
+        document.querySelectorAll('#add-influencer-view .scoped-pane form').forEach(f => f.reset());
+
+        // 3. Reset custom language dropdown
+        const languageSelectedText = document.getElementById('language-selected-text');
+        if (languageSelectedText) languageSelectedText.textContent = 'Select Language(s)';
+        const languageCheckboxes = document.querySelectorAll('#language-options-list input[type="checkbox"]');
+        languageCheckboxes.forEach(cb => cb.checked = false);
+
+        // 4. Clear dynamic platform inputs
+        document.querySelectorAll('#add-influencer-view .platform-card:not(.hidden) input').forEach(inp => inp.value = '');
+
+        // 5. Reset bargain rows to 1 empty row
+        const bargainContainer = document.getElementById('bargain-history-container');
+        if (bargainContainer) {
+            const rows = bargainContainer.querySelectorAll('.bargain-row');
+            rows.forEach((r, idx) => {
+                if (idx > 0) r.remove();
+                else {
+                    r.querySelectorAll('input').forEach(inp => inp.value = '');
+                }
+            });
+        }
+
+        // 6. Reset performance cards to 1 empty card
+        const perfContainer = document.querySelector('#add-influencer-view .brand-performance-container');
+        if (perfContainer) {
+            const cards = perfContainer.querySelectorAll('.performance-card');
+            cards.forEach((c, idx) => {
+                if (idx > 0) c.remove();
+                else {
+                    c.querySelectorAll('input').forEach(inp => inp.value = '');
+                    const select = c.querySelector('select');
+                    if (select) {
+                        select.value = 'All';
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            });
+        }
+
+        // 7. Reset dynamic products container
+        const productsResetContainer = document.getElementById('products-dynamic-container');
+        if (productsResetContainer) {
+            productsResetContainer.innerHTML = '<div class="text-muted" style="text-align: center; padding: 30px 0;">Fill in Pricing Info first to generate product sections.</div>';
+        }
+
+        // 8. Reset pricing auto-calc inputs
+        const pricingIds = ['pricing-vid1-count', 'pricing-vid1-price', 'pricing-vid2-count', 'pricing-vid2-price', 'pricing-total-videos', 'pricing-final-price'];
+        pricingIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+
+        // 9. Reset upload message
+        const msgSpan = document.querySelector('#add-influencer-view .upload-msg');
+        if (msgSpan) msgSpan.remove();
+
+        // 10. Navigate to first tab
+        const firstTabBtn = document.querySelector('#add-influencer-view .tab-btn[data-tab="tab-basic-info"]');
+        if (firstTabBtn) firstTabBtn.click();
+
+        console.log('[Wizard Reset] Add Influencer wizard state cleared for campaign:', window.selectedCampaignId);
+    }
+
+    // Initialize on page load
+    resetAddInfluencerWizard();
 
     // Custom Multi-Select Dropdown Logic
     const languageHeader = document.getElementById('language-select-header');
@@ -3923,63 +3990,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // --- RESET FULL WIZARD ---
-                // Reset all forms
-                document.querySelectorAll('.tab-pane form').forEach(f => f.reset());
-                document.querySelectorAll('.scoped-pane form').forEach(f => f.reset());
-
-                // Reset custom language dropdown
-                const languageSelectedText = document.getElementById('language-selected-text');
-                if (languageSelectedText) languageSelectedText.textContent = 'Select Language(s)';
-
-                // Clear dynamic platform inputs
-                document.querySelectorAll('.platform-card:not(.hidden) input').forEach(inp => inp.value = '');
-
-                // Reset bargain rows to 1
-                const bargainContainer = document.querySelector('.bargain-history-container');
-                if (bargainContainer) {
-                    const rows = bargainContainer.querySelectorAll('.bargain-row');
-                    rows.forEach((r, idx) => {
-                        if (idx > 0) r.remove();
-                        else {
-                            r.querySelectorAll('input').forEach(inp => inp.value = '');
-                        }
-                    });
-                }
-
-                // Reset performance cards to 1
-                const perfContainer = document.querySelector('.brand-performance-container');
-                if (perfContainer) {
-                    const cards = perfContainer.querySelectorAll('.performance-card');
-                    cards.forEach((c, idx) => {
-                        if (idx > 0) c.remove();
-                        else {
-                            c.querySelectorAll('input').forEach(inp => inp.value = '');
-                            const select = c.querySelector('select');
-                            if (select) {
-                                select.value = 'All';
-                                select.dispatchEvent(new Event('change', { bubbles: true }));
-                            }
-                        }
-                    });
-                }
-
-                // Reset products tab dynamic container
-                const productsResetContainer = document.getElementById('products-dynamic-container');
-                if (productsResetContainer) {
-                    productsResetContainer.innerHTML = '<div class="text-muted" style="text-align: center; padding: 30px 0;">Fill in Pricing Info first to generate product sections.</div>';
-                }
-
-                // Go to first tab
-                const firstTabBtn = document.querySelector('.tab-btn[data-tab="tab-basic-info"]');
-                if (firstTabBtn) firstTabBtn.click();
-
-                // Clear temporary wizard state
-                window.newInfluencerData = { basicInfo: {}, platformDetails: {}, pricingInfo: {}, products: [], brandPerformance: {} };
-                window.uploadedProfileUrl = null;
-
-                // Reset upload msg
-                const msgSpan = document.querySelector('.upload-msg');
-                if (msgSpan) msgSpan.remove();
+                resetAddInfluencerWizard();
 
                 // Refresh influencer list UI automatically
                 const btnInfluencerListNav = document.getElementById('btn-influencer-list');
