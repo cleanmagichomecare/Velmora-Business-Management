@@ -2481,7 +2481,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Total Videos</label><div class="info-val" data-field="total_videos" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.total_videos || 0}</div></div>
                 </div>
                 <div class="pricing-bargain-section">
-                    <h3 style="font-size: 18px; font-weight: 600; color: var(--primary-color); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">Bargain History</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+                        <h3 style="font-size: 18px; font-weight: 600; color: var(--primary-color); margin: 0; padding: 0; border: none;">Bargain History</h3>
+                        <button type="button" class="btn-toggle-bargain-history" data-inf-id="${data.id}">View History</button>
+                    </div>
+                    <div class="bargain-history-wrapper bargain-history-collapsed" data-bargain-wrap="${data.id}">
                     <div class="bargain-history-grid">
             `;
             if (data.pricing?.bargainHistory && data.pricing.bargainHistory.length > 0) {
@@ -2498,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 pricingHtml += `<div class="text-muted">No bargain history recorded.</div>`;
             }
-            pricingHtml += `</div></div></div>`;
+            pricingHtml += `</div></div></div></div>`;
 
             let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="brand-performance-grid">`;
@@ -2574,6 +2578,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (targetPane) targetPane.classList.remove('hidden');
                 });
             });
+
+            // Bargain History Toggle Logic (per card, lightweight DOM toggle)
+            const btnToggleBargain = card.querySelector('.btn-toggle-bargain-history');
+            if (btnToggleBargain) {
+                btnToggleBargain.addEventListener('click', () => {
+                    const wrapper = card.querySelector(`.bargain-history-wrapper[data-bargain-wrap="${data.id}"]`);
+                    if (!wrapper) return;
+                    const isCollapsed = wrapper.classList.contains('bargain-history-collapsed');
+                    if (isCollapsed) {
+                        wrapper.classList.remove('bargain-history-collapsed');
+                        wrapper.classList.add('bargain-history-expanded');
+                        btnToggleBargain.textContent = 'Hide History';
+                    } else {
+                        wrapper.classList.remove('bargain-history-expanded');
+                        wrapper.classList.add('bargain-history-collapsed');
+                        btnToggleBargain.textContent = 'View History';
+                    }
+                });
+            }
 
             // Action Buttons
             const btnDispatch = card.querySelector('.btn-dispatch-inf');
@@ -2843,6 +2866,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             bargainContainer.innerHTML = bargainEditHtml;
                             bargainContainer.classList.add('bargain-history-container');
+                            
+                            // Auto-expand bargain history wrapper in edit mode
+                            const bargainWrapper = pricingPane.querySelector('.bargain-history-wrapper');
+                            if (bargainWrapper) {
+                                bargainWrapper.classList.remove('bargain-history-collapsed');
+                                bargainWrapper.classList.add('bargain-history-expanded');
+                            }
+                            const toggleBtn = card.querySelector('.btn-toggle-bargain-history');
+                            if (toggleBtn) toggleBtn.textContent = 'Hide History';
                             
                             const bargainSection = pricingPane.querySelector('.pricing-bargain-section');
                             if (bargainSection && !bargainSection.querySelector('.btn-add-bargain-set')) {

@@ -5317,6 +5317,47 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* Bargain History Toggle Button */
+.btn-toggle-bargain-history {
+    background: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-toggle-bargain-history:hover {
+    background-color: rgba(123, 140, 255, 0.1);
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .btn-toggle-bargain-history:hover {
+    background-color: rgba(123, 140, 255, 0.15);
+}
+
+/* Bargain History Wrapper - Collapse / Expand Animation */
+.bargain-history-wrapper {
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.bargain-history-wrapper.bargain-history-collapsed {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bargain-history-wrapper.bargain-history-expanded {
+    max-height: 2000px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
 /* --- Dispatched Full Card Dark Theme --- */
 .dispatch-full-card {
     background: #1e1e24;
