@@ -2416,6 +2416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="tab-btn active" data-tab="basic-${data.id}">Basic Info</button>
                     <button class="tab-btn" data-tab="platform-${data.id}">Platform Details</button>
                     <button class="tab-btn" data-tab="pricing-${data.id}">Pricing Info</button>
+                    <button class="tab-btn" data-tab="products-${data.id}">Products</button>
                     <button class="tab-btn" data-tab="performance-${data.id}">Brand Performance</button>
                 </div>
             `;
@@ -2541,6 +2542,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             pricingHtml += `</div></div>`;
 
+            // Products Tab (static, frontend-only)
+            const productsTabItems = ['DIY Dishwash Liquid', 'DIY Fabric Conditioner', 'DIY Detergent Liquid', 'Magic Sponge'];
+            let productsHtml = `<div id="products-${data.id}" class="tab-pane hidden">
+                <div class="grid-2 product-selection-grid" style="gap: 15px;">`;
+            productsTabItems.forEach(productName => {
+                productsHtml += `
+                    <div class="product-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="product-checkbox" data-product="${productName}">
+                            ${productName}
+                        </label>
+                        <div class="product-qty-wrapper">
+                            <label>Qty</label>
+                            <input type="number" class="product-quantity-input" value="0" min="0" step="1">
+                        </div>
+                    </div>`;
+            });
+            productsHtml += `</div></div>`;
+
             let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="brand-performance-grid">`;
             if (data.performance && data.performance.length > 0) {
@@ -2599,6 +2619,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${basicHtml}
                     ${platformHtml}
                     ${pricingHtml}
+                    ${productsHtml}
                     ${perfHtml}
                 </div>
             `;
