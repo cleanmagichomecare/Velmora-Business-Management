@@ -1851,6 +1851,62 @@ document.addEventListener('DOMContentLoaded', () => {
             
             totalVideosInput.value = totalV;
             finalPriceInput.value = finalP;
+
+            // Dynamically regenerate Products tab sections
+            generateProductSections(totalV);
+        }
+
+        const DEFAULT_PRODUCTS = ['DIY Dishwash Liquid', 'DIY Fabric Conditioner', 'DIY Detergent Liquid', 'Magic Sponge'];
+
+        function generateProductSections(totalVideos) {
+            const container = document.getElementById('products-dynamic-container');
+            if (!container) return;
+
+            // Preserve existing selections before regenerating
+            const existingSelections = {};
+            container.querySelectorAll('.video-product-section').forEach(section => {
+                const vidNum = section.getAttribute('data-video-num');
+                existingSelections[vidNum] = {};
+                section.querySelectorAll('.products-tab-item').forEach(item => {
+                    const cb = item.querySelector('.product-checkbox');
+                    const qty = item.querySelector('.product-quantity-input');
+                    if (cb) {
+                        existingSelections[vidNum][cb.getAttribute('data-product')] = {
+                            selected: cb.checked,
+                            qty: parseInt(qty?.value) || 0
+                        };
+                    }
+                });
+            });
+
+            if (totalVideos <= 0) {
+                container.innerHTML = '<div class="text-muted" style="text-align: center; padding: 30px 0;">Fill in Pricing Info first to generate product sections.</div>';
+                return;
+            }
+
+            let html = '';
+            for (let v = 1; v <= totalVideos; v++) {
+                const saved = existingSelections[String(v)] || {};
+                html += `<div class="video-product-section" data-video-num="${v}" style="margin-bottom: 24px;">
+                    <h4 style="font-size: 16px; font-weight: 600; color: var(--primary-color); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">Video ${v}</h4>
+                    <div class="products-tab-grid">`;
+                DEFAULT_PRODUCTS.forEach(productName => {
+                    const prev = saved[productName] || { selected: false, qty: 0 };
+                    html += `
+                        <div class="products-tab-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="product-checkbox" data-product="${productName}" data-video-num="${v}" ${prev.selected ? 'checked' : ''}>
+                                ${productName}
+                            </label>
+                            <div class="product-qty-wrapper">
+                                <label>Qty</label>
+                                <input type="number" class="product-quantity-input" value="${prev.qty}" min="0" step="1" ${prev.selected ? '' : 'disabled'}>
+                            </div>
+                        </div>`;
+                });
+                html += `</div></div>`;
+            }
+            container.innerHTML = html;
         }
 
         if (vid1CountInput) vid1CountInput.addEventListener('input', updatePricingTotals);
@@ -1951,13 +2007,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const productsPane = document.getElementById('tab-products');
             const products = [];
             if (productsPane) {
-                productsPane.querySelectorAll('.products-tab-item').forEach(item => {
-                    const checkbox = item.querySelector('.product-checkbox');
-                    const qtyInput = item.querySelector('.product-quantity-input');
-                    products.push({
-                        product_name: checkbox.getAttribute('data-product'),
-                        selected: checkbox.checked,
-                        qty: checkbox.checked ? parseInt(qtyInput.value) || 0 : 0
+                productsPane.querySelectorAll('.video-product-section').forEach(section => {
+                    const videoNum = parseInt(section.getAttribute('data-video-num')) || 1;
+                    section.querySelectorAll('.products-tab-item').forEach(item => {
+                        const checkbox = item.querySelector('.product-checkbox');
+                        const qtyInput = item.querySelector('.product-quantity-input');
+                        products.push({
+                            product_name: checkbox.getAttribute('data-product'),
+                            video_number: videoNum,
+                            selected: checkbox.checked,
+                            qty: checkbox.checked ? parseInt(qtyInput.value) || 0 : 0
+                        });
                     });
                 });
             }
@@ -2678,28 +2738,50 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             pricingHtml += `</div></div></div>`;
 
-            // Products Tab (dynamic from DB)
+            // Products Tab (dynamic from DB, grouped by video_number)
             const defaultProducts = ['DIY Dishwash Liquid', 'DIY Fabric Conditioner', 'DIY Detergent Liquid', 'Magic Sponge'];
             const savedProducts = data.products || [];
-            let productsHtml = `<div id="products-${data.id}" class="tab-pane hidden">
-                <div class="products-tab-grid">`;
-            defaultProducts.forEach(productName => {
-                const saved = savedProducts.find(p => p.product_name === productName);
-                const isChecked = saved ? saved.selected : false;
-                const qtyVal = saved ? (saved.qty || 0) : 0;
-                productsHtml += `
-                    <div class="products-tab-item">
-                        <label class="checkbox-label">
-                            <input type="checkbox" class="product-checkbox" data-product="${productName}" ${isChecked ? 'checked' : ''}>
-                            ${productName}
-                        </label>
-                        <div class="product-qty-wrapper">
-                            <label>Qty</label>
-                            <input type="number" class="product-quantity-input" value="${qtyVal}" min="0" step="1" ${isChecked ? '' : 'disabled'}>
-                        </div>
-                    </div>`;
+            const totalVids = data.pricing?.total_videos || 0;
+            const videoCount = totalVids > 0 ? totalVids : 1;
+
+            // Group saved products by video_number
+            const productsByVideo = {};
+            savedProducts.forEach(p => {
+                const vn = p.video_number || 1;
+                if (!productsByVideo[vn]) productsByVideo[vn] = [];
+                productsByVideo[vn].push(p);
             });
-            productsHtml += `</div></div>`;
+
+            let productsHtml = `<div id="products-${data.id}" class="tab-pane hidden">`;
+            
+            // Determine how many video sections to show
+            const maxVideoNum = Math.max(videoCount, ...Object.keys(productsByVideo).map(Number).filter(n => !isNaN(n)), 0);
+            const sectionsToShow = maxVideoNum > 0 ? maxVideoNum : 1;
+
+            for (let v = 1; v <= sectionsToShow; v++) {
+                const videoProducts = productsByVideo[v] || [];
+                productsHtml += `<div class="video-product-section" data-video-num="${v}" style="margin-bottom: 24px;">
+                    <h4 style="font-size: 16px; font-weight: 600; color: var(--primary-color); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">Video ${v}</h4>
+                    <div class="products-tab-grid">`;
+                defaultProducts.forEach(productName => {
+                    const saved = videoProducts.find(p => p.product_name === productName);
+                    const isChecked = saved ? saved.selected : false;
+                    const qtyVal = saved ? (saved.qty || 0) : 0;
+                    productsHtml += `
+                        <div class="products-tab-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="product-checkbox" data-product="${productName}" data-video-num="${v}" ${isChecked ? 'checked' : ''}>
+                                ${productName}
+                            </label>
+                            <div class="product-qty-wrapper">
+                                <label>Qty</label>
+                                <input type="number" class="product-quantity-input" value="${qtyVal}" min="0" step="1" ${isChecked ? '' : 'disabled'}>
+                            </div>
+                        </div>`;
+                });
+                productsHtml += `</div></div>`;
+            }
+            productsHtml += `</div>`;
 
             let perfHtml = `<div id="performance-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="brand-performance-grid">`;
@@ -3481,17 +3563,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         const editProductsPane = card.querySelector(`#products-${data.id}`);
                         if (editProductsPane) {
                             const productDataToSave = [];
-                            editProductsPane.querySelectorAll('.products-tab-item').forEach(item => {
-                                const checkbox = item.querySelector('.product-checkbox');
-                                const qtyInput = item.querySelector('.product-quantity-input');
-                                if (checkbox) {
-                                    productDataToSave.push({
-                                        influencer_id: data.id,
-                                        product_name: checkbox.getAttribute('data-product'),
-                                        selected: checkbox.checked,
-                                        qty: checkbox.checked ? (parseInt(qtyInput?.value) || 0) : 0
-                                    });
-                                }
+                            editProductsPane.querySelectorAll('.video-product-section').forEach(section => {
+                                const videoNum = parseInt(section.getAttribute('data-video-num')) || 1;
+                                section.querySelectorAll('.products-tab-item').forEach(item => {
+                                    const checkbox = item.querySelector('.product-checkbox');
+                                    const qtyInput = item.querySelector('.product-quantity-input');
+                                    if (checkbox) {
+                                        productDataToSave.push({
+                                            influencer_id: data.id,
+                                            product_name: checkbox.getAttribute('data-product'),
+                                            video_number: videoNum,
+                                            selected: checkbox.checked,
+                                            qty: checkbox.checked ? (parseInt(qtyInput?.value) || 0) : 0
+                                        });
+                                    }
+                                });
                             });
 
                             const { error: prodDelErr } = await window.supabase
@@ -3816,6 +3902,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const productInserts = productsToSave.map(p => ({
                         influencer_id: influencerId,
                         product_name: p.product_name,
+                        video_number: p.video_number || 1,
                         selected: p.selected || false,
                         qty: p.selected ? (p.qty || 0) : 0
                     }));
@@ -3876,16 +3963,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
 
-                // Reset products tab checkboxes and qty inputs
-                const productsResetPane = document.getElementById('tab-products');
-                if (productsResetPane) {
-                    productsResetPane.querySelectorAll('.product-checkbox').forEach(cb => {
-                        cb.checked = false;
-                    });
-                    productsResetPane.querySelectorAll('.product-quantity-input').forEach(inp => {
-                        inp.value = 0;
-                        inp.disabled = true;
-                    });
+                // Reset products tab dynamic container
+                const productsResetContainer = document.getElementById('products-dynamic-container');
+                if (productsResetContainer) {
+                    productsResetContainer.innerHTML = '<div class="text-muted" style="text-align: center; padding: 30px 0;">Fill in Pricing Info first to generate product sections.</div>';
                 }
 
                 // Go to first tab
