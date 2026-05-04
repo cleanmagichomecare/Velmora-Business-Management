@@ -2581,6 +2581,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Campaign Influencer Fetch & Render Logic ---
     async function loadCampaignInfluencers(campaignId) {
+        window.currentInfluencerData = null; // Prevent bleeding from other campaigns
         const container = document.getElementById('influencer-list-container');
         if (!container) return;
 
@@ -9026,11 +9027,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInfList = document.getElementById('search-influencer-list');
     if (searchInfList) {
         searchInfList.addEventListener('input', debounce((e) => {
-            const term = e.target.value;
+            const term = (e.target.value || '').trim();
             const container = document.getElementById('influencer-list-container');
             if (!window.currentInfluencerData) return;
             
-            const filtered = filterDataArray(window.currentInfluencerData, term, ['name', 'influencer_name', 'phone_number', 'city']);
+            const filtered = filterDataArray(window.currentInfluencerData, term, ['name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state']);
             
             if (filtered.length === 0) {
                 container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">No results found.</div>';
@@ -9044,7 +9045,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchDispList = document.getElementById('search-dispatched-list');
     if (searchDispList) {
         searchDispList.addEventListener('input', debounce((e) => {
-            const term = e.target.value;
+            const term = (e.target.value || '').trim();
             if (!window.currentDispatchData || !window.renderDispatchCards) return;
             
             const filtered = filterDataArray(window.currentDispatchData, term, ['creator_name', 'campaign_name', 'phone_number', 'state']);
@@ -9056,7 +9057,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchStList = document.getElementById('search-status-tracking');
     if (searchStList) {
         searchStList.addEventListener('input', debounce((e) => {
-            const term = e.target.value;
+            const term = (e.target.value || '').trim();
             if (!window.currentStatusData || !window.renderStatusCards) return;
             
             const filtered = filterDataArray(window.currentStatusData, term, [
@@ -9066,4 +9067,5 @@ document.addEventListener('DOMContentLoaded', () => {
             window.renderStatusCards(filtered);
         }));
     }
+
 
