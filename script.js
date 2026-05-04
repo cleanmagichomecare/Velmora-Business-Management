@@ -1024,6 +1024,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Campaign Menu & Rename State ---
+    let activeOpenMenuId = null;
+
+    // Handle global click to close menus
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.campaign-menu-btn') && !e.target.closest('.campaign-dropdown')) {
+            document.querySelectorAll('.campaign-dropdown').forEach(d => d.classList.add('hidden'));
+            activeOpenMenuId = null;
+        }
+    });
+
+    async function saveCampaignRename(id, newName) {
+        if (!newName || newName.trim() === "") return;
+        
+        try {
+            const { error } = await window.supabase
+                .from('influencer_create_campaigns')
+                .update({ campaign_name: newName.trim() })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            if (typeof showToast === 'function') {
+                showToast('✅ Campaign renamed');
+            }
+            
+            // Re-render to reflect changes
+            renderCampaignList();
+        } catch (err) {
+            console.error("Rename error:", err);
+            if (typeof showToast === 'function') {
+                showToast('❌ Rename failed');
+            }
+            renderCampaignList(); // Revert UI
+        }
+    }
+
+    async function archiveCampaignAction(id, name) {
+        if (!confirm(`Archive campaign "${name}"?`)) return;
+
+        try {
+            const { error } = await window.supabase
+                .from('influencer_create_campaigns')
+                .update({ status: 'archived' })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            if (typeof showToast === 'function') {
+                showToast('✅ Campaign archived');
+            }
+            
+            // If archived campaign was currently selected, clear selection view
+            if (window.selectedCampaignId === id) {
+                window.selectedCampaignId = null;
+                window.selectedCampaign = null;
+                localStorage.removeItem('selectedCampaignId');
+                const contentPlaceholder = document.getElementById('content-viewer-placeholder');
+                const dashboardView = document.getElementById('campaign-dashboard-view');
+                if (dashboardView) dashboardView.classList.add('hidden');
+                if (contentPlaceholder) contentPlaceholder.classList.remove('hidden');
+            }
+
+            renderCampaignList();
+        } catch (err) {
+            console.error("Archive error:", err);
+            if (typeof showToast === 'function') {
+                showToast('❌ Archive failed');
+            }
+        }
+    }
+
     async function renderCampaignList() {
         if (!emptyCampaignList) return;
         emptyCampaignList.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 10px;">Loading campaigns...</div>';
@@ -1048,7 +1120,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const folderItem = document.createElement('div');
                 folderItem.className = 'campaign-folder-item';
                 
-                // Highlight if it's the currently selected campaign
                 if (window.selectedCampaignId == campaign.id) {
                     folderItem.classList.add('active-folder');
                 }
@@ -1056,81 +1127,80 @@ document.addEventListener('DOMContentLoaded', () => {
                 folderItem.setAttribute('data-id', campaign.id);
 
                 folderItem.innerHTML = `
-                    <div style="display: flex; align-items: center; width: 100%; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                    <div style="display: flex; align-items: center; width: 100%; justify-content: space-between; position: relative;">
+                        <div class="campaign-name-wrapper" style="display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
                                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                             </svg>
                             <span class="folder-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${campaign.campaign_name || 'Untitled Campaign'}</span>
+                            <input type="text" class="campaign-rename-input hidden" value="${campaign.campaign_name || ''}">
                         </div>
-                        <button class="btn-archive-campaign" style="background: none; border: none; padding: 4px; border-radius: 4px; cursor: pointer; color: var(--text-muted); opacity: 0.6; transition: all 0.2s; flex-shrink: 0;" title="Archive Campaign">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="21 8 21 21 3 21 3 8"></polyline>
-                                <rect x="1" y="3" width="22" height="5"></rect>
-                                <line x1="10" y1="12" x2="14" y2="12"></line>
+                        <button class="campaign-menu-btn" title="More actions">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="12" cy="5" r="1"></circle>
+                                <circle cx="12" cy="19" r="1"></circle>
                             </svg>
                         </button>
+                        <div class="campaign-dropdown hidden">
+                            <button class="campaign-dropdown-item rename-btn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                Rename
+                            </button>
+                            <button class="campaign-dropdown-item archive-btn archive">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                                Archive
+                            </button>
+                        </div>
                     </div>
                 `;
 
-                // Add hover effect specifically for the archive button via JS since it's inline styled
-                const archiveBtn = folderItem.querySelector('.btn-archive-campaign');
-                if (archiveBtn) {
-                    archiveBtn.addEventListener('mouseenter', () => {
-                        archiveBtn.style.opacity = '1';
-                        archiveBtn.style.color = '#ef4444';
-                        archiveBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+                // --- Menu Handlers ---
+                const menuBtn = folderItem.querySelector('.campaign-menu-btn');
+                const dropdown = folderItem.querySelector('.campaign-dropdown');
+                const renameBtn = folderItem.querySelector('.rename-btn');
+                const archiveBtn = folderItem.querySelector('.archive-btn');
+                const nameSpan = folderItem.querySelector('.folder-name');
+                const nameInput = folderItem.querySelector('.campaign-rename-input');
+
+                menuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.campaign-dropdown').forEach(d => {
+                        if (d !== dropdown) d.classList.add('hidden');
                     });
-                    archiveBtn.addEventListener('mouseleave', () => {
-                        archiveBtn.style.opacity = '0.6';
-                        archiveBtn.style.color = 'var(--text-muted)';
-                        archiveBtn.style.background = 'none';
-                    });
+                    dropdown.classList.toggle('hidden');
+                });
 
-                    archiveBtn.addEventListener('click', async (e) => {
-                        e.stopPropagation(); // Prevent folder selection
-                        
-                        if (!confirm(`Archive campaign "${campaign.campaign_name || 'Untitled Campaign'}"?`)) return;
+                renameBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.add('hidden');
+                    nameSpan.classList.add('hidden');
+                    nameInput.classList.remove('hidden');
+                    nameInput.focus();
+                    nameInput.select();
+                });
 
-                        archiveBtn.style.pointerEvents = 'none';
-                        archiveBtn.style.opacity = '0.3';
+                archiveBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.add('hidden');
+                    archiveCampaignAction(campaign.id, campaign.campaign_name);
+                });
 
-                        try {
-                            const { error } = await window.supabase
-                                .from('influencer_create_campaigns')
-                                .update({ status: 'archived' })
-                                .eq('id', campaign.id);
+                nameInput.addEventListener('click', (e) => e.stopPropagation());
+                
+                nameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        saveCampaignRename(campaign.id, nameInput.value);
+                    } else if (e.key === 'Escape') {
+                        renderCampaignList();
+                    }
+                });
 
-                            if (error) throw error;
-
-                            if (typeof showToast === 'function') {
-                                showToast('✅ Campaign archived');
-                            }
-                            
-                            // If archived campaign was currently selected, clear selection view
-                            if (window.selectedCampaignId === campaign.id) {
-                                window.selectedCampaignId = null;
-                                window.selectedCampaign = null;
-                                localStorage.removeItem('selectedCampaignId');
-                                const contentPlaceholder = document.getElementById('content-viewer-placeholder');
-                                const dashboardView = document.getElementById('campaign-dashboard-view');
-                                if (dashboardView) dashboardView.classList.add('hidden');
-                                if (contentPlaceholder) contentPlaceholder.classList.remove('hidden');
-                            }
-
-                            // Re-render list
-                            renderCampaignList();
-
-                        } catch (err) {
-                            console.error("Archive campaign error:", err);
-                            if (typeof showToast === 'function') {
-                                showToast('❌ Failed to archive campaign');
-                            }
-                            archiveBtn.style.pointerEvents = 'auto';
-                            archiveBtn.style.opacity = '0.6';
-                        }
-                    });
-                }
+                nameInput.addEventListener('blur', () => {
+                    if (!nameInput.classList.contains('hidden')) {
+                        saveCampaignRename(campaign.id, nameInput.value);
+                    }
+                });
 
                 folderItem.addEventListener('click', () => {
                     emptyCampaignList.querySelectorAll('.campaign-folder-item').forEach(f => f.classList.remove('active-folder'));

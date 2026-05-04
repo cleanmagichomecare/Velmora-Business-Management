@@ -1182,9 +1182,11 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
 
 /* Campaign Folder Items logic */
 .campaign-folder-item {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
+    gap: 8px;
     padding: 10px 14px;
     border-radius: 10px;
     cursor: pointer;
@@ -1210,6 +1212,80 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
 .active-folder {
     background-color: rgba(123, 140, 255, 0.1);
     color: var(--primary-color);
+}
+
+.campaign-menu-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.campaign-menu-btn:hover {
+    background: rgba(124, 140, 255, 0.1);
+    color: var(--primary-color);
+    opacity: 1;
+}
+
+.campaign-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    min-width: 140px;
+    padding: 6px;
+    animation: fadeIn 0.2s ease;
+}
+
+.campaign-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    border-radius: 8px;
+    transition: all 0.2s;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.campaign-dropdown-item:hover {
+    background: rgba(124, 140, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.campaign-dropdown-item.archive:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.campaign-rename-input {
+    background: var(--bg-color);
+    border: 1px solid var(--primary-color);
+    color: var(--text-main);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    width: 100%;
+    outline: none;
 }
 
 .active-folder:hover {
