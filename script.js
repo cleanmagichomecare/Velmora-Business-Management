@@ -1139,6 +1139,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.selectedCampaignId = campaign.id;
                     window.selectedCampaign = campaign;
                     localStorage.setItem('selectedCampaignId', campaign.id);
+
+                    // Store active campaign in localStorage for persistence across modules
+                    const activeCampaign = {
+                        campaign_id: campaign.id,
+                        campaign_name: campaign.campaign_name
+                    };
+                    localStorage.setItem('active_campaign', JSON.stringify(activeCampaign));
                     
                     console.log("Selected Campaign:", window.selectedCampaign);
 
@@ -4470,8 +4477,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const moveToBtn = recordCard.querySelector('.btn-move-status');
                     if (moveToBtn) {
                         moveToBtn.addEventListener('click', () => {
-                            const campaignName = window.selectedCampaignId || record.campaign_name;
-                            window.loadCampaignStatusTracking(campaignName, record.id);
+                            // Update active_campaign in localStorage
+                            const activeCampaign = {
+                                campaign_id: record.campaign_id,
+                                campaign_name: record.campaign_name
+                            };
+                            localStorage.setItem('active_campaign', JSON.stringify(activeCampaign));
+                            
+                            window.loadCampaignStatusTracking(record.id);
                         });
                     }
 
@@ -4526,7 +4539,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.loadCampaignStatusTracking = async function(campaignName, targetDispatchId = null) {
+    window.loadCampaignStatusTracking = async function(targetDispatchId = null) {
+        // Retrieve active campaign from localStorage
+        let activeCampaign = null;
+        try {
+            const stored = localStorage.getItem('active_campaign');
+            if (stored) activeCampaign = JSON.parse(stored);
+        } catch (e) {
+            console.error("Error parsing active_campaign from localStorage:", e);
+        }
+
+        const stCardsContainer = document.getElementById('st-cards-container');
+
+        // Safety check: if no campaign is selected
+        if (!activeCampaign) {
+            if (stCardsContainer) {
+                stCardsContainer.innerHTML = `
+                    <div class="empty-state" style="text-align:center; padding:40px;">
+                        <h3 style="color: var(--text-main);">Please select a campaign folder first.</h3>
+                        <p class="text-muted">You must select a campaign from the sidebar to view status tracking.</p>
+                    </div>
+                `;
+            }
+            alert("⚠ Please select a campaign folder first.");
+            return;
+        }
+
+        const campaignId = activeCampaign.campaign_id;
+        const campaignName = activeCampaign.campaign_name;
+
         // Hide all other views in the right panel
         const viewsToHide = [
             'campaign-dashboard-view',
@@ -4555,26 +4596,18 @@ document.addEventListener('DOMContentLoaded', () => {
             breadcrumb.textContent = `${campaignName || 'Campaign'} — Status Tracking`;
         }
 
-        const stCardsContainer = document.getElementById('st-cards-container');
         if (!stCardsContainer) return;
 
         stCardsContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">Loading tracking records...</p>';
 
         try {
-            // Fetch tracking records joined with dispatch details and info
-            const { data: trackingData, error: trackingError } = await window.supabase
+            // Fetch tracking records joined with dispatch details and info filtered by campaign_id
+            const { data: campaignRecords, error: trackingError } = await window.supabase
                 .from('influencer_status_tracking')
-                .select('*, influencer_dispatch_details!inner(*, influencers_info(name, profile_file_url))');
+                .select('*, influencer_dispatch_details!inner(*, influencers_info(name, profile_file_url))')
+                .eq('campaign_id', campaignId);
                 
             if (trackingError) throw trackingError;
-
-            // Filter for campaign: handle cases where campaignIdentifier is either ID or Name
-            const campaignRecords = trackingData.filter(t => {
-                const matchId = String(t.campaign_id) === String(campaignName) || 
-                               (t.influencer_dispatch_details && String(t.influencer_dispatch_details.campaign_id) === String(campaignName));
-                const matchName = t.influencer_dispatch_details && t.influencer_dispatch_details.campaign_name === campaignName;
-                return matchId || matchName;
-            });
 
             if (campaignRecords.length === 0) {
                 stCardsContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">No dispatched influencers to track.</p>';
@@ -6052,14 +6085,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnStatusTracking = document.getElementById('btn-status-tracking');
     if (btnStatusTracking) {
         btnStatusTracking.addEventListener('click', () => {
-            const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
-            const campaignName = activeFolder ? activeFolder.getAttribute('data-campaign-id') : null;
-
-            if (campaignName) {
-                window.loadCampaignStatusTracking(campaignName);
-            } else {
-                alert("⚠ Please select a campaign folder first.");
-            }
+            window.loadCampaignStatusTracking();
         });
     }
 
@@ -8790,11 +8816,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (window.showToast) window.showToast('✅ Progress Saved!', '✅');
 
-                // Find campaign name to reload only this UI
-                const activeFolder = document.querySelector('.campaign-folder-item.active-folder');
-                const campaignName = activeFolder ? activeFolder.getAttribute('data-campaign-id') : null;
-                if (campaignName) {
-                    window.loadCampaignStatusTracking(campaignName, trackingId);
+                if (window.loadCampaignStatusTracking) {
+                    window.loadCampaignStatusTracking(trackingId);
                 }
             } catch (err) {
                 console.error("Save Tracking Error:", err);
