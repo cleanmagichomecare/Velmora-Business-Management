@@ -9046,27 +9046,96 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1. Influencer List Search
+    // --- Influencer List Filter State ---
+    let activeInfluencerFilter = "all";
+
+    function applyInfluencerSearchAndFilter() {
+        const searchInput = document.getElementById('search-influencer-list');
+        const container = document.getElementById('influencer-list-container');
+        if (!searchInput || !container || !window.currentInfluencerData) return;
+
+        const term = searchInput.value.trim();
+        
+        // 1. First apply text search
+        let filtered = filterDataArray(window.currentInfluencerData, term, [
+            'name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state'
+        ]);
+
+        // 2. Then apply status filter
+        if (activeInfluencerFilter === "dispatched") {
+            filtered = filtered.filter(item => item.dispatchDetails);
+        } else if (activeInfluencerFilter === "not-dispatched") {
+            filtered = filtered.filter(item => !item.dispatchDetails);
+        }
+
+        // 3. Render
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">No results found.</div>';
+        } else {
+            window.renderInfluencerCards(filtered, container);
+        }
+    }
+
+    // 1. Influencer List Search & Filter Logic
     const searchInfList = document.getElementById('search-influencer-list');
+    const btnFilter = document.getElementById('btn-filter-influencers');
+    const filterDropdown = document.getElementById('filter-dropdown-influencers');
+
     if (searchInfList) {
-        const influencerSearchHandler = debounce((val) => {
-            const term = val.trim();
-            const container = document.getElementById('influencer-list-container');
-            if (!window.currentInfluencerData) return;
-            
-            const filtered = filterDataArray(window.currentInfluencerData, term, [
-                'name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state'
-            ]);
-            
-            if (filtered.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">No results found.</div>';
-            } else {
-                window.renderInfluencerCards(filtered, container);
-            }
+        const influencerSearchHandler = debounce(() => {
+            applyInfluencerSearchAndFilter();
         }, 300);
 
-        searchInfList.addEventListener('input', (e) => {
-            influencerSearchHandler(e.target.value);
+        searchInfList.addEventListener('input', () => {
+            influencerSearchHandler();
+        });
+    }
+
+    if (btnFilter && filterDropdown) {
+        btnFilter.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterDropdown.classList.toggle('hidden');
+        });
+
+        filterDropdown.querySelectorAll('.filter-option').forEach(opt => {
+            opt.addEventListener('mouseenter', () => {
+                if (!opt.classList.contains('active')) {
+                    opt.style.background = 'rgba(255,255,255,0.05)';
+                }
+            });
+            opt.addEventListener('mouseleave', () => {
+                if (!opt.classList.contains('active')) {
+                    opt.style.background = 'none';
+                }
+            });
+            opt.addEventListener('click', () => {
+                activeInfluencerFilter = opt.getAttribute('data-filter');
+                
+                // Update UI: highlight active
+                filterDropdown.querySelectorAll('.filter-option').forEach(o => {
+                    o.classList.remove('active');
+                    o.style.background = 'none';
+                    o.style.color = 'var(--text-main)';
+                });
+                opt.classList.add('active');
+                opt.style.background = 'var(--primary-color)';
+                opt.style.color = '#fff';
+
+                filterDropdown.classList.add('hidden');
+                applyInfluencerSearchAndFilter();
+            });
+        });
+
+        // Initial style for 'all'
+        const allOpt = filterDropdown.querySelector('[data-filter="all"]');
+        if (allOpt) {
+            allOpt.style.background = 'var(--primary-color)';
+            allOpt.style.color = '#fff';
+        }
+
+        // Close on outside click
+        document.addEventListener('click', () => {
+            filterDropdown.classList.add('hidden');
         });
     }
 
