@@ -2170,6 +2170,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         products.push({
                             product_name: checkbox.getAttribute('data-product'),
                             video_number: videoNum,
+                            video_type: 'video' + videoNum,
                             selected: checkbox.checked,
                             qty: checkbox.checked ? parseInt(qtyInput.value) || 0 : 0
                         });
@@ -3742,6 +3743,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             influencer_id: data.id,
                                             product_name: checkbox.getAttribute('data-product'),
                                             video_number: videoNum,
+                                            video_type: 'video' + videoNum,
                                             selected: checkbox.checked,
                                             qty: checkbox.checked ? (parseInt(qtyInput?.value) || 0) : 0
                                         });
@@ -4089,6 +4091,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         influencer_id: influencerId,
                         product_name: p.product_name,
                         video_number: p.video_number || 1,
+                        video_type: p.video_type || 'video1',
                         selected: p.selected || false,
                         qty: p.selected ? (p.qty || 0) : 0
                     }));
@@ -4188,6 +4191,63 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fState) { fState.value = safeVal(infData.state); fState.readOnly = true; fState.disabled = false; }
             if (fCampaign) { fCampaign.value = safeVal(campData.campaign_name); fCampaign.readOnly = true; fCampaign.disabled = false; }
 
+            // Fetch and Render Products Dynamically
+            const productsContainer = document.getElementById('dispatch-products-dynamic');
+            if (productsContainer) {
+                productsContainer.innerHTML = '<p class="text-muted" style="text-align: center; padding: 10px;">Loading products...</p>';
+                
+                const { data: productsData, error: productsError } = await window.supabase
+                    .from('influencer_products')
+                    .select('*')
+                    .eq('influencer_id', influencerId)
+                    .eq('selected', true);
+
+                if (productsError) {
+                    console.error('Error fetching products:', productsError);
+                    productsContainer.innerHTML = '<p class="text-danger">Error loading products.</p>';
+                } else {
+                    const grouped = { video1: [], video2: [] };
+                    let totalQty = 0;
+
+                    productsData.forEach(item => {
+                        if (item.qty > 0) {
+                            totalQty += item.qty;
+                            if (item.video_type === 'video1' || item.video_number == 1) grouped.video1.push(item);
+                            else if (item.video_type === 'video2' || item.video_number == 2) grouped.video2.push(item);
+                        }
+                    });
+
+                    window.currentDispatchSelectedProducts = productsData.filter(p => p.qty > 0);
+
+                    function renderVideoSection(title, items) {
+                        if (!items.length) return '';
+                        return `
+                            <div class="video-section">
+                                <h4>${title}</h4>
+                                ${items.map(p => `
+                                    <div class="dispatch-product-item">
+                                        <span>${p.product_name}</span>
+                                        <span>Qty: ${p.qty}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    if (productsData.length === 0 || totalQty === 0) {
+                        productsContainer.innerHTML = '<p class="text-muted" style="text-align: center; padding: 10px;">No products selected</p>';
+                    } else {
+                        productsContainer.innerHTML = 
+                            renderVideoSection('Video 1', grouped.video1) + 
+                            renderVideoSection('Video 2', grouped.video2);
+                    }
+
+                    // Auto-update Total Products field
+                    const fTotalProducts = document.getElementById('dispatch-total-products');
+                    if (fTotalProducts) fTotalProducts.value = totalQty;
+                }
+            }
+
         } catch (error) {
             console.error('Error fetching dispatch data:', error);
             if (window.showToast) window.showToast('❌ Error loading dispatch data.');
@@ -4269,21 +4329,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Products
-            const selectedProducts = [];
-            dispatchModal.querySelectorAll('.product-checkbox:checked').forEach(cb => {
-                const item = cb.closest('.product-item');
-                if (item) {
-                    const qtyInput = item.querySelector('.product-quantity-input');
-                    selectedProducts.push({
-                        product_name: cb.getAttribute('data-product'),
-                        quantity: qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1
-                    });
-                }
-            });
+            // Products (Now from dynamic state)
+            const selectedProducts = window.currentDispatchSelectedProducts || [];
 
             if (selectedProducts.length === 0) {
-                if (window.showToast) window.showToast('❌ Please select at least one product.');
+                if (window.showToast) window.showToast('❌ No selected products found for this influencer.');
                 return;
             }
 
