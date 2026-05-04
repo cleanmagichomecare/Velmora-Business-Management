@@ -4181,12 +4181,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const fState = document.getElementById('dispatch-state');
             const fCampaign = document.getElementById('dispatch-campaign');
 
-            if (fName) { fName.value = safeVal(infData.name); fName.readOnly = true; }
-            if (fPhone) { fPhone.value = safeVal(infData.phone_number); fPhone.readOnly = true; }
-            if (fAltPhone) { fAltPhone.value = safeVal(infData.alternative_number); fAltPhone.readOnly = true; }
-            if (fAddress) { fAddress.value = safeVal(infData.complete_address); fAddress.readOnly = true; }
-            if (fState) { fState.value = safeVal(infData.state); fState.readOnly = true; }
-            if (fCampaign) { fCampaign.value = safeVal(campData.campaign_name); fCampaign.readOnly = true; }
+            if (fName) { fName.value = safeVal(infData.name); fName.readOnly = true; fName.disabled = false; }
+            if (fPhone) { fPhone.value = safeVal(infData.phone_number); fPhone.readOnly = true; fPhone.disabled = false; }
+            if (fAltPhone) { fAltPhone.value = safeVal(infData.alternative_number); fAltPhone.readOnly = true; fAltPhone.disabled = false; }
+            if (fAddress) { fAddress.value = safeVal(infData.complete_address); fAddress.readOnly = true; fAddress.disabled = false; }
+            if (fState) { fState.value = safeVal(infData.state); fState.readOnly = true; fState.disabled = false; }
+            if (fCampaign) { fCampaign.value = safeVal(campData.campaign_name); fCampaign.readOnly = true; fCampaign.disabled = false; }
 
         } catch (error) {
             console.error('Error fetching dispatch data:', error);
@@ -4206,8 +4206,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Quantity Auto Calculation Logic (Campaign Products) ---
         const dispatchTotalProducts = document.getElementById('dispatch-total-products');
-        const productCheckboxes = document.querySelectorAll('.product-checkbox');
-        const quantityInputs = document.querySelectorAll('.product-quantity-input');
+        const productCheckboxes = dispatchModal.querySelectorAll('.product-checkbox');
+        const quantityInputs = dispatchModal.querySelectorAll('.product-quantity-input');
 
         function updateTotalProducts() {
             if (!dispatchTotalProducts) return;
@@ -4271,12 +4271,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Products
             const selectedProducts = [];
-            document.querySelectorAll('.product-checkbox:checked').forEach(cb => {
-                const qtyInput = cb.closest('.product-item').querySelector('.product-quantity-input');
-                selectedProducts.push({
-                    product_name: cb.getAttribute('data-product'),
-                    quantity: qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1
-                });
+            dispatchModal.querySelectorAll('.product-checkbox:checked').forEach(cb => {
+                const item = cb.closest('.product-item');
+                if (item) {
+                    const qtyInput = item.querySelector('.product-quantity-input');
+                    selectedProducts.push({
+                        product_name: cb.getAttribute('data-product'),
+                        quantity: qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1
+                    });
+                }
             });
 
             if (selectedProducts.length === 0) {
