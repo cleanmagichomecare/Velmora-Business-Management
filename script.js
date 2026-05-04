@@ -56,6 +56,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const vendorSubSubLabel = document.getElementById('vendor-sub-sub-label');
 
     // --- Category Dropdown Helpers ---
+    function generateCampaignPrefix(name) {
+        if (!name) return "INF";
+        const smallWords = ["the", "and", "of", "a", "an", "in", "on", "at", "to", "for", "with"];
+        const words = name.split(/\s+/).filter(w => w.length > 0 && !smallWords.includes(w.toLowerCase()));
+        
+        if (words.length === 0) return "INF";
+        
+        let prefix = words.map(w => w[0].toUpperCase()).join("");
+        return prefix.substring(0, 3);
+    }
+
     function populateVendorDropdown(select, data, placeholder) {
         if (!select) return;
         select.innerHTML = `<option value="">${placeholder}</option>`;
@@ -2983,7 +2994,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div style="flex-grow: 1;">
                         <h2 style="margin: 0 0 5px 0; font-size: 20px; color: var(--text-main); font-weight: 600;">${data.name || 'Unknown'}</h2>
-                        <div class="text-muted" style="font-size: 13px; margin-bottom: 8px;">Handle: ${data.influencer_name || '-'}</div>
+                        <div class="text-muted" style="font-size: 13px; margin-bottom: 8px;">Code: <span style="color: var(--primary-color); font-weight: 600;">${data.code || '-'}</span> | Handle: ${data.influencer_name || '-'}</div>
                         <span class="badge" style="background: rgba(40, 167, 69, 0.15); color: #28a745; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; border: 1px solid rgba(40, 167, 69, 0.3);">Active</span>
                     </div>
                     <div class="influencer-card-actions flex-row align-center" style="display: flex; gap: 10px; margin-left: auto;">
@@ -3918,11 +3929,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const basic = d.basicInfo;
                 
+                // --- Code Generation Logic ---
+                const campaignName = window.selectedCampaign?.campaign_name || "Campaign";
+                const prefix = generateCampaignPrefix(campaignName);
+                
+                // Count existing influencers to generate the next number
+                const { count, error: countErr } = await window.supabase
+                    .from('influencers_info')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('campaign_id', campaignId);
+                
+                if (countErr) console.error("Error counting for code:", countErr);
+                
+                const nextNumber = (count || 0) + 1;
+                const influencerCode = `${prefix}${nextNumber}`;
+                console.log("Generated Influencer Code:", influencerCode);
+
                 // 1. Insert into influencers_info
                 const { data: infoData, error: infoError } = await window.supabase
                     .from('influencers_info')
                     .insert([{
                         campaign_id: campaignId,
+                        code: influencerCode,
                         name: basic.name,
                         influencer_name: basic.influencer_name,
                         phone_number: basic.phone,
@@ -4433,7 +4461,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch influencer info
             const { data: infoData, error: infoError } = await window.supabase
                 .from('influencers_info')
-                .select('id, name, profile_file_url')
+                .select('id, name, profile_file_url, code')
                 .in('id', influencerIds);
 
             if (infoError) throw infoError;
@@ -4496,7 +4524,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ${avatarHTML}
                                 <div>
                                     <h3 style="margin: 0; font-size: 1.1rem;">${record.creator_name}</h3>
-                                    <span style="font-size: 0.8rem; color: #a0a0a0;">Dispatch ID: ${record.id}</span>
+                                    <span style="font-size: 0.8rem; color: #a0a0a0;">Dispatch ID: ${info.code || record.id}</span>
                                 </div>
                             </div>
                             <button class="btn-move-status" data-dispatch-id="${record.id}">
@@ -4674,7 +4702,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch tracking records joined with dispatch details and info filtered by campaign_id
             const { data: campaignRecords, error: trackingError } = await window.supabase
                 .from('influencer_status_tracking')
-                .select('*, influencer_dispatch_details!inner(*, influencers_info(name, profile_file_url))')
+                .select('*, influencer_dispatch_details!inner(*, influencers_info(name, profile_file_url, code))')
                 .eq('campaign_id', campaignId);
                 
             if (trackingError) throw trackingError;
@@ -4711,9 +4739,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     campaignId: tracking.campaign_id,
                     campaignName: dispatch.campaign_name,
                     creatorName: info.name,
+                    code: info.code,
                     address: dispatch.address,
                     state: dispatch.state,
-                    phoneNumber: dispatch.phone_number,
+                    phone: dispatch.phone_number,
                     altPhoneNumber: dispatch.alternative_phone_number,
                     dispatchDate: dispatch.dispatch_date,
                     expectedDelivery: dispatch.expected_delivery_date,
@@ -5022,6 +5051,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="st-info-item">
                             <span class="st-label">User Name</span>
                             <span class="st-value">${record.creatorName || '-'}</span>
+                        </div>
+                        <div class="st-info-item">
+                            <span class="st-label">Influencer Code</span>
+                            <span class="st-value" style="color: var(--primary-color); font-weight: 600;">${record.code || '-'}</span>
                         </div>
                         <div class="st-info-item">
                             <span class="st-label">Address</span>
