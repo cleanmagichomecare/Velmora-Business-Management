@@ -9026,6 +9026,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+document.addEventListener('DOMContentLoaded', () => {
     // --- Reusable Search & Filter Logic ---
     function debounce(func, wait = 300) {
         let timeout;
@@ -9151,19 +9152,98 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
     }
 
-    // 3. Status Tracking Search
-    const searchStList = document.getElementById('search-status-tracking');
-    if (searchStList) {
-        searchStList.addEventListener('input', debounce((e) => {
-            const term = (e.target.value || '').trim();
-            if (!window.currentStatusData || !window.renderStatusCards) return;
-            
-            const filtered = filterDataArray(window.currentStatusData, term, [
-                'influencer_dispatch_details.influencers_info.name',
-                'influencer_dispatch_details.campaign_name'
-            ]);
+    // 3. Status Tracking Search & Filter Logic
+    let activeStatusFilter = "all";
+
+    function applyStatusTrackingSearchAndFilter() {
+        const searchInput = document.getElementById('search-status-tracking');
+        const container = document.getElementById('st-cards-container');
+        if (!searchInput || !container || !window.currentStatusData) return;
+
+        const term = searchInput.value.trim();
+        
+        // 1. First apply text search
+        let filtered = filterDataArray(window.currentStatusData, term, [
+            'influencer_dispatch_details.influencers_info.name',
+            'influencer_dispatch_details.campaign_name'
+        ]);
+
+        // 2. Then apply status filter
+        if (activeStatusFilter === "not-started") {
+            filtered = filtered.filter(item => (item.current_step || 0) <= 1);
+        } else if (activeStatusFilter === "pending") {
+            filtered = filtered.filter(item => item.current_step > 1 && item.current_step < 7);
+        } else if (activeStatusFilter === "completed") {
+            filtered = filtered.filter(item => item.current_step === 7);
+        }
+
+        // 3. Render
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">No results found.</p>';
+        } else {
             window.renderStatusCards(filtered);
-        }));
+        }
     }
 
+    const searchStList = document.getElementById('search-status-tracking');
+    const btnFilterStatus = document.getElementById('btn-filter-status');
+    const filterDropdownStatus = document.getElementById('filter-dropdown-status');
 
+    if (searchStList) {
+        const statusSearchHandler = debounce(() => {
+            applyStatusTrackingSearchAndFilter();
+        }, 300);
+
+        searchStList.addEventListener('input', () => {
+            statusSearchHandler();
+        });
+    }
+
+    if (btnFilterStatus && filterDropdownStatus) {
+        btnFilterStatus.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterDropdownStatus.classList.toggle('hidden');
+        });
+
+        filterDropdownStatus.querySelectorAll('.status-filter-option').forEach(opt => {
+            opt.addEventListener('mouseenter', () => {
+                if (!opt.classList.contains('active')) {
+                    opt.style.background = 'rgba(255,255,255,0.05)';
+                }
+            });
+            opt.addEventListener('mouseleave', () => {
+                if (!opt.classList.contains('active')) {
+                    opt.style.background = 'none';
+                }
+            });
+            opt.addEventListener('click', () => {
+                activeStatusFilter = opt.getAttribute('data-filter');
+                
+                // Update UI: highlight active
+                filterDropdownStatus.querySelectorAll('.status-filter-option').forEach(o => {
+                    o.classList.remove('active');
+                    o.style.background = 'none';
+                    o.style.color = 'var(--text-main)';
+                });
+                opt.classList.add('active');
+                opt.style.background = 'var(--primary-color)';
+                opt.style.color = '#fff';
+
+                filterDropdownStatus.classList.add('hidden');
+                applyStatusTrackingSearchAndFilter();
+            });
+        });
+
+        // Initial style for 'all'
+        const allOptSt = filterDropdownStatus.querySelector('[data-filter="all"]');
+        if (allOptSt) {
+            allOptSt.style.background = 'var(--primary-color)';
+            allOptSt.style.color = '#fff';
+        }
+
+        // Close on outside click
+        document.addEventListener('click', () => {
+            filterDropdownStatus.classList.add('hidden');
+        });
+    }
+});
