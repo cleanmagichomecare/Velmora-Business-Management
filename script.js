@@ -9140,18 +9140,97 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Dispatched List Search
-    const searchDispList = document.getElementById('search-dispatched-list');
-    if (searchDispList) {
-        searchDispList.addEventListener('input', debounce((e) => {
-            const term = (e.target.value || '').trim();
-            if (!window.currentDispatchData || !window.renderDispatchCards) return;
-            
-            const filtered = filterDataArray(window.currentDispatchData, term, ['creator_name', 'campaign_name', 'phone_number', 'state']);
+    // 2. Dispatched List Search & Filter Logic
+    let activeDispatchFilter = "all";
+
+    function applyDispatchSearchAndFilter() {
+        const searchInput = document.getElementById('search-dispatched-list');
+        const container = document.getElementById('dispatched-influencers-container');
+        if (!searchInput || !container || !window.currentDispatchData) return;
+
+        const term = searchInput.value.trim();
+        
+        // 1. First apply text search
+        let filtered = filterDataArray(window.currentDispatchData, term, ['creator_name', 'campaign_name', 'phone_number', 'state']);
+
+        // 2. Then apply courier filter
+        if (activeDispatchFilter !== "all") {
+            if (activeDispatchFilter === "Other") {
+                filtered = filtered.filter(item => item.courier_partner !== "ST Courier" && item.courier_partner !== "India Post");
+            } else {
+                filtered = filtered.filter(item => item.courier_partner === activeDispatchFilter);
+            }
+        }
+
+        // 3. Render
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="text-align:center; width:100%; padding:40px; color: var(--text-muted);">No results found.</div>';
+        } else {
             window.renderDispatchCards(filtered);
-        }));
+        }
     }
 
+    const searchDispList = document.getElementById('search-dispatched-list');
+    const btnFilterDispatch = document.getElementById('btn-filter-dispatch');
+    const filterDropdownDispatch = document.getElementById('filter-dropdown-dispatch');
+
+    if (searchDispList) {
+        const dispatchSearchHandler = debounce(() => {
+            applyDispatchSearchAndFilter();
+        }, 300);
+
+        searchDispList.addEventListener('input', () => {
+            dispatchSearchHandler();
+        });
+    }
+
+    if (btnFilterDispatch && filterDropdownDispatch) {
+        btnFilterDispatch.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterDropdownDispatch.classList.toggle('hidden');
+        });
+
+        filterDropdownDispatch.querySelectorAll('.dispatch-filter-option').forEach(opt => {
+            opt.addEventListener('mouseenter', () => {
+                if (!opt.classList.contains('active')) {
+                    opt.style.background = 'rgba(255,255,255,0.05)';
+                }
+            });
+            opt.addEventListener('mouseleave', () => {
+                if (!opt.classList.contains('active')) {
+                    opt.style.background = 'none';
+                }
+            });
+            opt.addEventListener('click', () => {
+                activeDispatchFilter = opt.getAttribute('data-filter');
+                
+                // Update UI: highlight active
+                filterDropdownDispatch.querySelectorAll('.dispatch-filter-option').forEach(o => {
+                    o.classList.remove('active');
+                    o.style.background = 'none';
+                    o.style.color = 'var(--text-main)';
+                });
+                opt.classList.add('active');
+                opt.style.background = 'var(--primary-color)';
+                opt.style.color = '#fff';
+
+                filterDropdownDispatch.classList.add('hidden');
+                applyDispatchSearchAndFilter();
+            });
+        });
+
+        // Initial style for 'all'
+        const allOptDisp = filterDropdownDispatch.querySelector('[data-filter="all"]');
+        if (allOptDisp) {
+            allOptDisp.style.background = 'var(--primary-color)';
+            allOptDisp.style.color = '#fff';
+        }
+
+        // Close on outside click
+        document.addEventListener('click', () => {
+            filterDropdownDispatch.classList.add('hidden');
+        });
+    }
     // 3. Status Tracking Search & Filter Logic
     let activeStatusFilter = "all";
 
