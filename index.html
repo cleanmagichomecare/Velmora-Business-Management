@@ -2278,8 +2278,10 @@
                                     <div id="influencer-list-view" class="influencer-list-view hidden">
                                         <div class="content-header flex-between mb-20">
                                             <h2 class="dashboard-title">Influencer List</h2>
-                                            <button class="btn-primary" id="btn-back-to-add-influencer">+ Add
-                                                Influencer</button>
+                                            <div style="display: flex; gap: 15px; align-items: center;">
+                                                <input type="text" id="search-influencer-list" class="edit-input" placeholder="Search..." style="border-radius: 8px; width: 250px; padding: 8px 12px; background: var(--input-bg, #1a1a2e); color: #fff; border: 1px solid var(--border-color);">
+                                                <button class="btn-primary" id="btn-back-to-add-influencer">+ Add Influencer</button>
+                                            </div>
                                         </div>
                                         <div id="influencer-list-container" class="influencer-list-container">
                                             <!-- Profile cards dynamically injected here -->
@@ -2290,12 +2292,10 @@
                                     <div id="view-dispatched-list" class="dispatched-list-view hidden">
                                         <div class="content-header flex-between mb-20" style="width: 100%;">
                                             <div>
-                                                <h2 class="dashboard-title"
-                                                    style="text-align: left; margin-bottom: 0.5rem;">Dispatched List
-                                                </h2>
-                                                <div id="dispatched-breadcrumb" class="breadcrumb text-muted">Campaign
-                                                    Dispatched List</div>
+                                                <h2 class="dashboard-title" style="text-align: left; margin-bottom: 0.5rem;">Dispatched List</h2>
+                                                <div id="dispatched-breadcrumb" class="breadcrumb text-muted">Campaign Dispatched List</div>
                                             </div>
+                                            <input type="text" id="search-dispatched-list" class="edit-input" placeholder="Search..." style="border-radius: 8px; width: 250px; padding: 8px 12px; background: var(--input-bg, #1a1a2e); color: #fff; border: 1px solid var(--border-color);">
                                         </div>
 
                                         <!-- Influencer Grid -->
@@ -2309,12 +2309,10 @@
                                     <div id="view-status-tracking" class="status-tracking-view hidden">
                                         <div class="content-header flex-between mb-20" style="width: 100%;">
                                             <div>
-                                                <h2 class="dashboard-title"
-                                                    style="text-align: left; margin-bottom: 0.5rem;">Status Tracking
-                                                </h2>
-                                                <div id="st-breadcrumb" class="breadcrumb text-muted">Campaign Status
-                                                    Tracking</div>
+                                                <h2 class="dashboard-title" style="text-align: left; margin-bottom: 0.5rem;">Status Tracking</h2>
+                                                <div id="st-breadcrumb" class="breadcrumb text-muted">Campaign Status Tracking</div>
                                             </div>
+                                            <input type="text" id="search-status-tracking" class="edit-input" placeholder="Search..." style="border-radius: 8px; width: 250px; padding: 8px 12px; background: var(--input-bg, #1a1a2e); color: #fff; border: 1px solid var(--border-color);">
                                         </div>
 
                                         <!-- Cards Container for Multi-Influencer Tracking -->

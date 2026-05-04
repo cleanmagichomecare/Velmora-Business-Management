@@ -2652,6 +2652,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             });
 
+            window.currentInfluencerData = combinedData;
             renderInfluencerCards(combinedData, container);
 
         } catch (error) {
@@ -4366,107 +4367,118 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            dispatchedInfluencersContainer.innerHTML = '';
+            window.currentDispatchData = dispatchData;
+            window.currentDispatchInfoMap = infoMap;
 
-            dispatchData.forEach(record => {
-                const info = infoMap[record.influencer_id] || {};
-                const recordCard = document.createElement('div');
-                recordCard.className = 'dispatch-full-card'; 
-
-                let productsHTML = '';
-                if (record.selected_products && record.selected_products.length > 0) {
-                    record.selected_products.forEach(p => {
-                        productsHTML += `<div style="font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between;">
-                            <span style="color: #bbb;">• ${p.product_name}</span>
-                            <strong>Qty: ${p.quantity}</strong>
-                        </div>`;
-                    });
-                } else {
-                    productsHTML = '<span style="color: #888;">No products selected</span>';
+            window.renderDispatchCards = function(dataToRender) {
+                dispatchedInfluencersContainer.innerHTML = '';
+                if(dataToRender.length === 0) {
+                    dispatchedInfluencersContainer.innerHTML = '<div style="text-align:center; width:100%; padding:40px; color: var(--text-muted);">No results found.</div>';
+                    return;
                 }
+                
+                dataToRender.forEach(record => {
+                    const info = window.currentDispatchInfoMap[record.influencer_id] || {};
+                    const recordCard = document.createElement('div');
+                    recordCard.className = 'dispatch-full-card'; 
 
-                const avatarUrl = info.profile_file_url || 'assets/images/default-profile.png';
-                const avatarHTML = `<div class="avatar-wrapper" style="flex-shrink: 0; width: 44px; height: 44px;">
-                    <img src="${avatarUrl}" alt="Profile Image" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #444; background: #2a2a30;">
-                </div>`;
+                    let productsHTML = '';
+                    if (record.selected_products && record.selected_products.length > 0) {
+                        record.selected_products.forEach(p => {
+                            productsHTML += `<div style="font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                                <span style="color: #bbb;">• ${p.product_name}</span>
+                                <strong>Qty: ${p.quantity}</strong>
+                            </div>`;
+                        });
+                    } else {
+                        productsHTML = '<span style="color: #888;">No products selected</span>';
+                    }
 
-                // Missing image placeholder component
-                const imgFallback = `<div class="dispatch-photo-box"><span>No Image</span></div>`;
+                    const avatarUrl = info.profile_file_url || 'assets/images/default-profile.png';
+                    const avatarHTML = `<div class="avatar-wrapper" style="flex-shrink: 0; width: 44px; height: 44px;">
+                        <img src="${avatarUrl}" alt="Profile Image" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #444; background: #2a2a30;">
+                    </div>`;
 
-                const productImg = record.product_photo_url 
-                    ? `<div class="dispatch-photo-box"><img src="${record.product_photo_url}" alt="Product Photo"></div>`
-                    : imgFallback;
+                    // Missing image placeholder component
+                    const imgFallback = `<div class="dispatch-photo-box"><span>No Image</span></div>`;
 
-                const dispatchImg = record.dispatch_photo_url 
-                    ? `<div class="dispatch-photo-box"><img src="${record.dispatch_photo_url}" alt="Dispatch Photo"></div>`
-                    : imgFallback;
+                    const productImg = record.product_photo_url 
+                        ? `<div class="dispatch-photo-box"><img src="${record.product_photo_url}" alt="Product Photo"></div>`
+                        : imgFallback;
 
-                const safeVal = (v) => v || '-';
+                    const dispatchImg = record.dispatch_photo_url 
+                        ? `<div class="dispatch-photo-box"><img src="${record.dispatch_photo_url}" alt="Dispatch Photo"></div>`
+                        : imgFallback;
 
-                recordCard.innerHTML = `
-                    <div class="dispatch-full-header">
-                        <div class="dispatch-user" style="display: flex; align-items: center; gap: 12px;">
-                            ${avatarHTML}
-                            <div>
-                                <h3 style="margin: 0; font-size: 1.1rem;">${record.creator_name}</h3>
-                                <span style="font-size: 0.8rem; color: #a0a0a0;">Dispatch ID: ${record.id}</span>
-                            </div>
-                        </div>
-                        <button class="btn-move-status" data-dispatch-id="${record.id}">
-                            Move To
-                        </button>
-                    </div>
-                    <div class="dispatch-full-body">
-                        <div class="dispatch-details-grid">
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Phone</span><span class="dispatch-info-val">${safeVal(record.phone_number)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Alt Phone</span><span class="dispatch-info-val">${safeVal(record.alternative_phone_number)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Address</span><span class="dispatch-info-val" style="word-break: break-word;">${safeVal(record.address)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">State</span><span class="dispatch-info-val">${safeVal(record.state)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Dispatch Date</span><span class="dispatch-info-val">${safeVal(record.dispatch_date)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Exp. Delivery Date</span><span class="dispatch-info-val">${safeVal(record.expected_delivery_date)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Campaign Name</span><span class="dispatch-info-val">${safeVal(record.campaign_name)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Product Name</span><span class="dispatch-info-val">${safeVal(record.product_name)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Courier Partner</span><span class="dispatch-info-val">${safeVal(record.courier_partner)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Track ID</span><span class="dispatch-info-val">${safeVal(record.tracking_id)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Total Value</span><span class="dispatch-info-val">${safeVal(record.total_product_value)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Total Weight</span><span class="dispatch-info-val">${safeVal(record.total_weight)}</span></div>
-                            <div class="dispatch-info-item"><span class="dispatch-info-label">Total Products</span><span class="dispatch-info-val">${safeVal(record.total_products)}</span></div>
-                        </div>
+                    const safeVal = (v) => v || '-';
 
-                        <div style="margin-top: 10px;">
-                            <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 8px;">Products Sent</h4>
-                            <div class="dispatch-products-list">
-                                ${productsHTML}
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 0;">Dispatch Photos</h4>
-                            <div class="dispatch-photos-grid">
-                                <div class="dispatch-photo-container">
-                                    <span class="dispatch-photo-title">Product Photo</span>
-                                    ${productImg}
-                                </div>
-                                <div class="dispatch-photo-container">
-                                    <span class="dispatch-photo-title">Dispatch Photo</span>
-                                    ${dispatchImg}
+                    recordCard.innerHTML = `
+                        <div class="dispatch-full-header">
+                            <div class="dispatch-user" style="display: flex; align-items: center; gap: 12px;">
+                                ${avatarHTML}
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1.1rem;">${record.creator_name}</h3>
+                                    <span style="font-size: 0.8rem; color: #a0a0a0;">Dispatch ID: ${record.id}</span>
                                 </div>
                             </div>
+                            <button class="btn-move-status" data-dispatch-id="${record.id}">
+                                Move To
+                            </button>
                         </div>
-                    </div>
-                `;
+                        <div class="dispatch-full-body">
+                            <div class="dispatch-details-grid">
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Phone</span><span class="dispatch-info-val">${safeVal(record.phone_number)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Alt Phone</span><span class="dispatch-info-val">${safeVal(record.alternative_phone_number)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Address</span><span class="dispatch-info-val" style="word-break: break-word;">${safeVal(record.address)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">State</span><span class="dispatch-info-val">${safeVal(record.state)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Dispatch Date</span><span class="dispatch-info-val">${safeVal(record.dispatch_date)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Exp. Delivery Date</span><span class="dispatch-info-val">${safeVal(record.expected_delivery_date)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Campaign Name</span><span class="dispatch-info-val">${safeVal(record.campaign_name)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Product Name</span><span class="dispatch-info-val">${safeVal(record.product_name)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Courier Partner</span><span class="dispatch-info-val">${safeVal(record.courier_partner)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Track ID</span><span class="dispatch-info-val">${safeVal(record.tracking_id)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Total Value</span><span class="dispatch-info-val">${safeVal(record.total_product_value)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Total Weight</span><span class="dispatch-info-val">${safeVal(record.total_weight)}</span></div>
+                                <div class="dispatch-info-item"><span class="dispatch-info-label">Total Products</span><span class="dispatch-info-val">${safeVal(record.total_products)}</span></div>
+                            </div>
 
-                // Attach Move To button handler
-                const moveToBtn = recordCard.querySelector('.btn-move-status');
-                if (moveToBtn) {
-                    moveToBtn.addEventListener('click', () => {
-                        const campaignName = window.selectedCampaignId || record.campaign_name;
-                        window.loadCampaignStatusTracking(campaignName, record.id);
-                    });
-                }
+                            <div style="margin-top: 10px;">
+                                <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 8px;">Products Sent</h4>
+                                <div class="dispatch-products-list">
+                                    ${productsHTML}
+                                </div>
+                            </div>
 
-                dispatchedInfluencersContainer.appendChild(recordCard);
-            });
+                            <div style="margin-top: 20px;">
+                                <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 8px;">Dispatch Photos</h4>
+                                <div class="dispatch-photos-grid">
+                                    <div class="dispatch-photo-container">
+                                        <span class="dispatch-photo-title">Product Photo</span>
+                                        ${productImg}
+                                    </div>
+                                    <div class="dispatch-photo-container">
+                                        <span class="dispatch-photo-title">Dispatch Photo</span>
+                                        ${dispatchImg}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Attach Move To button handler
+                    const moveToBtn = recordCard.querySelector('.btn-move-status');
+                    if (moveToBtn) {
+                        moveToBtn.addEventListener('click', () => {
+                            const campaignName = window.selectedCampaignId || record.campaign_name;
+                            window.loadCampaignStatusTracking(campaignName, record.id);
+                        });
+                    }
+
+                    dispatchedInfluencersContainer.appendChild(recordCard);
+                });
+            };
+
+            window.renderDispatchCards(dispatchData);
             
         } catch (error) {
             console.error('Error fetching dispatch records:', error);
@@ -4575,11 +4587,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Render all records
-            stCardsContainer.innerHTML = '';
-            campaignRecords.forEach(tracking => {
-                // Map to match the template structure
-                const dispatch = tracking.influencer_dispatch_details;
-                const info = dispatch.influencers_info || {};
+            window.currentStatusData = campaignRecords;
+
+            window.renderStatusCards = function(dataToRender) {
+                stCardsContainer.innerHTML = '';
+                if(dataToRender.length === 0) {
+                    stCardsContainer.innerHTML = '<p class="text-muted" style="text-align:center; padding:40px;">No results found.</p>';
+                    return;
+                }
+
+                dataToRender.forEach(tracking => {
+                    // Map to match the template structure
+                    const dispatch = tracking.influencer_dispatch_details;
+                    const info = dispatch.influencers_info || {};
                 const record = {
                     id: tracking.id,
                     dispatchId: dispatch.id,
@@ -4670,6 +4690,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Add Save workflow event listeners
                 attachTrackingSaveListeners(tracking.id);
             });
+            };
+
+            window.renderStatusCards(campaignRecords);
 
             // Scroll to specific card if requested
             if (targetDispatchId) {
@@ -8978,3 +9001,69 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
+
+    // --- Reusable Search & Filter Logic ---
+    function debounce(func, wait = 300) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    function filterDataArray(data, searchTerm, fields) {
+        if (!searchTerm) return data;
+        const term = searchTerm.toLowerCase();
+        return data.filter(item => {
+            return fields.some(field => {
+                const val = field.split('.').reduce((o, i) => o ? o[i] : null, item);
+                return val && String(val).toLowerCase().includes(term);
+            });
+        });
+    }
+
+    // 1. Influencer List Search
+    const searchInfList = document.getElementById('search-influencer-list');
+    if (searchInfList) {
+        searchInfList.addEventListener('input', debounce((e) => {
+            const term = e.target.value;
+            const container = document.getElementById('influencer-list-container');
+            if (!window.currentInfluencerData) return;
+            
+            const filtered = filterDataArray(window.currentInfluencerData, term, ['name', 'influencer_name', 'phone_number', 'city']);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">No results found.</div>';
+            } else {
+                renderInfluencerCards(filtered, container);
+            }
+        }));
+    }
+
+    // 2. Dispatched List Search
+    const searchDispList = document.getElementById('search-dispatched-list');
+    if (searchDispList) {
+        searchDispList.addEventListener('input', debounce((e) => {
+            const term = e.target.value;
+            if (!window.currentDispatchData || !window.renderDispatchCards) return;
+            
+            const filtered = filterDataArray(window.currentDispatchData, term, ['creator_name', 'campaign_name', 'phone_number', 'state']);
+            window.renderDispatchCards(filtered);
+        }));
+    }
+
+    // 3. Status Tracking Search
+    const searchStList = document.getElementById('search-status-tracking');
+    if (searchStList) {
+        searchStList.addEventListener('input', debounce((e) => {
+            const term = e.target.value;
+            if (!window.currentStatusData || !window.renderStatusCards) return;
+            
+            const filtered = filterDataArray(window.currentStatusData, term, [
+                'influencer_dispatch_details.influencers_info.name',
+                'influencer_dispatch_details.campaign_name'
+            ]);
+            window.renderStatusCards(filtered);
+        }));
+    }
+
