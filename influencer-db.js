@@ -31,7 +31,7 @@
         const btnViewList = document.getElementById('btn-view-influencer-list');
         const btnBackToMarketing = document.getElementById('btn-back-to-marketing');
         const formContainer = document.getElementById('influencer-form-container');
-        const listContainer = document.getElementById('influencer-list-container');
+        const listContainer = document.getElementById('influencer-db-list-container');
         const defaultState = document.getElementById('influencer-db-default');
         const influencerForm = document.getElementById('influencer-db-form');
         const btnCancel = document.getElementById('btn-cancel-influencer');

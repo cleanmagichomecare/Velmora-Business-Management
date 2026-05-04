@@ -2654,7 +2654,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             window.currentInfluencerData = combinedData;
-            renderInfluencerCards(combinedData, container);
+            window.renderInfluencerCards(combinedData, container);
 
         } catch (error) {
             console.error("Error loading campaign influencers:", error);
@@ -2664,7 +2664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderInfluencerCards(dataList, container) {
+    window.renderInfluencerCards = function renderInfluencerCards(dataList, container) {
         container.innerHTML = '';
         dataList.forEach(data => {
             const card = document.createElement('div');
@@ -9026,19 +9026,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Influencer List Search
     const searchInfList = document.getElementById('search-influencer-list');
     if (searchInfList) {
-        searchInfList.addEventListener('input', debounce((e) => {
-            const term = (e.target.value || '').trim();
+        const influencerSearchHandler = debounce((val) => {
+            const term = val.trim();
             const container = document.getElementById('influencer-list-container');
             if (!window.currentInfluencerData) return;
             
-            const filtered = filterDataArray(window.currentInfluencerData, term, ['name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state']);
+            const filtered = filterDataArray(window.currentInfluencerData, term, [
+                'name', 'influencer_name', 'phone_number', 'alternative_number', 'upi_number', 'city', 'state'
+            ]);
             
             if (filtered.length === 0) {
                 container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-muted);">No results found.</div>';
             } else {
-                renderInfluencerCards(filtered, container);
+                window.renderInfluencerCards(filtered, container);
             }
-        }));
+        }, 300);
+
+        searchInfList.addEventListener('input', (e) => {
+            influencerSearchHandler(e.target.value);
+        });
     }
 
     // 2. Dispatched List Search
