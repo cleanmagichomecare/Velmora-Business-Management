@@ -2809,13 +2809,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Products Tab (dynamic from DB, grouped by video_number)
             const defaultProducts = ['DIY Dishwash Liquid', 'DIY Fabric Conditioner', 'DIY Detergent Liquid', 'Magic Sponge'];
             const savedProducts = data.products || [];
-            const totalVids = data.pricing?.total_videos || 0;
+            
+            // Parse total_videos to ensure it's a valid integer
+            let totalVids = parseInt(data.pricing?.total_videos, 10);
+            if (isNaN(totalVids)) totalVids = 0;
             const videoCount = totalVids > 0 ? totalVids : 1;
 
             // Group saved products by video_number
             const productsByVideo = {};
             savedProducts.forEach(p => {
-                const vn = p.video_number || 1;
+                const vn = parseInt(p.video_number, 10) || 1;
                 if (!productsByVideo[vn]) productsByVideo[vn] = [];
                 productsByVideo[vn].push(p);
             });
@@ -2824,8 +2827,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Determine how many video sections to show
             const videoKeys = Object.keys(productsByVideo).map(Number).filter(n => !isNaN(n) && n > 0);
-            const maxVideoNum = videoKeys.length > 0 ? Math.max(videoCount, ...videoKeys) : videoCount;
-            const sectionsToShow = maxVideoNum > 0 ? maxVideoNum : 1;
+            let maxVideoNum = videoKeys.length > 0 ? Math.max(videoCount, ...videoKeys) : videoCount;
+            
+            // Limit to a sensible maximum to prevent browser freeze (Invalid string length)
+            const MAX_VIDEOS_UI_LIMIT = 50;
+            let sectionsToShow = maxVideoNum > 0 ? maxVideoNum : 1;
+            if (sectionsToShow > MAX_VIDEOS_UI_LIMIT) {
+                console.warn(`Limiting video sections from ${sectionsToShow} to ${MAX_VIDEOS_UI_LIMIT} to prevent UI crash.`);
+                sectionsToShow = MAX_VIDEOS_UI_LIMIT;
+            }
 
             for (let v = 1; v <= sectionsToShow; v++) {
                 const videoProducts = productsByVideo[v] || [];
