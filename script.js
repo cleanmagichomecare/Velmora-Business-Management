@@ -790,6 +790,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (marketingOptions && influencerDashboard) {
                 marketingOptions.classList.add('hidden');
                 influencerDashboard.classList.remove('hidden');
+
+                const analyticsOverview = document.getElementById('analytics-overview');
+                const contentPlaceholder = document.getElementById('content-viewer-placeholder');
+                const campaignFormContainer = document.getElementById('campaign-form-container');
+                const dashboardViewGlob = document.getElementById('campaign-dashboard-view');
+                const addInfluencerViewGlob = document.getElementById('add-influencer-view');
+                const influencerListView = document.getElementById('influencer-list-view');
+                const dispatchedListView = document.getElementById('view-dispatched-list');
+                const statusTrackingView = document.getElementById('view-status-tracking');
+
+                if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
+                if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
+                if (dashboardViewGlob) dashboardViewGlob.classList.add('hidden');
+                if (addInfluencerViewGlob) addInfluencerViewGlob.classList.add('hidden');
+                if (influencerListView) influencerListView.classList.add('hidden');
+                if (dispatchedListView) dispatchedListView.classList.add('hidden');
+                if (statusTrackingView) statusTrackingView.classList.add('hidden');
+
+                if (analyticsOverview) analyticsOverview.classList.remove('hidden');
+
+                document.querySelectorAll('.campaign-item').forEach(item => {
+                    item.classList.remove('active');
+                });
             }
         });
     }
@@ -812,6 +835,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     campaignFormContainer.classList.add('hidden');
                     if (dashboardViewGlob) dashboardViewGlob.classList.add('hidden');
                     if (addInfluencerViewGlob) addInfluencerViewGlob.classList.add('hidden');
+                    
+                    const analyticsOverview = document.getElementById('analytics-overview');
+                    if (analyticsOverview) analyticsOverview.classList.add('hidden');
 
                     const influencerList = document.getElementById('influencer-list-view');
                     if (influencerList) influencerList.classList.add('hidden');
@@ -835,6 +861,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCreateCampaign.addEventListener('click', () => {
             // Hide existing views in right panel
             contentPlaceholder.classList.add('hidden');
+            const analyticsOverview = document.getElementById('analytics-overview');
+            if (analyticsOverview) analyticsOverview.classList.add('hidden');
 
             const dashboardView = document.getElementById('campaign-dashboard-view');
             const addInfluencerView = document.getElementById('add-influencer-view');
@@ -1256,9 +1284,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const dashboardView = document.getElementById('campaign-dashboard-view');
         const dispatchedListView = document.getElementById('view-dispatched-list');
         const statusTrackingView = document.getElementById('view-status-tracking');
+        const analyticsOverview = document.getElementById('analytics-overview');
 
         // Hide other views
         if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
+        if (analyticsOverview) analyticsOverview.classList.add('hidden');
         if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
         if (addInfluencerView) addInfluencerView.classList.add('hidden');
         if (influencerListView) influencerListView.classList.add('hidden');
