@@ -95,7 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             vendorCategorySelect.innerHTML = '<option value="">Select Category</option>';
             
-            const uniqueMains = [...new Set(data.map(row => row.main).filter(Boolean).map(v => v.trim()).filter(v => v !== '-'))];
+            const uniqueMains = [...new Set(data.map(row => {
+                let val = row.main ? row.main.trim() : null;
+                return val === 'Operatons' ? 'Operations' : val;
+            }).filter(Boolean).filter(v => v !== '-'))];
+
             
             uniqueMains.forEach(main => {
                 const opt = document.createElement('option');
@@ -800,6 +804,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dispatchedListView = document.getElementById('view-dispatched-list');
                 const statusTrackingView = document.getElementById('view-status-tracking');
 
+                const campaignDashboardHeader = document.getElementById('campaign-dashboard-header');
+                if (campaignDashboardHeader) campaignDashboardHeader.classList.add('hidden');
+                
                 if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
                 if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
                 if (dashboardViewGlob) dashboardViewGlob.classList.add('hidden');
@@ -1297,20 +1304,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
         if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
 
-        // Show Dashboard View
+        // Show Dashboard Header and View
+        const dashboardHeader = document.getElementById('campaign-dashboard-header');
+        if (dashboardHeader) {
+            dashboardHeader.classList.remove('hidden');
+        }
+
         if (dashboardView) {
             dashboardView.classList.remove('fade-in');
             void dashboardView.offsetWidth; // Trigger reflow for animation
             dashboardView.classList.remove('hidden');
             dashboardView.classList.add('fade-in'); // Smooth transition
+        }
             
             // Set Campaign Title
             const titleEl = document.getElementById('campaign-dashboard-title');
             if (titleEl) {
                 titleEl.textContent = `${campaign.campaign_name || 'Untitled'} Campaign`;
             }
-        }
+
+            // Reset active states on all action buttons
+            const campaignActions = document.querySelector('.campaign-actions');
+            if (campaignActions) {
+                campaignActions.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            }
     }
+
 
     // Call on load
     window.selectedCampaignId = localStorage.getItem('selectedCampaignId') || null;
@@ -1742,9 +1761,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const campaignDashboardView = document.getElementById('campaign-dashboard-view');
     const addInfluencerView = document.getElementById('add-influencer-view');
 
-    if (btnAddInfluencer && campaignDashboardView && addInfluencerView) {
+    if (btnAddInfluencer && addInfluencerView) {
         btnAddInfluencer.addEventListener('click', () => {
-            campaignDashboardView.classList.add('hidden');
+            // Keep header visible, but hide dashboard content view
+            if (campaignDashboardView) campaignDashboardView.classList.add('hidden');
+            
             addInfluencerView.classList.remove('hidden');
             const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
             if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
@@ -2685,9 +2706,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCampaignDispatch = document.getElementById('btn-campaign-dispatch');
 
     // Route from Dashboard to List View
-    if (btnInfluencerListNav && campaignDashboardView && influencerListView) {
+    if (btnInfluencerListNav && influencerListView) {
         btnInfluencerListNav.addEventListener('click', () => {
-            campaignDashboardView.classList.add('hidden');
+            // Keep header visible, hide dashboard content
+            if (campaignDashboardView) campaignDashboardView.classList.add('hidden');
+            
             influencerListView.classList.remove('hidden');
             const dispatchedListView = document.getElementById('view-dispatched-list');
             if (dispatchedListView) dispatchedListView.classList.add('hidden');
@@ -3836,9 +3859,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Route from Dashboard to Dispatched List View
-    if (btnCampaignDispatch && campaignDashboardView) {
+    if (btnCampaignDispatch) {
         btnCampaignDispatch.addEventListener('click', () => {
-            campaignDashboardView.classList.add('hidden');
+            // Keep header visible, hide dashboard content
+            if (campaignDashboardView) campaignDashboardView.classList.add('hidden');
+            
             const dispatchedListView = document.getElementById('view-dispatched-list');
             if (dispatchedListView) {
                 dispatchedListView.classList.remove('hidden');
@@ -6300,7 +6325,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCampaignAnalytics = document.getElementById('btn-campaign-analytics');
     if (btnCampaignAnalytics) {
         btnCampaignAnalytics.addEventListener('click', () => {
-            // Hide all other views
+            // Hide other content views (NOT campaign-dashboard-header)
             const viewsToHide = [
                 'campaign-dashboard-view',
                 'add-influencer-view',
@@ -6308,7 +6333,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'view-dispatched-list',
                 'view-status-tracking',
                 'content-viewer-placeholder',
-                'campaign-form-container'
+                'campaign-form-container',
+                'analytics-overview'
             ];
             viewsToHide.forEach(id => {
                 const el = document.getElementById(id);

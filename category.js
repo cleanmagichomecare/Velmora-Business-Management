@@ -174,7 +174,9 @@ console.log('category.js Loading...');
                 const hierarchy = {};
 
                 data.forEach(row => {
-                    const main = row.category ? row.category.trim() : null;
+                    let main = row.category ? row.category.trim() : null;
+                    if (main === 'Operatons') main = 'Operations';
+
                     const sub1 = row.sub_category ? row.sub_category.trim() : null;
                     const sub2 = row.sub_sub_category ? row.sub_sub_category.trim() : null;
                     const sub3 = row.sub_sub_sub_category ? row.sub_sub_sub_category.trim() : null;
@@ -831,7 +833,11 @@ window.loadVendorMainCategories = async function(dropdownId) {
     // Remove null + duplicates
     const unique = [...new Set(
         data
-            .map(item => item.category)
+            .map(item => {
+                const val = item.category ? item.category.trim() : null;
+                return val === 'Operatons' ? 'Operations' : val;
+            })
+
             .filter(Boolean)
             .map(v => v.trim())
     )];
