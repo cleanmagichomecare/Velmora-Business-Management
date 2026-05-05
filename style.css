@@ -2156,9 +2156,6 @@ div.modal.hidden {
     gap: 8px;
 }
 
-@media (max-width: 768px) {
-    }
-}
 
 /* Dispatch Modal Dynamic Products */
 .dispatch-products-dynamic {
