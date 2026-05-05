@@ -6332,35 +6332,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Campaign Analytics ---
     async function loadCampaignAnalytics(campaignId) {
         try {
-            // 1. Influencers count
+            // 1. Get influencers for campaign
             const { data: influencers } = await supabase
                 .from('influencers_info')
                 .select('id')
                 .eq('campaign_id', campaignId);
 
-            // 2. Pricing data (IMPORTANT FIX)
+            const influencerIds = influencers ? influencers.map(i => i.id) : [];
+
+            // 2. Get pricing using influencer IDs
             const { data: pricing } = await supabase
                 .from('influencer_pricing')
                 .select('total_videos, final_price')
-                .eq('campaign_id', campaignId);
+                .in('influencer_id', influencerIds);
 
+            // 3. Calculate totals
             let totalVideos = 0;
             let totalBudget = 0;
 
-            if (pricing && pricing.length > 0) {
-                pricing.forEach(item => {
-                    totalVideos += Number(item.total_videos) || 0;
-                    totalBudget += Number(item.final_price) || 0;
-                });
-            }
+            pricing?.forEach(p => {
+                totalVideos += Number(p.total_videos) || 0;
+                totalBudget += Number(p.final_price) || 0;
+            });
 
-            // 3. Update UI
+            // 4. Update UI
             document.getElementById('totalInfluencers').innerText = influencers?.length || 0;
             document.getElementById('totalVideos').innerText = totalVideos;
             document.getElementById('totalBudget').innerText = `₹${totalBudget.toLocaleString()}`;
 
-        } catch (error) {
-            console.error('Analytics Error:', error);
+        } catch (err) {
+            console.error('Analytics Error:', err);
         }
     }
 
