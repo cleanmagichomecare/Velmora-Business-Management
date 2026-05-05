@@ -6332,13 +6332,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Campaign Analytics ---
     async function loadCampaignAnalytics(campaignId) {
         try {
-            // Total Influencers
+            // 1. Influencers count
             const { data: influencers } = await supabase
                 .from('influencers_info')
                 .select('id')
                 .eq('campaign_id', campaignId);
 
-            // Pricing Data
+            // 2. Pricing data (IMPORTANT FIX)
             const { data: pricing } = await supabase
                 .from('influencer_pricing')
                 .select('total_videos, final_price')
@@ -6347,14 +6347,15 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalVideos = 0;
             let totalBudget = 0;
 
-            if (pricing) {
+            if (pricing && pricing.length > 0) {
                 pricing.forEach(item => {
-                    totalVideos += item.total_videos || 0;
-                    totalBudget += item.final_price || 0;
+                    totalVideos += Number(item.total_videos) || 0;
+                    totalBudget += Number(item.final_price) || 0;
                 });
             }
 
-            document.getElementById('totalInfluencers').innerText = influencers ? influencers.length : 0;
+            // 3. Update UI
+            document.getElementById('totalInfluencers').innerText = influencers?.length || 0;
             document.getElementById('totalVideos').innerText = totalVideos;
             document.getElementById('totalBudget').innerText = `₹${totalBudget.toLocaleString()}`;
 
