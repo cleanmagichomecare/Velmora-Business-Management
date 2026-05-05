@@ -1,3 +1,8 @@
+const VIDEO_TYPES = {
+    video1: "DIY",
+    video2: "Sponge"
+};
+
 window.influencerData = [];
 window.dispatchRecords = [];
 window.mainCategories = window.mainCategories || [];
@@ -2141,9 +2146,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!finalPriceStr || !totalVideosStr) {
                 if (typeof showToast === 'function') {
-                    showToast('❌ Pricing calculation failed. Please enter Video 1 or Video 2 quantities.');
+                    showToast(`❌ Pricing calculation failed. Please enter Video 1 (${VIDEO_TYPES.video1}) or Video 2 (${VIDEO_TYPES.video2}) quantities.`);
                 } else {
-                    alert('Pricing calculation failed. Please enter Video 1 or Video 2 quantities.');
+                    alert(`Pricing calculation failed. Please enter Video 1 (${VIDEO_TYPES.video1}) or Video 2 (${VIDEO_TYPES.video2}) quantities.`);
                 }
                 return;
             }
@@ -2921,10 +2926,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let pricingHtml = `<div id="pricing-${data.id}" class="tab-pane hidden" style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="pricing-summary-grid">
-                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 1</label><div class="info-val" data-field="video1_count" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.video1_count || 0}</div></div>
-                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 1 Price</label><div class="info-val" data-field="video1_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.video1_price || 0}</div></div>
-                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 2</label><div class="info-val" data-field="video2_count" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.video2_count || 0}</div></div>
-                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 2 Price</label><div class="info-val" data-field="video2_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.video2_price || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 1 (${VIDEO_TYPES.video1})</label><div class="info-val" data-field="video1_count" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.video1_count || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 1 (${VIDEO_TYPES.video1}) Price</label><div class="info-val" data-field="video1_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.video1_price || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 2 (${VIDEO_TYPES.video2})</label><div class="info-val" data-field="video2_count" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.video2_count || 0}</div></div>
+                    <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Video 2 (${VIDEO_TYPES.video2}) Price</label><div class="info-val" data-field="video2_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.video2_price || 0}</div></div>
                     <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Total Videos</label><div class="info-val" data-field="total_videos" style="font-weight: 600; font-size: 15px; color: var(--text-main);">${data.pricing?.total_videos || 0}</div></div>
                     <div class="info-group" style="margin: 0;"><label style="font-size: 13px;">Final Price</label><div class="info-val" data-field="final_price" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${data.pricing?.final_price || 0}</div></div>
                 </div>
@@ -4321,8 +4326,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         productsContainer.innerHTML = '<p class="text-muted" style="text-align: center; padding: 10px;">No products selected</p>';
                     } else {
                         productsContainer.innerHTML = 
-                            renderVideoSection('Video 1', grouped.video1) + 
-                            renderVideoSection('Video 2', grouped.video2);
+                            renderVideoSection(`Video 1 (${VIDEO_TYPES.video1})`, grouped.video1) + 
+                            renderVideoSection(`Video 2 (${VIDEO_TYPES.video2})`, grouped.video2);
                     }
 
                     // Auto-update Total Products field
