@@ -6348,20 +6348,30 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Get pricing using influencer IDs
             const { data: pricing } = await supabase
                 .from('influencer_pricing')
-                .select('total_videos, final_price')
+                .select('total_videos, final_price, video1_count, video2_count')
                 .in('influencer_id', influencerIds);
 
             // 3. Calculate totals
             let totalVideos = 0;
             let totalBudget = 0;
+            let diyCount = 0;
+            let spongeCount = 0;
 
             pricing?.forEach(p => {
                 totalVideos += Number(p.total_videos) || 0;
                 totalBudget += Number(p.final_price) || 0;
+                
+                if (Number(p.video1_count || 0) > 0) diyCount++;
+                if (Number(p.video2_count || 0) > 0) spongeCount++;
             });
 
             // 4. Update UI
             document.getElementById('totalInfluencers').innerText = influencers?.length || 0;
+            const elDiyCount = document.getElementById('diyCount');
+            if (elDiyCount) elDiyCount.innerText = diyCount;
+            const elSpongeCount = document.getElementById('spongeCount');
+            if (elSpongeCount) elSpongeCount.innerText = spongeCount;
+            
             document.getElementById('totalVideos').innerText = totalVideos;
             document.getElementById('totalBudget').innerText = `₹${totalBudget.toLocaleString()}`;
 

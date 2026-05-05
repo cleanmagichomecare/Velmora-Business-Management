@@ -1476,6 +1476,22 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
     color: #e2e8f0;
 }
 
+.influencer-breakdown {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.influencer-breakdown p {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 4px;
+    margin-bottom: 0;
+    color: white;
+}
+
 .card-icon {
     width: 42px;
     height: 42px;
