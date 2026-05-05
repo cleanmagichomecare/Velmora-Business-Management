@@ -783,6 +783,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Helper to hide all views to prevent overlap
+    function hideAllInfluencerViews() {
+        const viewsToHide = [
+            'analytics-overview',
+            'campaign-analytics-view',
+            'campaign-dashboard-view',
+            'add-influencer-view',
+            'influencer-list-view',
+            'view-dispatched-list',
+            'view-status-tracking',
+            'content-viewer-placeholder',
+            'campaign-form-container'
+        ];
+        viewsToHide.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.add('hidden');
+                el.classList.remove('active-view');
+            }
+        });
+    }
+
     // Influencer Dashboard Logic
     const btnInfluencerDashboard = document.getElementById('btn-influencer-dashboard');
     const marketingOptions = document.getElementById('marketing-options');
@@ -795,26 +817,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 marketingOptions.classList.add('hidden');
                 influencerDashboard.classList.remove('hidden');
 
-                const analyticsOverview = document.getElementById('analytics-overview');
-                const contentPlaceholder = document.getElementById('content-viewer-placeholder');
-                const campaignFormContainer = document.getElementById('campaign-form-container');
-                const dashboardViewGlob = document.getElementById('campaign-dashboard-view');
-                const addInfluencerViewGlob = document.getElementById('add-influencer-view');
-                const influencerListView = document.getElementById('influencer-list-view');
-                const dispatchedListView = document.getElementById('view-dispatched-list');
-                const statusTrackingView = document.getElementById('view-status-tracking');
-
+                hideAllInfluencerViews();
+                
                 const campaignDashboardHeader = document.getElementById('campaign-dashboard-header');
                 if (campaignDashboardHeader) campaignDashboardHeader.classList.add('hidden');
-                
-                if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
-                if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
-                if (dashboardViewGlob) dashboardViewGlob.classList.add('hidden');
-                if (addInfluencerViewGlob) addInfluencerViewGlob.classList.add('hidden');
-                if (influencerListView) influencerListView.classList.add('hidden');
-                if (dispatchedListView) dispatchedListView.classList.add('hidden');
-                if (statusTrackingView) statusTrackingView.classList.add('hidden');
 
+                const analyticsOverview = document.getElementById('analytics-overview');
                 if (analyticsOverview) analyticsOverview.classList.remove('hidden');
 
                 document.querySelectorAll('.campaign-item').forEach(item => {
@@ -6325,24 +6333,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCampaignAnalytics = document.getElementById('btn-campaign-analytics');
     if (btnCampaignAnalytics) {
         btnCampaignAnalytics.addEventListener('click', () => {
-            // Hide other content views (NOT campaign-dashboard-header)
-            const viewsToHide = [
-                'campaign-dashboard-view',
-                'add-influencer-view',
-                'influencer-list-view',
-                'view-dispatched-list',
-                'view-status-tracking',
-                'content-viewer-placeholder',
-                'campaign-form-container',
-                'analytics-overview'
-            ];
-            viewsToHide.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.classList.add('hidden');
-                    el.classList.remove('active-view');
-                }
-            });
+            hideAllInfluencerViews();
 
             // Show campaign analytics view
             const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
