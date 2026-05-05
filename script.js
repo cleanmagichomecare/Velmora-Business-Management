@@ -6329,11 +6329,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Campaign Analytics ---
+    async function loadCampaignAnalytics(campaignId) {
+        try {
+            // Total Influencers
+            const { data: influencers } = await supabase
+                .from('influencers_info')
+                .select('id')
+                .eq('campaign_id', campaignId);
+
+            // Pricing Data
+            const { data: pricing } = await supabase
+                .from('influencer_pricing')
+                .select('total_videos, final_price')
+                .eq('campaign_id', campaignId);
+
+            let totalVideos = 0;
+            let totalBudget = 0;
+
+            if (pricing) {
+                pricing.forEach(item => {
+                    totalVideos += item.total_videos || 0;
+                    totalBudget += item.final_price || 0;
+                });
+            }
+
+            document.getElementById('totalInfluencers').innerText = influencers ? influencers.length : 0;
+            document.getElementById('totalVideos').innerText = totalVideos;
+            document.getElementById('totalBudget').innerText = `₹${totalBudget.toLocaleString()}`;
+
+        } catch (error) {
+            console.error('Analytics Error:', error);
+        }
+    }
+
     // --- Campaign Analytics Button ---
     const btnCampaignAnalytics = document.getElementById('btn-campaign-analytics');
     if (btnCampaignAnalytics) {
         btnCampaignAnalytics.addEventListener('click', () => {
             hideAllInfluencerViews();
+
+            // Load data
+            loadCampaignAnalytics(window.selectedCampaignId);
 
             // Show campaign analytics view
             const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
