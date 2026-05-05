@@ -1294,6 +1294,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (influencerListView) influencerListView.classList.add('hidden');
         if (dispatchedListView) dispatchedListView.classList.add('hidden');
         if (statusTrackingView) statusTrackingView.classList.add('hidden');
+        const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
+        if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
 
         // Show Dashboard View
         if (dashboardView) {
@@ -1744,6 +1746,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnAddInfluencer.addEventListener('click', () => {
             campaignDashboardView.classList.add('hidden');
             addInfluencerView.classList.remove('hidden');
+            const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
+            if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
             
             // Always force-reset wizard state when opening Add Influencer
             resetAddInfluencerWizard();
@@ -2689,6 +2693,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dispatchedListView) dispatchedListView.classList.add('hidden');
             const statusTrackingView = document.getElementById('view-status-tracking');
             if (statusTrackingView) statusTrackingView.classList.add('hidden');
+            const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
+            if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
             
             if (window.selectedCampaignId) {
                 loadCampaignInfluencers(window.selectedCampaignId);
@@ -3848,6 +3854,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (influencerListView) influencerListView.classList.add('hidden');
             const statusTrackingView = document.getElementById('view-status-tracking');
             if (statusTrackingView) statusTrackingView.classList.add('hidden');
+            const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
+            if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
         });
     }
 
@@ -4768,7 +4776,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'influencer-list-view',
             'view-dispatched-list',
             'content-viewer-placeholder',
-            'campaign-form-container'
+            'campaign-form-container',
+            'campaign-analytics-view'
         ];
         viewsToHide.forEach(id => {
             const el = document.getElementById(id);
@@ -6284,6 +6293,43 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnStatusTracking) {
         btnStatusTracking.addEventListener('click', () => {
             window.loadCampaignStatusTracking();
+        });
+    }
+
+    // --- Campaign Analytics Button ---
+    const btnCampaignAnalytics = document.getElementById('btn-campaign-analytics');
+    if (btnCampaignAnalytics) {
+        btnCampaignAnalytics.addEventListener('click', () => {
+            // Hide all other views
+            const viewsToHide = [
+                'campaign-dashboard-view',
+                'add-influencer-view',
+                'influencer-list-view',
+                'view-dispatched-list',
+                'view-status-tracking',
+                'content-viewer-placeholder',
+                'campaign-form-container'
+            ];
+            viewsToHide.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('hidden');
+                    el.classList.remove('active-view');
+                }
+            });
+
+            // Show campaign analytics view
+            const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
+            if (campaignAnalyticsView) {
+                campaignAnalyticsView.classList.remove('hidden');
+            }
+
+            // Active button styling
+            const campaignActions = document.querySelector('.campaign-actions');
+            if (campaignActions) {
+                campaignActions.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                btnCampaignAnalytics.classList.add('active');
+            }
         });
     }
 
