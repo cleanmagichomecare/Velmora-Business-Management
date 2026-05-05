@@ -9563,6 +9563,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // 1. Generate code safely
+                const generateCampaignPrefix = function(name) {
+                    if (!name) return "INF";
+                    const smallWords = ["the", "and", "of", "a", "an", "in", "on", "at", "to", "for", "with"];
+                    const words = name.split(/\s+/).filter(w => w.length > 0 && !smallWords.includes(w.toLowerCase()));
+                    if (words.length === 0) return "INF";
+                    let pfx = words.map(w => w[0].toUpperCase()).join("");
+                    return pfx.substring(0, 3);
+                };
                 const prefix = generateCampaignPrefix(targetCampaignName);
                 const { data: existingCodes, error: codeErr } = await window.supabase
                     .from('influencers_info')
