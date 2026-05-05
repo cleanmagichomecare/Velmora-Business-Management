@@ -3003,6 +3003,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ? `<button class="btn-secondary btn-dispatch-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px; background-color: rgba(40, 167, 69, 0.1); color: #28a745; border-color: rgba(40, 167, 69, 0.3); pointer-events: none;" disabled>Dispatched</button>` 
                             : `<button class="btn-secondary btn-dispatch-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Dispatch</button>`}
                         <button class="btn-secondary btn-edit-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Edit</button>
+                        <button class="btn-secondary btn-copy-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Copy</button>
                         <button class="btn-danger btn-archive-inf" data-id="${data.id}" style="padding: 6px 16px; font-size: 13px; border-radius: 6px;">Archive</button>
                     </div>
                 </div>
@@ -3054,6 +3055,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnDispatch = card.querySelector('.btn-dispatch-inf');
             const btnEdit = card.querySelector('.btn-edit-inf');
             const btnArchive = card.querySelector('.btn-archive-inf');
+            const btnCopy = card.querySelector('.btn-copy-inf');
+
+            if (btnCopy) {
+                btnCopy.addEventListener('click', () => {
+                    if (typeof window.openCopyInfluencerModal === 'function') {
+                        window.openCopyInfluencerModal(data);
+                    } else {
+                        console.error('Copy function not globally available');
+                    }
+                });
+            }
 
             btnDispatch.addEventListener('click', () => {
                 if (btnDispatch.disabled) return;
@@ -9481,4 +9493,212 @@ document.addEventListener('DOMContentLoaded', () => {
             filterDropdownStatus.classList.add('hidden');
         });
     }
+    // --- Copy Influencer Feature ---
+    window.openCopyInfluencerModal = async function(influencerData) {
+        const modal = document.getElementById('copy-influencer-modal');
+        const nameEl = document.getElementById('copy-influencer-name');
+        const selectEl = document.getElementById('copy-target-campaign');
+        const btnCancel = document.getElementById('btn-cancel-copy-influencer');
+        const btnCopy = document.getElementById('btn-confirm-copy-influencer');
+
+        if (!modal || !nameEl || !selectEl) return;
+
+        nameEl.textContent = `Copy ${influencerData.name || 'Unknown'}`;
+        selectEl.innerHTML = '<option value="">Loading campaigns...</option>';
+        modal.classList.remove('hidden');
+
+        // Fetch active campaigns (excluding current)
+        try {
+            const { data: campaigns, error } = await window.supabase
+                .from('campaigns')
+                .select('id, campaign_name')
+                .eq('status', 'active');
+            
+            if (error) throw error;
+
+            selectEl.innerHTML = '<option value="">Select a campaign...</option>';
+            let hasOptions = false;
+            campaigns.forEach(c => {
+                if (c.id !== influencerData.campaign_id) {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.campaign_name;
+                    selectEl.appendChild(opt);
+                    hasOptions = true;
+                }
+            });
+
+            if (!hasOptions) {
+                selectEl.innerHTML = '<option value="">No other active campaigns available</option>';
+                btnCopy.disabled = true;
+            } else {
+                btnCopy.disabled = false;
+            }
+        } catch (err) {
+            console.error("Error loading campaigns for copy:", err);
+            selectEl.innerHTML = '<option value="">Error loading campaigns</option>';
+            btnCopy.disabled = true;
+        }
+
+        // Cleanup previous listeners
+        const newCancelBtn = btnCancel.cloneNode(true);
+        btnCancel.parentNode.replaceChild(newCancelBtn, btnCancel);
+        const newCopyBtn = btnCopy.cloneNode(true);
+        btnCopy.parentNode.replaceChild(newCopyBtn, btnCopy);
+
+        newCancelBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        newCopyBtn.addEventListener('click', async () => {
+            const targetCampaignId = selectEl.value;
+            if (!targetCampaignId) {
+                if (window.showToast) window.showToast("❌ Please select a target campaign");
+                return;
+            }
+
+            const targetCampaignName = selectEl.options[selectEl.selectedIndex].text;
+            newCopyBtn.disabled = true;
+            newCopyBtn.textContent = 'Copying...';
+
+            try {
+                // 1. Generate code safely
+                const prefix = generateCampaignPrefix(targetCampaignName);
+                const { data: existingCodes, error: codeErr } = await window.supabase
+                    .from('influencers_info')
+                    .select('code')
+                    .eq('campaign_id', targetCampaignId)
+                    .ilike('code', `${prefix}%`);
+                
+                if (codeErr) throw codeErr;
+
+                let maxNum = 0;
+                if (existingCodes && existingCodes.length > 0) {
+                    existingCodes.forEach(row => {
+                        const numStr = (row.code || '').replace(prefix, '');
+                        const num = parseInt(numStr, 10);
+                        if (!isNaN(num) && num > maxNum) {
+                            maxNum = num;
+                        }
+                    });
+                }
+                const newCode = `${prefix}${maxNum + 1}`;
+
+                // 2. Insert into influencers_info
+                const { data: newInfo, error: insertInfoErr } = await window.supabase
+                    .from('influencers_info')
+                    .insert([{
+                        campaign_id: targetCampaignId,
+                        code: newCode,
+                        name: influencerData.name,
+                        influencer_name: influencerData.influencer_name,
+                        phone_number: influencerData.phone_number,
+                        alternative_number: influencerData.alternative_number,
+                        upi_number: influencerData.upi_number,
+                        complete_address: influencerData.complete_address,
+                        city: influencerData.city,
+                        state: influencerData.state,
+                        languages: influencerData.languages,
+                        profile_file_url: influencerData.profile_file_url
+                    }])
+                    .select('id')
+                    .single();
+
+                if (insertInfoErr) throw insertInfoErr;
+                const newInfluencerId = newInfo.id;
+
+                let newPricingId = null;
+
+                try {
+                    // 3. Copy Platforms
+                    if (influencerData.platforms && influencerData.platforms.length > 0) {
+                        const platformsToInsert = influencerData.platforms.map(p => ({
+                            influencer_id: newInfluencerId,
+                            platform: p.platform,
+                            username: p.username,
+                            followers_count: p.followers_count,
+                            profile_link: p.profile_link,
+                            video_views: p.video_views
+                        }));
+                        const { error: platErr } = await window.supabase.from('influencer_platforms_details').insert(platformsToInsert);
+                        if (platErr) throw platErr;
+                    }
+
+                    // 4. Copy Pricing
+                    if (influencerData.pricing && influencerData.pricing.id) { // Checking if pricing exists
+                        const { data: newPricing, error: priceErr } = await window.supabase
+                            .from('influencer_pricing')
+                            .insert([{
+                                influencer_id: newInfluencerId,
+                                video1_count: influencerData.pricing.video1_count,
+                                video1_price: influencerData.pricing.video1_price,
+                                video2_count: influencerData.pricing.video2_count,
+                                video2_price: influencerData.pricing.video2_price,
+                                total_videos: influencerData.pricing.total_videos,
+                                final_price: influencerData.pricing.final_price
+                            }])
+                            .select('id')
+                            .single();
+                        if (priceErr) throw priceErr;
+                        newPricingId = newPricing.id;
+
+                        // 5. Copy Bargain History
+                        if (influencerData.pricing.bargainHistory && influencerData.pricing.bargainHistory.length > 0) {
+                            const bargainsToInsert = influencerData.pricing.bargainHistory.map(b => ({
+                                pricing_id: newPricingId,
+                                creator_request: b.creator_request,
+                                brand_request: b.brand_request
+                            }));
+                            const { error: bargainErr } = await window.supabase.from('influencer_bargain_history').insert(bargainsToInsert);
+                            if (bargainErr) throw bargainErr;
+                        }
+                    }
+
+                    // 6. Copy Products
+                    if (influencerData.products && influencerData.products.length > 0) {
+                        const productsToInsert = influencerData.products.map(p => ({
+                            influencer_id: newInfluencerId,
+                            video_number: p.video_number,
+                            product_name: p.product_name,
+                            selected: p.selected,
+                            qty: p.qty
+                        }));
+                        const { error: prodErr } = await window.supabase.from('influencer_products').insert(productsToInsert);
+                        if (prodErr) throw prodErr;
+                    }
+
+                    // 7. Copy Brand Performance
+                    if (influencerData.performance && influencerData.performance.length > 0) {
+                        const perfsToInsert = influencerData.performance.map(p => ({
+                            influencer_id: newInfluencerId,
+                            brand_name: p.brand_name,
+                            product_name: p.product_name,
+                            views: p.views,
+                            uploaded_platforms: p.uploaded_platforms,
+                            instagram_link: p.instagram_link,
+                            youtube_link: p.youtube_link,
+                            facebook_link: p.facebook_link
+                        }));
+                        const { error: perfErr } = await window.supabase.from('influencer_brand_performance').insert(perfsToInsert);
+                        if (perfErr) throw perfErr;
+                    }
+                } catch (innerErr) {
+                    // Manual rollback
+                    console.error("Error copying related data, rolling back:", innerErr);
+                    await window.supabase.from('influencers_info').delete().eq('id', newInfluencerId);
+                    throw innerErr;
+                }
+
+                if (window.showToast) window.showToast(`✅ Copied to ${targetCampaignName}`);
+                modal.classList.add('hidden');
+
+            } catch (err) {
+                console.error("Failed to copy influencer:", err);
+                if (window.showToast) window.showToast("❌ Failed to copy: " + (err.message || 'Unknown error'));
+            } finally {
+                newCopyBtn.disabled = false;
+                newCopyBtn.textContent = 'Copy';
+            }
+        });
+    };
 });

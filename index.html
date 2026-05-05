@@ -3251,7 +3251,29 @@
             </form>
         </div>
     </div>
-
+    <!-- Copy Influencer Modal -->
+    <div id="copy-influencer-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header flex-between">
+                <h2 id="copy-influencer-title" style="font-size: 1.25rem; margin: 0;">Copy Influencer</h2>
+                <button class="btn-close-modal" id="btn-close-copy-influencer">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="copy-influencer-name" style="margin-bottom: 15px; font-weight: 500; font-size: 0.95rem;"></p>
+                <div class="form-group">
+                    <label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; display: block;">Target Campaign</label>
+                    <select id="copy-target-campaign" class="edit-input" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main);" required>
+                        <option value="">Select a campaign...</option>
+                        <!-- Options injected dynamically -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn-secondary" id="btn-cancel-copy-influencer" style="padding: 8px 16px; border-radius: 8px;">Cancel</button>
+                <button type="button" class="btn-primary" id="btn-confirm-copy-influencer" style="padding: 8px 16px; border-radius: 8px;">Copy</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
