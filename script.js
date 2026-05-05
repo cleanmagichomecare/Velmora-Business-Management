@@ -9510,7 +9510,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch active campaigns (excluding current)
         try {
             const { data: campaigns, error } = await window.supabase
-                .from('campaigns')
+                .from('influencer_create_campaigns')
                 .select('id, campaign_name')
                 .eq('status', 'active');
             
