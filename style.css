@@ -1631,6 +1631,34 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
     font-weight:700;
 }
 
+.state-extra-content{
+    max-height:0;
+    overflow:hidden;
+    opacity:0;
+    transition:all .35s ease;
+}
+
+.state-card.expanded .state-extra-content{
+    max-height:500px;
+    opacity:1;
+    margin-top:14px;
+}
+
+.state-toggle-btn{
+    width:28px;
+    height:28px;
+    border:none;
+    border-radius:8px;
+    background:#101827;
+    color:#fff;
+    cursor:pointer;
+    font-size:18px;
+    font-weight:700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .campaign-actions {
     display: flex;
     gap: 16px;
