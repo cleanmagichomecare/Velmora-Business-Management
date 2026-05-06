@@ -1570,6 +1570,52 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
     max-height: 320px;
 }
 
+.state-breakdown-cards {
+    margin-top: 24px;
+    display: grid;
+    gap: 16px;
+}
+
+.state-breakdown-card {
+    background: #182338;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.state-breakdown-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.state-breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.state-metric {
+    background: #111827;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.state-metric h4 {
+    color: #9ca3af;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+    margin-bottom: 6px;
+}
+
 .campaign-actions {
     display: flex;
     gap: 16px;

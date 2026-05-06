@@ -6463,6 +6463,96 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
+            // Create State Analytics Cards
+            const stateAnalytics = {};
+
+            influencers?.forEach(inf => {
+                const rawState = inf.state || 'Unknown';
+                let state = rawState.trim().toLowerCase().replace(/\s+/g, ' ');
+
+                if (state === 'tamilnadu') state = 'tamil nadu';
+                if (state === 'newdelhi') state = 'new delhi';
+                if (state === 'uttarpradesh') state = 'uttar pradesh';
+                if (state === 'madhyapradesh') state = 'madhya pradesh';
+                if (state === 'andhrapradesh') state = 'andhra pradesh';
+                if (state === 'himachalpradesh') state = 'himachal pradesh';
+                if (state === 'arunachalpradesh') state = 'arunachal pradesh';
+                if (state === 'westbengal') state = 'west bengal';
+                if (state === 'jammuandkashmir') state = 'jammu and kashmir';
+                
+                const formattedState = state.replace(/\b\w/g, l => l.toUpperCase());
+
+                if (!stateAnalytics[formattedState]) {
+                    stateAnalytics[formattedState] = {
+                        influencerDIY: 0,
+                        influencerSponge: 0,
+                        videoDIY: 0,
+                        videoSponge: 0,
+                        total: 0
+                    };
+                }
+
+                stateAnalytics[formattedState].total++;
+
+                const pricingData = pricing?.find(p => p.influencer_id === inf.id);
+
+                if (pricingData) {
+                    const diyQty = Number(pricingData.video1_count) || 0;
+                    const spongeQty = Number(pricingData.video2_count) || 0;
+
+                    if (diyQty > 0) {
+                        stateAnalytics[formattedState].influencerDIY++;
+                    }
+
+                    if (spongeQty > 0) {
+                        stateAnalytics[formattedState].influencerSponge++;
+                    }
+
+                    stateAnalytics[formattedState].videoDIY += diyQty;
+                    stateAnalytics[formattedState].videoSponge += spongeQty;
+                }
+            });
+
+            const cardsContainer = document.getElementById('stateBreakdownCards');
+            if (cardsContainer) {
+                cardsContainer.innerHTML = '';
+
+                Object.entries(stateAnalytics).forEach(([state, data]) => {
+                    cardsContainer.innerHTML += `
+                    <div class="state-breakdown-card">
+                      <div class="state-breakdown-header">
+                        <span>${state}</span>
+                        <span>${data.total}</span>
+                      </div>
+                      <div class="state-breakdown-grid">
+                        <div class="state-metric">
+                          <h4>Influencers</h4>
+                          <div class="metric-row">
+                            <span>DIY</span>
+                            <strong>${data.influencerDIY}</strong>
+                          </div>
+                          <div class="metric-row">
+                            <span>Sponge</span>
+                            <strong>${data.influencerSponge}</strong>
+                          </div>
+                        </div>
+                        <div class="state-metric">
+                          <h4>Videos</h4>
+                          <div class="metric-row">
+                            <span>DIY</span>
+                            <strong>${data.videoDIY}</strong>
+                          </div>
+                          <div class="metric-row">
+                            <span>Sponge</span>
+                            <strong>${data.videoSponge}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    `;
+                });
+            }
+
         } catch (err) {
             console.error('Analytics Error:', err);
         }
