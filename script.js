@@ -6348,29 +6348,32 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Get pricing using influencer IDs
             const { data: pricing } = await supabase
                 .from('influencer_pricing')
-                .select('total_videos, final_price, video1_count, video2_count')
+                .select('total_videos, final_price, video1_count, video2_count, video1_price, video2_price')
                 .in('influencer_id', influencerIds);
 
             console.log("Analytics Pricing Data:", pricing);
 
             // 3. Calculate totals
-            let totalBudget = 0;
             let diyCount = 0;
             let spongeCount = 0;
             let diyVideos = 0;
             let spongeVideos = 0;
+            let diyBudget = 0;
+            let spongeBudget = 0;
 
             pricing?.forEach(p => {
-                totalBudget += Number(p.final_price) || 0;
-                
                 if (Number(p.video1_count || 0) > 0) diyCount++;
                 if (Number(p.video2_count || 0) > 0) spongeCount++;
 
                 diyVideos += Number(p.video1_count) || 0;
                 spongeVideos += Number(p.video2_count) || 0;
+
+                diyBudget += Number(p.video1_price) || 0;
+                spongeBudget += Number(p.video2_price) || 0;
             });
 
             let totalVideos = diyVideos + spongeVideos;
+            const totalBudget = diyBudget + spongeBudget;
 
             // 4. Update UI
             document.getElementById('totalInfluencers').innerText = influencers?.length || 0;
@@ -6387,6 +6390,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elSpongeVideos) elSpongeVideos.innerText = spongeVideos;
 
             document.getElementById('totalBudget').innerText = `₹${totalBudget.toLocaleString()}`;
+
+            const elDiyBudget = document.getElementById('diyBudget');
+            if (elDiyBudget) elDiyBudget.innerText = `₹${diyBudget.toLocaleString()}`;
+            const elSpongeBudget = document.getElementById('spongeBudget');
+            if (elSpongeBudget) elSpongeBudget.innerText = `₹${spongeBudget.toLocaleString()}`;
 
         } catch (err) {
             console.error('Analytics Error:', err);
