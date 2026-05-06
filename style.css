@@ -1598,6 +1598,16 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
     gap: 12px;
 }
 
+.state-breakdown-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media(max-width: 768px) {
+    .state-breakdown-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
 .state-metric {
     background: #111827;
     border-radius: 12px;

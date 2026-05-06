@@ -6488,6 +6488,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         influencerSponge: 0,
                         videoDIY: 0,
                         videoSponge: 0,
+                        budgetDIY: 0,
+                        budgetSponge: 0,
                         total: 0
                     };
                 }
@@ -6499,6 +6501,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (pricingData) {
                     const diyQty = Number(pricingData.video1_count) || 0;
                     const spongeQty = Number(pricingData.video2_count) || 0;
+                    const diyPrice = Number(pricingData.video1_price) || 0;
+                    const spongePrice = Number(pricingData.video2_price) || 0;
 
                     if (diyQty > 0) {
                         stateAnalytics[formattedState].influencerDIY++;
@@ -6510,6 +6514,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     stateAnalytics[formattedState].videoDIY += diyQty;
                     stateAnalytics[formattedState].videoSponge += spongeQty;
+                    stateAnalytics[formattedState].budgetDIY += diyPrice;
+                    stateAnalytics[formattedState].budgetSponge += spongePrice;
                 }
             });
 
@@ -6538,7 +6544,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <span>${data.total}</span>
                       </div>
-                      <div class="state-breakdown-grid">
+                      <div class="state-breakdown-grid state-breakdown-grid-3">
                         <div class="state-metric">
                           <h4>Influencers</h4>
                           <div class="metric-row">
@@ -6559,6 +6565,17 @@ document.addEventListener('DOMContentLoaded', () => {
                           <div class="metric-row">
                             <span>Sponge</span>
                             <strong>${data.videoSponge}</strong>
+                          </div>
+                        </div>
+                        <div class="state-metric">
+                          <h4>Budget</h4>
+                          <div class="metric-row">
+                            <span>DIY</span>
+                            <strong>₹${data.budgetDIY.toLocaleString()}</strong>
+                          </div>
+                          <div class="metric-row">
+                            <span>Sponge</span>
+                            <strong>₹${data.budgetSponge.toLocaleString()}</strong>
                           </div>
                         </div>
                       </div>
