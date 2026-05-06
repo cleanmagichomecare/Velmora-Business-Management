@@ -2760,6 +2760,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('influencers_info')
                 .select('*')
                 .eq('campaign_id', activeCampaignId)
+                .or('is_archived.eq.false,is_archived.is.null')
                 .order('created_at', { ascending: false });
 
             console.log('FETCHED INFLUENCERS (infoData):', infoData);
@@ -3169,16 +3170,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (error) throw error;
                     
-                    if (window.showToast) window.showToast('✅ Influencer archived');
-                    card.remove(); // Remove immediately without refetch
+                    if (window.showToast) window.showToast('Influencer archived successfully');
+                    card.remove(); // Remove immediately from UI
                     
-                    // Show empty state if this was the last card
-                    if (container.children.length === 0) {
-                        container.innerHTML = `
-                            <div class="empty-state" style="text-align: center; padding: 40px;">
-                                <div style="font-size: 40px; margin-bottom: 10px;">📇</div>
-                                <h3 style="color: var(--text-main); margin-bottom: 5px;">No influencers added to this campaign yet.</h3>
-                            </div>`;
+                    // Reload influencer list
+                    if (window.selectedCampaignId) {
+                        loadCampaignInfluencers(window.selectedCampaignId);
                     }
                 } catch (err) {
                     console.error("Archive error:", err);
