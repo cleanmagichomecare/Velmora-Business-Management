@@ -6337,8 +6337,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Get influencers for campaign
             const { data: influencers } = await supabase
                 .from('influencers_info')
-                .select('id')
-                .eq('campaign_id', campaignId);
+                .select('id, state')
+                .eq('campaign_id', campaignId)
+                .or('is_archived.eq.false,is_archived.is.null');
 
             const influencerIds = influencers ? influencers.map(i => i.id) : [];
 
@@ -6392,6 +6393,55 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elDiyBudget) elDiyBudget.innerText = `₹${diyBudget.toLocaleString()}`;
             const elSpongeBudget = document.getElementById('spongeBudget');
             if (elSpongeBudget) elSpongeBudget.innerText = `₹${spongeBudget.toLocaleString()}`;
+
+            // Create State Breakdown Chart
+            const stateCounts = {};
+            influencers?.forEach(inf => {
+                const state = inf.state || 'Unknown';
+                stateCounts[state] = (stateCounts[state] || 0) + 1;
+            });
+
+            const stateLabels = Object.keys(stateCounts);
+            const stateValues = Object.values(stateCounts);
+
+            if (window.stateChartInstance) {
+                window.stateChartInstance.destroy();
+            }
+
+            const ctx = document.getElementById('stateBreakdownChart');
+            if (ctx) {
+                window.stateChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: stateLabels,
+                        datasets: [{
+                            data: stateValues,
+                            backgroundColor: [
+                                '#7c5cff',
+                                '#22c55e',
+                                '#3b82f6',
+                                '#f59e0b',
+                                '#ef4444',
+                                '#14b8a6',
+                                '#ec4899'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#fff'
+                                }
+                            }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
 
         } catch (err) {
             console.error('Analytics Error:', err);

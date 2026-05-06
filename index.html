@@ -2043,12 +2043,17 @@
                                         
                                         <!-- Placeholders -->
                                         <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
-                                            <div class="analytics-placeholder-box" style="min-height: 300px;">
-                                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5;">
-                                                    <path d="M18 20V10M12 20V4M6 20v-6"></path>
-                                                </svg>
-                                                <span style="font-size: 18px; font-weight: 600; color: var(--text-main);">Performance Chart</span>
-                                                <span style="font-size: 14px;">Detailed visualizations coming soon</span>
+                                            <div class="analytics-chart-grid">
+                                              <div class="chart-card">
+                                                <h3>State Breakdown</h3>
+                                                <canvas id="stateBreakdownChart"></canvas>
+                                              </div>
+                                              <div class="chart-card">
+                                                <h3>Performance Bar Chart</h3>
+                                                <div class="chart-placeholder">
+                                                  Coming Soon
+                                                </div>
+                                              </div>
                                             </div>
                                             
                                             <div class="analytics-placeholder-box" style="min-height: 250px;">
@@ -3426,6 +3431,7 @@
     <script src="influencer-db.js?v=2"></script>
     <script src="script.js?v=6"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 
 </html>
