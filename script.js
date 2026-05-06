@@ -6536,46 +6536,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.entries(stateAnalytics).forEach(([state, data], index) => {
                     const stateColor = chartColors[index % chartColors.length];
                     cardsContainer.innerHTML += `
-                    <div class="state-breakdown-card">
-                      <div class="state-breakdown-header">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="state-card">
+                      <div class="state-card-header">
+                        <div class="state-title">
                             <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${stateColor};"></div>
-                            <span>${state}</span>
+                            ${state}
                         </div>
-                        <span>${data.total}</span>
+                        <div class="state-total">${data.total}</div>
                       </div>
-                      <div class="state-breakdown-grid state-breakdown-grid-3">
-                        <div class="state-metric">
-                          <h4>Influencers</h4>
-                          <div class="metric-row">
+                      
+                      <div class="state-stack">
+                        <div class="state-box">
+                          <strong>Influencers</strong>
+                          <div class="state-row">
                             <span>DIY</span>
-                            <strong>${data.influencerDIY}</strong>
+                            <span>${data.influencerDIY}</span>
                           </div>
-                          <div class="metric-row">
+                          <div class="state-row">
                             <span>Sponge</span>
-                            <strong>${data.influencerSponge}</strong>
+                            <span>${data.influencerSponge}</span>
                           </div>
                         </div>
-                        <div class="state-metric">
-                          <h4>Videos</h4>
-                          <div class="metric-row">
+
+                        <div class="state-box">
+                          <strong>Videos</strong>
+                          <div class="state-row">
                             <span>DIY</span>
-                            <strong>${data.videoDIY}</strong>
+                            <span>${data.videoDIY}</span>
                           </div>
-                          <div class="metric-row">
+                          <div class="state-row">
                             <span>Sponge</span>
-                            <strong>${data.videoSponge}</strong>
+                            <span>${data.videoSponge}</span>
                           </div>
                         </div>
-                        <div class="state-metric">
-                          <h4>Budget</h4>
-                          <div class="metric-row">
+
+                        <div class="state-box">
+                          <strong>Budget</strong>
+                          <div class="state-row">
                             <span>DIY</span>
-                            <strong>₹${data.budgetDIY.toLocaleString()}</strong>
+                            <span>₹${data.budgetDIY.toLocaleString()}</span>
                           </div>
-                          <div class="metric-row">
+                          <div class="state-row">
                             <span>Sponge</span>
-                            <strong>₹${data.budgetSponge.toLocaleString()}</strong>
+                            <span>₹${data.budgetSponge.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
