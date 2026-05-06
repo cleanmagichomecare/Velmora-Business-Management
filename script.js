@@ -6397,8 +6397,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // Create State Breakdown Chart
             const stateCounts = {};
             influencers?.forEach(inf => {
-                const state = inf.state || 'Unknown';
-                stateCounts[state] = (stateCounts[state] || 0) + 1;
+                const rawState = inf.state || 'Unknown';
+                
+                let state = rawState
+                    .trim()
+                    .toLowerCase()
+                    .replace(/\s+/g, ' ');
+
+                // Handle missing spaces for common cases to fulfill user requirement
+                if (state === 'tamilnadu') state = 'tamil nadu';
+                if (state === 'newdelhi') state = 'new delhi';
+                if (state === 'uttarpradesh') state = 'uttar pradesh';
+                if (state === 'madhyapradesh') state = 'madhya pradesh';
+                if (state === 'andhrapradesh') state = 'andhra pradesh';
+                if (state === 'himachalpradesh') state = 'himachal pradesh';
+                if (state === 'arunachalpradesh') state = 'arunachal pradesh';
+                if (state === 'westbengal') state = 'west bengal';
+                if (state === 'jammuandkashmir') state = 'jammu and kashmir';
+                
+                const formattedState = state.replace(/\b\w/g, l => l.toUpperCase());
+
+                stateCounts[formattedState] = (stateCounts[formattedState] || 0) + 1;
             });
 
             const stateLabels = Object.keys(stateCounts);
