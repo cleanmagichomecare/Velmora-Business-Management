@@ -6348,7 +6348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Get pricing using influencer IDs
             const { data: pricing } = await supabase
                 .from('influencer_pricing')
-                .select('total_videos, final_price, video1_count, video2_count')
+                .select('total_videos, final_price, video1_count, video2_count, video1_qty, video2_qty')
                 .in('influencer_id', influencerIds);
 
             // 3. Calculate totals
@@ -6356,6 +6356,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalBudget = 0;
             let diyCount = 0;
             let spongeCount = 0;
+            let diyVideos = 0;
+            let spongeVideos = 0;
 
             pricing?.forEach(p => {
                 totalVideos += Number(p.total_videos) || 0;
@@ -6363,6 +6365,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (Number(p.video1_count || 0) > 0) diyCount++;
                 if (Number(p.video2_count || 0) > 0) spongeCount++;
+
+                diyVideos += Number(p.video1_qty) || 0;
+                spongeVideos += Number(p.video2_qty) || 0;
             });
 
             // 4. Update UI
@@ -6373,6 +6378,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elSpongeCount) elSpongeCount.innerText = spongeCount;
             
             document.getElementById('totalVideos').innerText = totalVideos;
+
+            const elDiyVideos = document.getElementById('diyVideos');
+            if (elDiyVideos) elDiyVideos.innerText = diyVideos;
+            const elSpongeVideos = document.getElementById('spongeVideos');
+            if (elSpongeVideos) elSpongeVideos.innerText = spongeVideos;
+
             document.getElementById('totalBudget').innerText = `₹${totalBudget.toLocaleString()}`;
 
         } catch (err) {
