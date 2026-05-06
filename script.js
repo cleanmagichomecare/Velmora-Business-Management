@@ -6361,14 +6361,14 @@ document.addEventListener('DOMContentLoaded', () => {
             let spongeBudget = 0;
 
             pricing?.forEach(p => {
-                if (Number(p.video_1_quantity || 0) > 0) diyCount++;
-                if (Number(p.video_2_quantity || 0) > 0) spongeCount++;
+                if (Number(p.video1_count || 0) > 0) diyCount++;
+                if (Number(p.video2_count || 0) > 0) spongeCount++;
 
-                diyVideos += Number(p.video_1_quantity) || 0;
-                spongeVideos += Number(p.video_2_quantity) || 0;
+                diyVideos += Number(p.video1_count) || 0;
+                spongeVideos += Number(p.video2_count) || 0;
 
-                diyBudget += Number(p.video_1_price) || 0;
-                spongeBudget += Number(p.video_2_price) || 0;
+                diyBudget += Number(p.video1_price) || 0;
+                spongeBudget += Number(p.video2_price) || 0;
             });
 
             const totalVideos = diyVideos + spongeVideos;
