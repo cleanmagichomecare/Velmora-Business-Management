@@ -1631,32 +1631,30 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
     font-weight:700;
 }
 
-.state-extra-content{
-    max-height:0;
+#stateBreakdownCards{
+    max-height:420px;
     overflow:hidden;
-    opacity:0;
-    transition:all .35s ease;
+    transition:all .4s ease;
 }
 
-.state-card.expanded .state-extra-content{
-    max-height:500px;
-    opacity:1;
-    margin-top:14px;
+#stateBreakdownCards.expanded{
+    max-height:5000px;
 }
 
-.state-toggle-btn{
-    width:28px;
-    height:28px;
+.state-breakdown-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+#toggle-state-breakdown{
     border:none;
-    border-radius:8px;
     background:#101827;
     color:#fff;
+    padding:10px 16px;
+    border-radius:10px;
     cursor:pointer;
-    font-size:18px;
-    font-weight:700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .campaign-actions {

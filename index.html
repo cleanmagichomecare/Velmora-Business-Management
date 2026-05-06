@@ -2045,9 +2045,12 @@
                                         <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
                                             <div class="analytics-chart-grid">
                                               <div class="chart-card">
-                                                <h3>State Breakdown</h3>
+                                                <div class="state-breakdown-header">
+                                                  <h3>State Breakdown</h3>
+                                                  <button id="toggle-state-breakdown">Show More</button>
+                                                </div>
                                                 <canvas id="stateBreakdownChart"></canvas>
-                                                <div id="stateBreakdownCards" class="state-breakdown-cards"></div>
+                                                <div id="stateBreakdownCards" class="state-breakdown-cards collapsed"></div>
                                               </div>
                                               <div class="chart-card">
                                                 <h3>Performance Bar Chart</h3>

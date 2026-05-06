@@ -6542,10 +6542,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${stateColor};"></div>
                             ${state}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div class="state-total">${data.total}</div>
-                            <button class="state-toggle-btn">+</button>
-                        </div>
+                        <div class="state-total">${data.total}</div>
                       </div>
                       
                       <div class="state-stack">
@@ -6561,43 +6558,41 @@ document.addEventListener('DOMContentLoaded', () => {
                           </div>
                         </div>
 
-                        <div class="state-extra-content">
-                            <div class="state-box" style="margin-bottom: 14px;">
-                              <strong>Videos</strong>
-                              <div class="state-row">
-                                <span>DIY</span>
-                                <span>${data.videoDIY}</span>
-                              </div>
-                              <div class="state-row">
-                                <span>Sponge</span>
-                                <span>${data.videoSponge}</span>
-                              </div>
-                            </div>
+                        <div class="state-box">
+                          <strong>Videos</strong>
+                          <div class="state-row">
+                            <span>DIY</span>
+                            <span>${data.videoDIY}</span>
+                          </div>
+                          <div class="state-row">
+                            <span>Sponge</span>
+                            <span>${data.videoSponge}</span>
+                          </div>
+                        </div>
 
-                            <div class="state-box">
-                              <strong>Budget</strong>
-                              <div class="state-row">
-                                <span>DIY</span>
-                                <span>₹${data.budgetDIY.toLocaleString()}</span>
-                              </div>
-                              <div class="state-row">
-                                <span>Sponge</span>
-                                <span>₹${data.budgetSponge.toLocaleString()}</span>
-                              </div>
-                            </div>
+                        <div class="state-box">
+                          <strong>Budget</strong>
+                          <div class="state-row">
+                            <span>DIY</span>
+                            <span>₹${data.budgetDIY.toLocaleString()}</span>
+                          </div>
+                          <div class="state-row">
+                            <span>Sponge</span>
+                            <span>₹${data.budgetSponge.toLocaleString()}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                     `;
                 });
 
-                document.querySelectorAll('.state-toggle-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const card = btn.closest('.state-card');
-                        card.classList.toggle('expanded');
-                        btn.textContent = card.classList.contains('expanded') ? '−' : '+';
+                const toggleBtn = document.getElementById('toggle-state-breakdown');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', () => {
+                        cardsContainer.classList.toggle('expanded');
+                        toggleBtn.textContent = cardsContainer.classList.contains('expanded') ? 'Show Less' : 'Show More';
                     });
-                });
+                }
             }
 
         } catch (err) {
