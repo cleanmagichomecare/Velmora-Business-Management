@@ -1573,6 +1573,7 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
 .state-breakdown-cards {
     margin-top: 24px;
     display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
 

@@ -6513,15 +6513,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            const chartColors = [
+                '#7c5cff',
+                '#22c55e',
+                '#3b82f6',
+                '#f59e0b',
+                '#ef4444',
+                '#14b8a6',
+                '#ec4899'
+            ];
+
             const cardsContainer = document.getElementById('stateBreakdownCards');
             if (cardsContainer) {
                 cardsContainer.innerHTML = '';
 
-                Object.entries(stateAnalytics).forEach(([state, data]) => {
+                Object.entries(stateAnalytics).forEach(([state, data], index) => {
+                    const stateColor = chartColors[index % chartColors.length];
                     cardsContainer.innerHTML += `
                     <div class="state-breakdown-card">
                       <div class="state-breakdown-header">
-                        <span>${state}</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${stateColor};"></div>
+                            <span>${state}</span>
+                        </div>
                         <span>${data.total}</span>
                       </div>
                       <div class="state-breakdown-grid">
