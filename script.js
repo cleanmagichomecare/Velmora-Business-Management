@@ -6337,16 +6337,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Get influencers for campaign
             const { data: influencers } = await supabase
                 .from('influencers_info')
-                .select('id, state')
+                .select('*')
                 .eq('campaign_id', campaignId)
                 .or('is_archived.eq.false,is_archived.is.null');
 
+            const totalInfluencers = influencers ? influencers.length : 0;
             const influencerIds = influencers ? influencers.map(i => i.id) : [];
 
             // 2. Get pricing using influencer IDs
             const { data: pricing } = await supabase
                 .from('influencer_pricing')
-                .select('total_videos, final_price, video1_count, video2_count, video1_price, video2_price')
+                .select('*')
                 .in('influencer_id', influencerIds);
 
             console.log("Analytics Pricing Data:", pricing);
@@ -6360,21 +6361,21 @@ document.addEventListener('DOMContentLoaded', () => {
             let spongeBudget = 0;
 
             pricing?.forEach(p => {
-                if (Number(p.video1_count || 0) > 0) diyCount++;
-                if (Number(p.video2_count || 0) > 0) spongeCount++;
+                if (Number(p.video_1_quantity || 0) > 0) diyCount++;
+                if (Number(p.video_2_quantity || 0) > 0) spongeCount++;
 
-                diyVideos += Number(p.video1_count) || 0;
-                spongeVideos += Number(p.video2_count) || 0;
+                diyVideos += Number(p.video_1_quantity) || 0;
+                spongeVideos += Number(p.video_2_quantity) || 0;
 
-                diyBudget += Number(p.video1_price) || 0;
-                spongeBudget += Number(p.video2_price) || 0;
+                diyBudget += Number(p.video_1_price) || 0;
+                spongeBudget += Number(p.video_2_price) || 0;
             });
 
-            let totalVideos = diyVideos + spongeVideos;
+            const totalVideos = diyVideos + spongeVideos;
             const totalBudget = diyBudget + spongeBudget;
 
             // 4. Update UI
-            document.getElementById('totalInfluencers').innerText = influencers?.length || 0;
+            document.getElementById('totalInfluencers').innerText = totalInfluencers;
             const elDiyCount = document.getElementById('diyCount');
             if (elDiyCount) elDiyCount.innerText = diyCount;
             const elSpongeCount = document.getElementById('spongeCount');
