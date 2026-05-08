@@ -1938,6 +1938,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 city: form.elements['inf_city']?.value.trim(),
                 address: form.elements['inf_address']?.value.trim(),
                 state: form.elements['inf_state']?.value.trim(),
+                auto_dm: form.elements['inf_auto_dm']?.checked || false,
                 languages: checkedLanguages
             };
 
@@ -2858,6 +2859,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="info-group"><label>UPI</label><div class="info-val" data-field="upi_number">${data.upi_number || '-'}</div></div>
                         <div class="info-group"><label>City</label><div class="info-val" data-field="city">${data.city || '-'}</div></div>
                         <div class="info-group"><label>State</label><div class="info-val" data-field="state">${data.state || '-'}</div></div>
+                        <div class="info-group"><label>Auto DM Tool</label><div class="info-val" data-field="auto_dm">${data.auto_dm ? 'Yes' : 'No'}</div></div>
                         <div class="info-group"><label>Languages</label><div class="info-val" data-field="languages">${Array.isArray(data.languages) ? data.languages.join(', ') : '-'}</div></div>
                     </div>
                     <div class="info-group mt-10"><label>Address</label><div class="info-val" data-field="complete_address">${data.complete_address || '-'}</div></div>
@@ -3213,6 +3215,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             valDiv.innerHTML = `<input type="text" class="edit-input" data-field="${f}" value="${val.replace(/"/g, '&quot;')}">`;
                         }
                     });
+
+                    // Auto DM Tool toggle
+                    const autoDmDiv = card.querySelector(`.info-val[data-field="auto_dm"]`);
+                    if (autoDmDiv) {
+                        const isChecked = autoDmDiv.textContent === 'Yes';
+                        autoDmDiv.innerHTML = `
+                            <label class="premium-toggle" style="margin-top: 5px;">
+                                <input type="checkbox" class="hidden-input edit-input" data-field="auto_dm" ${isChecked ? 'checked' : ''}>
+                                <div class="toggle-switch"></div>
+                            </label>
+                        `;
+                    }
 
                     // Pricing auto-calc fields
                     const pricingFields = ['video1_count', 'video1_price', 'video2_count', 'video2_price'];
@@ -3585,7 +3599,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (!priceUpdates) priceUpdates = {};
                                     priceUpdates[field] = inp.value ? Number(inp.value) : null;
                                 } else {
-                                    updates[field] = inp.value;
+                                    if (inp.type === 'checkbox') {
+                                        updates[field] = inp.checked;
+                                    } else {
+                                        updates[field] = inp.value;
+                                    }
                                 }
                             }
                         });
@@ -4046,6 +4064,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         city: basic.city,
                         complete_address: basic.address,
                         state: basic.state,
+                        auto_dm: basic.auto_dm,
                         languages: basic.languages || [],
                         profile_file_url: window.uploadedProfileUrl || null
                     }])
