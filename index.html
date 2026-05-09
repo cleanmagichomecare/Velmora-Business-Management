@@ -1751,8 +1751,14 @@
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h2 style="margin:0; font-size: 20px; font-weight: 600; color: #fff;">Marketing</h2>
-                            <button type="button" class="btn-primary btn-dept-task-toggle" data-dept="Marketing"
-                                style="font-size: 14px; padding: 6px 12px;">Task</button>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button class="btn-secondary" id="btn-download-csv" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 14px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Download CSV
+                                </button>
+                                <button type="button" class="btn-primary btn-dept-task-toggle" data-dept="Marketing"
+                                    style="font-size: 14px; padding: 6px 12px;">Task</button>
+                            </div>
                         </div>
                         <div class="dept-default-content">
                             <div id="marketing-options" class="marketing-options-container">
@@ -2488,10 +2494,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button class="btn-secondary" id="btn-download-csv" style="display: flex; align-items: center; gap: 8px; padding: 8px 16px;">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                                    Download CSV
-                                                </button>
                                                 <button class="btn-primary" id="btn-back-to-add-influencer">+ Add Influencer</button>
                                             </div>
                                         </div>
