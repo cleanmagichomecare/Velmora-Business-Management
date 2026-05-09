@@ -6594,14 +6594,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 Object.entries(stateAnalytics).forEach(([state, data]) => {
                     const stateColor = getStateColor(state);
+                    const totalInf = data.influencerDIY + data.influencerSponge;
+                    const totalVid = data.videoDIY + data.videoSponge;
+                    const totalBud = data.budgetDIY + data.budgetSponge;
+
                     cardsContainer.innerHTML += `
                     <div class="state-card">
-                      <div class="state-card-header">
-                        <div class="state-title">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${stateColor};"></div>
+                      <div class="state-card-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div class="state-title" style="width: 100%; font-size: 15px;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${stateColor}; flex-shrink: 0;"></div>
                             ${state}
                         </div>
-                        <div class="state-total">${data.total}</div>
+                        <div style="width: 100%; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #9ca3af;">
+                          <div style="display: flex; justify-content: space-between;">
+                            <span>Influencers:</span>
+                            <span style="color: #fff; font-weight: 500;">${totalInf.toLocaleString()}</span>
+                          </div>
+                          <div style="display: flex; justify-content: space-between;">
+                            <span>Videos:</span>
+                            <span style="color: #fff; font-weight: 500;">${totalVid.toLocaleString()}</span>
+                          </div>
+                          <div style="display: flex; justify-content: space-between;">
+                            <span>Budget:</span>
+                            <span style="color: #fff; font-weight: 500;">₹${totalBud.toLocaleString()}</span>
+                          </div>
+                        </div>
                       </div>
                       
                       <div class="state-stack">
