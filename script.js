@@ -2768,7 +2768,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const inf = card._influencerData;
                 if (!inf) return;
 
-                const userName = `"${(inf.username || '').replace(/"/g, '""')}"`;
+                const userName = `"${(inf.name || '').replace(/"/g, '""')}"`;
                 const infName = `"${(inf.influencer_name || '').replace(/"/g, '""')}"`;
                 const phone = `"${(inf.phone_number || '').replace(/"/g, '""')}"`;
                 const city = `"${(inf.city || '').replace(/"/g, '""')}"`;
