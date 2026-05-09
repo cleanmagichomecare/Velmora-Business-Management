@@ -6594,7 +6594,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 Object.entries(stateAnalytics).forEach(([state, data]) => {
                     const stateColor = getStateColor(state);
-                    const totalInf = data.influencerDIY + data.influencerSponge;
+                    const totalInf = data.total;
                     const totalVid = data.videoDIY + data.videoSponge;
                     const totalBud = data.budgetDIY + data.budgetSponge;
 
