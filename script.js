@@ -1430,14 +1430,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const summaryContainer = document.getElementById('campaign-details-summary-cards');
         if (!summaryContainer) return;
         
-        summaryContainer.innerHTML = \`
+        summaryContainer.innerHTML = `
             <div class="analytics-card">
                 <div class="card-icon blue">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 </div>
                 <div>
                     <span>Total Budget</span>
-                    <h2>\${formatCurrency(campaign.total_budget)}</h2>
+                    <h2>${formatCurrency(campaign.total_budget)}</h2>
                 </div>
             </div>
             <div class="analytics-card">
@@ -1446,7 +1446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div>
                     <span>Expected Influencers</span>
-                    <h2>\${safeValue(campaign.expected_influencers)}</h2>
+                    <h2>${safeValue(campaign.expected_influencers)}</h2>
                 </div>
             </div>
             <div class="analytics-card">
@@ -1455,30 +1455,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div>
                     <span>Expected Videos</span>
-                    <h2>\${safeValue(campaign.expected_videos)}</h2>
+                    <h2>${safeValue(campaign.expected_videos)}</h2>
                 </div>
             </div>
-        \`;
+        `;
     }
 
     function renderCampaignBasicInfo(campaign) {
         const container = document.getElementById('cd-basic-info');
         if (!container) return;
         
-        container.innerHTML = \`
+        container.innerHTML = `
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Campaign Name</div>
-                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.campaign_name)}</div>
+                <div class="info-val" style="font-weight: 500;">${safeValue(campaign.campaign_name)}</div>
             </div>
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Campaign Type</div>
-                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.campaign_type)}</div>
+                <div class="info-val" style="font-weight: 500;">${safeValue(campaign.campaign_type)}</div>
             </div>
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Created At</div>
-                <div class="info-val" style="font-weight: 500;">\${formatDate(campaign.created_at)}</div>
+                <div class="info-val" style="font-weight: 500;">${formatDate(campaign.created_at)}</div>
             </div>
-        \`;
+        `;
     }
 
     function renderCampaignPlanning(campaign) {
@@ -1490,44 +1490,44 @@ document.addEventListener('DOMContentLoaded', () => {
             avgCost = formatCurrency(Number(campaign.total_budget) / Number(campaign.expected_videos));
         }
 
-        container.innerHTML = \`
+        container.innerHTML = `
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Total Budget</div>
-                <div class="info-val" style="font-weight: 500;">\${formatCurrency(campaign.total_budget)}</div>
+                <div class="info-val" style="font-weight: 500;">${formatCurrency(campaign.total_budget)}</div>
             </div>
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Expected Influencers</div>
-                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.expected_influencers)}</div>
+                <div class="info-val" style="font-weight: 500;">${safeValue(campaign.expected_influencers)}</div>
             </div>
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Expected Videos</div>
-                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.expected_videos)}</div>
+                <div class="info-val" style="font-weight: 500;">${safeValue(campaign.expected_videos)}</div>
             </div>
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Avg Per Video Cost</div>
-                <div class="info-val" style="font-weight: 500; color: var(--primary-color);">\${avgCost}</div>
+                <div class="info-val" style="font-weight: 500; color: var(--primary-color);">${avgCost}</div>
             </div>
-        \`;
+        `;
     }
 
     function renderCampaignDetails(campaign) {
         const container = document.getElementById('cd-campaign-details');
         if (!container) return;
         
-        container.innerHTML = \`
+        container.innerHTML = `
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Campaign Goal</div>
-                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.campaign_goal)}</div>
+                <div class="info-val" style="font-weight: 500;">${safeValue(campaign.campaign_goal)}</div>
             </div>
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">Start Date</div>
-                <div class="info-val" style="font-weight: 500;">\${formatDate(campaign.start_date)}</div>
+                <div class="info-val" style="font-weight: 500;">${formatDate(campaign.start_date)}</div>
             </div>
             <div class="info-group">
                 <div class="info-label text-muted" style="font-size: 13px;">End Date</div>
-                <div class="info-val" style="font-weight: 500;">\${formatDate(campaign.end_date)}</div>
+                <div class="info-val" style="font-weight: 500;">${formatDate(campaign.end_date)}</div>
             </div>
-        \`;
+        `;
     }
 
     function renderCampaignLanguages(campaign) {
@@ -1536,7 +1536,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let langs = campaign.languages;
         if (!langs || (Array.isArray(langs) && langs.length === 0) || langs === '[]') {
-            container.innerHTML = \`<span class="text-muted">Not specified</span>\`;
+            container.innerHTML = `<span class="text-muted">Not specified</span>`;
             return;
         }
 
@@ -1546,12 +1546,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (Array.isArray(langs)) {
                 langs.sort((a, b) => a.localeCompare(b));
-                container.innerHTML = langs.map(lang => \`<span class="language-chip">\${lang}</span>\`).join('');
+                container.innerHTML = langs.map(lang => `<span class="language-chip">${lang}</span>`).join('');
             } else {
-                container.innerHTML = \`<span class="text-muted">Not specified</span>\`;
+                container.innerHTML = `<span class="text-muted">Not specified</span>`;
             }
         } catch(e) {
-            container.innerHTML = \`<span class="language-chip">\${langs}</span>\`;
+            container.innerHTML = `<span class="language-chip">${langs}</span>`;
         }
     }
 
