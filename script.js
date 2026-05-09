@@ -2771,47 +2771,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const btnEnableSelection = document.getElementById('btn-enable-selection');
-    const btnCancelSelection = document.getElementById('btn-cancel-selection');
-    const defaultActions = document.getElementById('influencer-list-default-actions');
-    const selectionActions = document.getElementById('influencer-list-selection-actions');
-    const listContainer = document.getElementById('influencer-list-container');
+    window.activeSelectionMode = null; // 'csv' | 'copy' | null
 
+    window.enterSelectionMode = function(mode) {
+        // Clean up previous state
+        window.selectedInfluencerIds.clear();
+        window.activeSelectionMode = mode;
+        window.updateSelectionUI();
+        
+        const defaultActions = document.getElementById('influencer-list-default-actions');
+        const selectionActions = document.getElementById('influencer-list-selection-actions');
+        const listContainer = document.getElementById('influencer-list-container');
+        const btnDownloadCsv = document.getElementById('btn-download-csv');
+        const btnCopySelected = document.getElementById('btn-copy-selected');
+        
+        if (btnDownloadCsv) btnDownloadCsv.style.display = mode === 'csv' ? 'flex' : 'none';
+        if (btnCopySelected) btnCopySelected.style.display = mode === 'copy' ? 'flex' : 'none';
+
+        if (defaultActions) {
+            defaultActions.style.opacity = '0';
+            setTimeout(() => {
+                defaultActions.classList.add('hidden');
+                if (selectionActions) {
+                    selectionActions.classList.remove('hidden');
+                    setTimeout(() => selectionActions.style.opacity = '1', 50);
+                }
+            }, 300);
+        }
+        if (listContainer) listContainer.classList.add('influencer-selection-active');
+    };
+
+    window.exitSelectionMode = function() {
+        window.selectedInfluencerIds.clear();
+        window.activeSelectionMode = null;
+        window.updateSelectionUI();
+        
+        const defaultActions = document.getElementById('influencer-list-default-actions');
+        const selectionActions = document.getElementById('influencer-list-selection-actions');
+        const listContainer = document.getElementById('influencer-list-container');
+        
+        if (selectionActions) {
+            selectionActions.style.opacity = '0';
+            setTimeout(() => {
+                selectionActions.classList.add('hidden');
+                if (defaultActions) {
+                    defaultActions.classList.remove('hidden');
+                    setTimeout(() => defaultActions.style.opacity = '1', 50);
+                }
+            }, 300);
+        }
+        if (listContainer) listContainer.classList.remove('influencer-selection-active');
+    };
+
+    const btnEnableSelection = document.getElementById('btn-enable-selection');
     if (btnEnableSelection) {
         btnEnableSelection.addEventListener('click', () => {
-            window.selectedInfluencerIds.clear();
-            window.updateSelectionUI();
-            
-            if (defaultActions) {
-                defaultActions.style.opacity = '0';
-                setTimeout(() => {
-                    defaultActions.classList.add('hidden');
-                    if (selectionActions) {
-                        selectionActions.classList.remove('hidden');
-                        setTimeout(() => selectionActions.style.opacity = '1', 50);
-                    }
-                }, 300);
-            }
-            if (listContainer) listContainer.classList.add('influencer-selection-active');
+            window.enterSelectionMode('csv');
         });
     }
 
+    const btnEnableBulkCopy = document.getElementById('btn-enable-bulk-copy');
+    if (btnEnableBulkCopy) {
+        btnEnableBulkCopy.addEventListener('click', () => {
+            window.enterSelectionMode('copy');
+        });
+    }
+
+    const btnCancelSelection = document.getElementById('btn-cancel-selection');
     if (btnCancelSelection) {
         btnCancelSelection.addEventListener('click', () => {
-            window.selectedInfluencerIds.clear();
-            window.updateSelectionUI();
-            
-            if (selectionActions) {
-                selectionActions.style.opacity = '0';
-                setTimeout(() => {
-                    selectionActions.classList.add('hidden');
-                    if (defaultActions) {
-                        defaultActions.classList.remove('hidden');
-                        setTimeout(() => defaultActions.style.opacity = '1', 50);
-                    }
-                }, 300);
-            }
-            if (listContainer) listContainer.classList.remove('influencer-selection-active');
+            window.exitSelectionMode();
         });
     }
 
@@ -2829,6 +2858,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             window.updateSelectionUI();
+        });
+    }
+
+    // Bulk Copy Logic
+    const btnCopySelected = document.getElementById('btn-copy-selected');
+    if (btnCopySelected) {
+        btnCopySelected.addEventListener('click', () => {
+            if (window.selectedInfluencerIds.size === 0) {
+                if (window.showToast) window.showToast('⚠ Select at least one influencer to copy');
+                else alert('Select at least one influencer to copy');
+                return;
+            }
+
+            const allCards = Array.from(document.querySelectorAll('#influencer-list-container .influencer-profile-card'));
+            const selectedData = [];
+            allCards.forEach(card => {
+                const id = parseInt(card.dataset.id, 10);
+                if (window.selectedInfluencerIds.has(id) && card._influencerData) {
+                    selectedData.push(card._influencerData);
+                }
+            });
+
+            if (selectedData.length > 0 && typeof window.openCopyInfluencerModal === 'function') {
+                window.openCopyInfluencerModal(selectedData);
+            }
         });
     }
 
@@ -10117,7 +10171,151 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     // --- Copy Influencer Feature ---
+    window.executeCopyInfluencer = async function(influencerData, targetCampaignId, targetCampaignName) {
+        // 1. Generate code safely
+        const generateCampaignPrefix = function(name) {
+            if (!name) return "INF";
+            const smallWords = ["the", "and", "of", "a", "an", "in", "on", "at", "to", "for", "with"];
+            const words = name.split(/\s+/).filter(w => w.length > 0 && !smallWords.includes(w.toLowerCase()));
+            if (words.length === 0) return "INF";
+            let pfx = words.map(w => w[0].toUpperCase()).join("");
+            return pfx.substring(0, 3);
+        };
+        const prefix = generateCampaignPrefix(targetCampaignName);
+        const { data: existingCodes, error: codeErr } = await window.supabase
+            .from('influencers_info')
+            .select('code')
+            .eq('campaign_id', targetCampaignId)
+            .ilike('code', `${prefix}%`);
+        
+        if (codeErr) throw codeErr;
+
+        let maxNum = 0;
+        if (existingCodes && existingCodes.length > 0) {
+            existingCodes.forEach(row => {
+                const numStr = (row.code || '').replace(prefix, '');
+                const num = parseInt(numStr, 10);
+                if (!isNaN(num) && num > maxNum) {
+                    maxNum = num;
+                }
+            });
+        }
+        const newCode = `${prefix}${maxNum + 1}`;
+
+        // 2. Insert into influencers_info
+        const { data: newInfo, error: insertInfoErr } = await window.supabase
+            .from('influencers_info')
+            .insert([{
+                campaign_id: targetCampaignId,
+                code: newCode,
+                name: influencerData.name,
+                influencer_name: influencerData.influencer_name,
+                phone_number: influencerData.phone_number,
+                alternative_number: influencerData.alternative_number,
+                upi_number: influencerData.upi_number,
+                complete_address: influencerData.complete_address,
+                city: influencerData.city,
+                state: influencerData.state,
+                languages: influencerData.languages,
+                profile_file_url: influencerData.profile_file_url,
+                auto_dm: influencerData.auto_dm || false
+            }])
+            .select('id')
+            .single();
+
+        if (insertInfoErr) throw insertInfoErr;
+        const newInfluencerId = newInfo.id;
+
+        let newPricingId = null;
+
+        try {
+            // 3. Copy Platforms
+            if (influencerData.platforms && influencerData.platforms.length > 0) {
+                const platformsToInsert = influencerData.platforms.map(p => ({
+                    influencer_id: newInfluencerId,
+                    platform: p.platform,
+                    username: p.username,
+                    followers_count: p.followers_count,
+                    profile_link: p.profile_link,
+                    video_views: p.video_views
+                }));
+                const { error: platErr } = await window.supabase.from('influencer_platforms_details').insert(platformsToInsert);
+                if (platErr) throw platErr;
+            }
+
+            // 4. Copy Pricing
+            if (influencerData.pricing && influencerData.pricing.id) { // Checking if pricing exists
+                const { data: newPricing, error: priceErr } = await window.supabase
+                    .from('influencer_pricing')
+                    .insert([{
+                        influencer_id: newInfluencerId,
+                        video1_count: influencerData.pricing.video1_count,
+                        video1_price: influencerData.pricing.video1_price,
+                        video2_count: influencerData.pricing.video2_count,
+                        video2_price: influencerData.pricing.video2_price,
+                        total_videos: influencerData.pricing.total_videos,
+                        final_price: influencerData.pricing.final_price
+                    }])
+                    .select('id')
+                    .single();
+                if (priceErr) throw priceErr;
+                newPricingId = newPricing.id;
+
+                // 5. Copy Bargain History
+                if (influencerData.pricing.bargainHistory && influencerData.pricing.bargainHistory.length > 0) {
+                    const bargainsToInsert = influencerData.pricing.bargainHistory.map(b => ({
+                        pricing_id: newPricingId,
+                        creator_request: b.creator_request,
+                        brand_request: b.brand_request
+                    }));
+                    const { error: bargainErr } = await window.supabase.from('influencer_bargain_history').insert(bargainsToInsert);
+                    if (bargainErr) throw bargainErr;
+                }
+            }
+
+            // 6. Copy Products
+            if (influencerData.products && influencerData.products.length > 0) {
+                const productsToInsert = influencerData.products.map(p => ({
+                    influencer_id: newInfluencerId,
+                    video_number: p.video_number,
+                    product_name: p.product_name,
+                    selected: p.selected,
+                    qty: p.qty
+                }));
+                const { error: prodErr } = await window.supabase.from('influencer_products').insert(productsToInsert);
+                if (prodErr) throw prodErr;
+            }
+
+            // 7. Copy Brand Performance
+            if (influencerData.performance && influencerData.performance.length > 0) {
+                const perfsToInsert = influencerData.performance.map(p => ({
+                    influencer_id: newInfluencerId,
+                    brand_name: p.brand_name,
+                    product_name: p.product_name,
+                    views: p.views,
+                    uploaded_platforms: p.uploaded_platforms,
+                    instagram_link: p.instagram_link,
+                    youtube_link: p.youtube_link,
+                    facebook_link: p.facebook_link
+                }));
+                const { error: perfErr } = await window.supabase.from('influencer_brand_performance').insert(perfsToInsert);
+                if (perfErr) throw perfErr;
+            }
+        } catch (innerErr) {
+            // Manual rollback
+            console.error("Error copying related data, rolling back:", innerErr);
+            await window.supabase.from('influencers_info').delete().eq('id', newInfluencerId);
+            throw innerErr;
+        }
+        return true;
+    };
+
     window.openCopyInfluencerModal = async function(influencerData) {
+        const isBulk = Array.isArray(influencerData);
+        const dataArr = isBulk ? influencerData : [influencerData];
+        
+        if (dataArr.length === 0) return;
+
         const modal = document.getElementById('copy-influencer-modal');
         const nameEl = document.getElementById('copy-influencer-name');
         const selectEl = document.getElementById('copy-target-campaign');
@@ -10126,7 +10324,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!modal || !nameEl || !selectEl) return;
 
-        nameEl.textContent = `Copy ${influencerData.name || 'Unknown'}`;
+        if (isBulk) {
+            nameEl.textContent = `Copy ${dataArr.length} influencers`;
+        } else {
+            nameEl.textContent = `Copy ${dataArr[0].name || 'Unknown'}`;
+        }
         selectEl.innerHTML = '<option value="">Loading campaigns...</option>';
         modal.classList.remove('hidden');
 
@@ -10142,7 +10344,8 @@ document.addEventListener('DOMContentLoaded', () => {
             selectEl.innerHTML = '<option value="">Select a campaign...</option>';
             let hasOptions = false;
             campaigns.forEach(c => {
-                if (c.id !== influencerData.campaign_id) {
+                const currentCampId = isBulk ? window.selectedCampaignId : dataArr[0].campaign_id;
+                if (c.id !== currentCampId) {
                     const opt = document.createElement('option');
                     opt.value = c.id;
                     opt.textContent = c.campaign_name;
@@ -10180,152 +10383,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const currentCampId = isBulk ? window.selectedCampaignId : dataArr[0].campaign_id;
+            if (Number(targetCampaignId) === Number(currentCampId)) {
+                if (window.showToast) window.showToast("⚠ Please select a different campaign");
+                return;
+            }
+
+            if (isBulk && !confirm(`Are you sure you want to copy ${dataArr.length} influencers to this campaign?`)) {
+                return;
+            }
+
             const targetCampaignName = selectEl.options[selectEl.selectedIndex].text;
             newCopyBtn.disabled = true;
-            newCopyBtn.textContent = 'Copying...';
+
+            let successCount = 0;
+            let failCount = 0;
 
             try {
-                // 1. Generate code safely
-                const generateCampaignPrefix = function(name) {
-                    if (!name) return "INF";
-                    const smallWords = ["the", "and", "of", "a", "an", "in", "on", "at", "to", "for", "with"];
-                    const words = name.split(/\s+/).filter(w => w.length > 0 && !smallWords.includes(w.toLowerCase()));
-                    if (words.length === 0) return "INF";
-                    let pfx = words.map(w => w[0].toUpperCase()).join("");
-                    return pfx.substring(0, 3);
-                };
-                const prefix = generateCampaignPrefix(targetCampaignName);
-                const { data: existingCodes, error: codeErr } = await window.supabase
-                    .from('influencers_info')
-                    .select('code')
-                    .eq('campaign_id', targetCampaignId)
-                    .ilike('code', `${prefix}%`);
+                for (let i = 0; i < dataArr.length; i++) {
+                    const inf = dataArr[i];
+                    if (isBulk) {
+                        newCopyBtn.textContent = `Copying ${i + 1} of ${dataArr.length}...`;
+                    } else {
+                        newCopyBtn.textContent = 'Copying...';
+                    }
+
+                    try {
+                        await window.executeCopyInfluencer(inf, targetCampaignId, targetCampaignName);
+                        successCount++;
+                    } catch (err) {
+                        console.error(`Failed to copy influencer ${inf.name || inf.id}:`, err);
+                        failCount++;
+                    }
+                }
+
+                if (isBulk) {
+                    if (failCount === 0) {
+                        if (window.showToast) window.showToast(`✅ ${successCount} influencers copied successfully!`);
+                    } else {
+                        if (window.showToast) window.showToast(`⚠ ${successCount} copied successfully, ${failCount} failed.`);
+                    }
+                    if (typeof window.exitSelectionMode === 'function') {
+                        window.exitSelectionMode();
+                    }
+                } else {
+                    if (failCount === 0) {
+                        if (window.showToast) window.showToast(`✅ Copied to ${targetCampaignName}`);
+                    } else {
+                        if (window.showToast) window.showToast("❌ Failed to copy influencer");
+                    }
+                }
                 
-                if (codeErr) throw codeErr;
-
-                let maxNum = 0;
-                if (existingCodes && existingCodes.length > 0) {
-                    existingCodes.forEach(row => {
-                        const numStr = (row.code || '').replace(prefix, '');
-                        const num = parseInt(numStr, 10);
-                        if (!isNaN(num) && num > maxNum) {
-                            maxNum = num;
-                        }
-                    });
-                }
-                const newCode = `${prefix}${maxNum + 1}`;
-
-                // 2. Insert into influencers_info
-                const { data: newInfo, error: insertInfoErr } = await window.supabase
-                    .from('influencers_info')
-                    .insert([{
-                        campaign_id: targetCampaignId,
-                        code: newCode,
-                        name: influencerData.name,
-                        influencer_name: influencerData.influencer_name,
-                        phone_number: influencerData.phone_number,
-                        alternative_number: influencerData.alternative_number,
-                        upi_number: influencerData.upi_number,
-                        complete_address: influencerData.complete_address,
-                        city: influencerData.city,
-                        state: influencerData.state,
-                        languages: influencerData.languages,
-                        profile_file_url: influencerData.profile_file_url
-                    }])
-                    .select('id')
-                    .single();
-
-                if (insertInfoErr) throw insertInfoErr;
-                const newInfluencerId = newInfo.id;
-
-                let newPricingId = null;
-
-                try {
-                    // 3. Copy Platforms
-                    if (influencerData.platforms && influencerData.platforms.length > 0) {
-                        const platformsToInsert = influencerData.platforms.map(p => ({
-                            influencer_id: newInfluencerId,
-                            platform: p.platform,
-                            username: p.username,
-                            followers_count: p.followers_count,
-                            profile_link: p.profile_link,
-                            video_views: p.video_views
-                        }));
-                        const { error: platErr } = await window.supabase.from('influencer_platforms_details').insert(platformsToInsert);
-                        if (platErr) throw platErr;
-                    }
-
-                    // 4. Copy Pricing
-                    if (influencerData.pricing && influencerData.pricing.id) { // Checking if pricing exists
-                        const { data: newPricing, error: priceErr } = await window.supabase
-                            .from('influencer_pricing')
-                            .insert([{
-                                influencer_id: newInfluencerId,
-                                video1_count: influencerData.pricing.video1_count,
-                                video1_price: influencerData.pricing.video1_price,
-                                video2_count: influencerData.pricing.video2_count,
-                                video2_price: influencerData.pricing.video2_price,
-                                total_videos: influencerData.pricing.total_videos,
-                                final_price: influencerData.pricing.final_price
-                            }])
-                            .select('id')
-                            .single();
-                        if (priceErr) throw priceErr;
-                        newPricingId = newPricing.id;
-
-                        // 5. Copy Bargain History
-                        if (influencerData.pricing.bargainHistory && influencerData.pricing.bargainHistory.length > 0) {
-                            const bargainsToInsert = influencerData.pricing.bargainHistory.map(b => ({
-                                pricing_id: newPricingId,
-                                creator_request: b.creator_request,
-                                brand_request: b.brand_request
-                            }));
-                            const { error: bargainErr } = await window.supabase.from('influencer_bargain_history').insert(bargainsToInsert);
-                            if (bargainErr) throw bargainErr;
-                        }
-                    }
-
-                    // 6. Copy Products
-                    if (influencerData.products && influencerData.products.length > 0) {
-                        const productsToInsert = influencerData.products.map(p => ({
-                            influencer_id: newInfluencerId,
-                            video_number: p.video_number,
-                            product_name: p.product_name,
-                            selected: p.selected,
-                            qty: p.qty
-                        }));
-                        const { error: prodErr } = await window.supabase.from('influencer_products').insert(productsToInsert);
-                        if (prodErr) throw prodErr;
-                    }
-
-                    // 7. Copy Brand Performance
-                    if (influencerData.performance && influencerData.performance.length > 0) {
-                        const perfsToInsert = influencerData.performance.map(p => ({
-                            influencer_id: newInfluencerId,
-                            brand_name: p.brand_name,
-                            product_name: p.product_name,
-                            views: p.views,
-                            uploaded_platforms: p.uploaded_platforms,
-                            instagram_link: p.instagram_link,
-                            youtube_link: p.youtube_link,
-                            facebook_link: p.facebook_link
-                        }));
-                        const { error: perfErr } = await window.supabase.from('influencer_brand_performance').insert(perfsToInsert);
-                        if (perfErr) throw perfErr;
-                    }
-                } catch (innerErr) {
-                    // Manual rollback
-                    console.error("Error copying related data, rolling back:", innerErr);
-                    await window.supabase.from('influencers_info').delete().eq('id', newInfluencerId);
-                    throw innerErr;
-                }
-
-                if (window.showToast) window.showToast(`✅ Copied to ${targetCampaignName}`);
                 modal.classList.add('hidden');
 
-            } catch (err) {
-                console.error("Failed to copy influencer:", err);
-                if (window.showToast) window.showToast("❌ Failed to copy: " + (err.message || 'Unknown error'));
             } finally {
                 newCopyBtn.disabled = false;
                 newCopyBtn.textContent = 'Copy';
