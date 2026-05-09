@@ -1002,40 +1002,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
-    function validateCampaignForm() {
+    window.collectCampaignFormData = function() {
+        const form = document.getElementById('campaign-form');
+        if (!form) return null;
+
+        const selectedLanguages = Array.from(form.querySelectorAll('input[name="target_language"]:checked'))
+            .map(checkbox => checkbox.value);
+
+        return {
+            campaign_name: form.elements['campaign_name']?.value?.trim() || '',
+            campaign_type: form.elements['campaign_type']?.value || '',
+            total_budget: parseFloat(form.elements['total_budget']?.value) || 0,
+            expected_influencers: parseInt(form.elements['expected_influencers']?.value, 10) || 0,
+            expected_total_videos: parseInt(form.elements['expected_videos']?.value, 10) || 0,
+            avg_per_video_cost: parseFloat(form.elements['avg_video_cost']?.value) || 0,
+            target_languages: selectedLanguages,
+            campaign_goal: form.elements['campaign_goal']?.value || '',
+            start_date: form.elements['start_date']?.value || '',
+            end_date: form.elements['end_date']?.value || '',
+            status: 'active'
+        };
+    };
+
+    function validateCampaignForm(payload) {
         // Validation: Required Fields
-        const requiredNames = [
+        const requiredKeys = [
             'campaign_name', 'campaign_type', 'total_budget',
-            'expected_influencers', 'expected_videos', 'avg_video_cost',
+            'expected_influencers', 'expected_total_videos', 'avg_per_video_cost',
             'start_date', 'end_date', 'campaign_goal'
         ];
 
         let hasEmptyRequired = false;
-        for (const name of requiredNames) {
-            const element = campaignForm.elements[name];
-            if (!element || !element.value.trim()) {
+        for (const key of requiredKeys) {
+            const val = payload[key];
+            if (val === '' || val === null || val === undefined) {
                 hasEmptyRequired = true;
                 break;
             }
         }
 
         if (hasEmptyRequired) {
-            showAlert("⚠ Please fill all required fields before creating the campaign.");
+            showAlert("⚠ Please fill all required fields before saving.");
             return false;
         }
 
         // Validation: Target Language Checkboxes
-        const selectedLanguages = document.querySelectorAll('input[name="target_language"]:checked');
-        if (selectedLanguages.length === 0) {
+        if (!payload.target_languages || payload.target_languages.length === 0) {
             showAlert("⚠ Please select at least one target language.");
             return false;
         }
 
         // Validation: Numeric Fields > 0
-        const numericNames = ['total_budget', 'expected_influencers', 'expected_videos', 'avg_video_cost'];
+        const numericKeys = ['total_budget', 'expected_influencers', 'expected_total_videos', 'avg_per_video_cost'];
         let hasInvalidNumeric = false;
-        for (const name of numericNames) {
-            const val = parseFloat(campaignForm.elements[name].value);
+        for (const key of numericKeys) {
+            const val = payload[key];
             if (isNaN(val) || val <= 0) {
                 hasInvalidNumeric = true;
                 break;
@@ -1048,8 +1069,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Validation: Date Logic
-        const startDate = new Date(campaignForm.elements['start_date'].value);
-        const endDate = new Date(campaignForm.elements['end_date'].value);
+        const startDate = new Date(payload.start_date);
+        const endDate = new Date(payload.end_date);
         if (endDate < startDate) {
             showAlert("⚠ End Date cannot be earlier than Start Date.");
             return false;
@@ -1063,35 +1084,23 @@ document.addEventListener('DOMContentLoaded', () => {
         campaignForm.addEventListener('submit', async (e) => {
             e.preventDefault(); // Prevent page reload
 
-            if (!validateCampaignForm()) {
+            const payload = window.collectCampaignFormData();
+            if (!payload) return;
+
+            if (!validateCampaignForm(payload)) {
                 return;
             }
 
             const btnSubmit = campaignForm.querySelector('.btn-submit');
             if (btnSubmit) {
                 btnSubmit.disabled = true;
-                btnSubmit.textContent = 'Creating...';
+                btnSubmit.textContent = window.isEditingCampaign ? 'Saving...' : 'Creating...';
             }
 
             try {
-                // Collect target languages
-                const selectedLanguages = Array.from(document.querySelectorAll('input[name="target_language"]:checked'))
-                    .map(checkbox => checkbox.value);
-
-                // Collect form data matching DB schema
-                const payload = {
-                    campaign_name: campaignForm.elements['campaign_name'].value.trim() || 'Untitled Campaign',
-                    campaign_type: campaignForm.elements['campaign_type'].value,
-                    total_budget: parseFloat(campaignForm.elements['total_budget'].value),
-                    expected_influencers: parseInt(campaignForm.elements['expected_influencers'].value, 10),
-                    expected_total_videos: parseInt(campaignForm.elements['expected_videos'].value, 10),
-                    avg_per_video_cost: parseFloat(campaignForm.elements['avg_video_cost'].value),
-                    target_languages: selectedLanguages, // Send array directly for JSON type
-                    campaign_goal: campaignForm.elements['campaign_goal'].value,
-                    start_date: campaignForm.elements['start_date'].value,
-                    end_date: campaignForm.elements['end_date'].value,
-                    status: 'active'
-                };
+                if (!payload.campaign_name) {
+                    payload.campaign_name = 'Untitled Campaign';
+                }
 
                 let dbData, dbError;
                 if (window.isEditingCampaign && window.editingCampaignId) {
