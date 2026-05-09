@@ -799,7 +799,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'view-dispatched-list',
             'view-status-tracking',
             'content-viewer-placeholder',
-            'campaign-form-container'
+            'campaign-form-container',
+            'campaign-details-view'
         ];
         viewsToHide.forEach(id => {
             const el = document.getElementById(id);
@@ -1316,6 +1317,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (statusTrackingView) statusTrackingView.classList.add('hidden');
         const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
         if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
+        const campaignDetailsView = document.getElementById('campaign-details-view');
+        if (campaignDetailsView) campaignDetailsView.classList.add('hidden');
 
         // Show Dashboard Header and View
         const dashboardHeader = document.getElementById('campaign-dashboard-header');
@@ -1324,10 +1327,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (dashboardView) {
-            dashboardView.classList.remove('fade-in');
-            void dashboardView.offsetWidth; // Trigger reflow for animation
-            dashboardView.classList.remove('hidden');
-            dashboardView.classList.add('fade-in'); // Smooth transition
+            dashboardView.classList.add('hidden');
+        }
+        
+        // Open Campaign Details View by default
+        if (campaignDetailsView) {
+            campaignDetailsView.classList.remove('fade-in');
+            void campaignDetailsView.offsetWidth; // Trigger reflow for animation
+            campaignDetailsView.classList.remove('hidden');
+            campaignDetailsView.classList.add('fade-in'); // Smooth transition
         }
             
             // Set Campaign Title
@@ -1341,6 +1349,210 @@ document.addEventListener('DOMContentLoaded', () => {
             if (campaignActions) {
                 campaignActions.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
             }
+            
+            // Set details button as active
+            const btnCampaignDetails = document.getElementById('btn-campaign-details');
+            if (btnCampaignDetails) btnCampaignDetails.classList.add('active');
+
+            // Render the campaign details dashboard
+            if (typeof window.renderCampaignDetailsDashboard === 'function') {
+                const loadingState = document.getElementById('campaign-details-loading');
+                const emptyState = document.getElementById('campaign-details-empty');
+                const contentContainer = document.getElementById('campaign-details-content');
+                if(loadingState) loadingState.classList.remove('hidden');
+                if(emptyState) emptyState.classList.add('hidden');
+                if(contentContainer) contentContainer.classList.add('hidden');
+                
+                setTimeout(() => {
+                    window.renderCampaignDetailsDashboard(campaign);
+                }, 300);
+            }
+    }
+
+    // --- Helper Utilities ---
+    const safeValue = (value) => {
+        if (value === null || value === undefined || value === '') return 'Not specified';
+        return value;
+    };
+
+    const formatCurrency = (value) => {
+        if (!value || isNaN(value)) return 'Not specified';
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 0
+        }).format(value);
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Not specified';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Not specified';
+        return new Intl.DateTimeFormat('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        }).format(date);
+    };
+
+    // --- Campaign Details Rendering ---
+    window.renderCampaignDetailsDashboard = function(campaign) {
+        if (!campaign) return;
+
+        const detailsView = document.getElementById('campaign-details-view');
+        const loadingState = document.getElementById('campaign-details-loading');
+        const emptyState = document.getElementById('campaign-details-empty');
+        const contentContainer = document.getElementById('campaign-details-content');
+        
+        // Basic check for details
+        const hasDetails = campaign.campaign_type || campaign.total_budget || campaign.expected_influencers;
+
+        if (!hasDetails) {
+            if(emptyState) emptyState.classList.remove('hidden');
+            if(contentContainer) contentContainer.classList.add('hidden');
+            if(loadingState) loadingState.classList.add('hidden');
+            return;
+        }
+
+        if(emptyState) emptyState.classList.add('hidden');
+        if(contentContainer) contentContainer.classList.remove('hidden');
+        if(loadingState) loadingState.classList.add('hidden');
+
+        // Render sections
+        renderCampaignSummary(campaign);
+        renderCampaignBasicInfo(campaign);
+        renderCampaignPlanning(campaign);
+        renderCampaignDetails(campaign);
+        renderCampaignLanguages(campaign);
+    };
+
+    function renderCampaignSummary(campaign) {
+        const summaryContainer = document.getElementById('campaign-details-summary-cards');
+        if (!summaryContainer) return;
+        
+        summaryContainer.innerHTML = \`
+            <div class="analytics-card">
+                <div class="card-icon blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <div>
+                    <span>Total Budget</span>
+                    <h2>\${formatCurrency(campaign.total_budget)}</h2>
+                </div>
+            </div>
+            <div class="analytics-card">
+                <div class="card-icon purple">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <div>
+                    <span>Expected Influencers</span>
+                    <h2>\${safeValue(campaign.expected_influencers)}</h2>
+                </div>
+            </div>
+            <div class="analytics-card">
+                <div class="card-icon green">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+                </div>
+                <div>
+                    <span>Expected Videos</span>
+                    <h2>\${safeValue(campaign.expected_videos)}</h2>
+                </div>
+            </div>
+        \`;
+    }
+
+    function renderCampaignBasicInfo(campaign) {
+        const container = document.getElementById('cd-basic-info');
+        if (!container) return;
+        
+        container.innerHTML = \`
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Campaign Name</div>
+                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.campaign_name)}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Campaign Type</div>
+                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.campaign_type)}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Created At</div>
+                <div class="info-val" style="font-weight: 500;">\${formatDate(campaign.created_at)}</div>
+            </div>
+        \`;
+    }
+
+    function renderCampaignPlanning(campaign) {
+        const container = document.getElementById('cd-budget-planning');
+        if (!container) return;
+        
+        let avgCost = 'Not specified';
+        if (campaign.total_budget && campaign.expected_videos && !isNaN(campaign.total_budget) && !isNaN(campaign.expected_videos) && Number(campaign.expected_videos) > 0) {
+            avgCost = formatCurrency(Number(campaign.total_budget) / Number(campaign.expected_videos));
+        }
+
+        container.innerHTML = \`
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Total Budget</div>
+                <div class="info-val" style="font-weight: 500;">\${formatCurrency(campaign.total_budget)}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Expected Influencers</div>
+                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.expected_influencers)}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Expected Videos</div>
+                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.expected_videos)}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Avg Per Video Cost</div>
+                <div class="info-val" style="font-weight: 500; color: var(--primary-color);">\${avgCost}</div>
+            </div>
+        \`;
+    }
+
+    function renderCampaignDetails(campaign) {
+        const container = document.getElementById('cd-campaign-details');
+        if (!container) return;
+        
+        container.innerHTML = \`
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Campaign Goal</div>
+                <div class="info-val" style="font-weight: 500;">\${safeValue(campaign.campaign_goal)}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">Start Date</div>
+                <div class="info-val" style="font-weight: 500;">\${formatDate(campaign.start_date)}</div>
+            </div>
+            <div class="info-group">
+                <div class="info-label text-muted" style="font-size: 13px;">End Date</div>
+                <div class="info-val" style="font-weight: 500;">\${formatDate(campaign.end_date)}</div>
+            </div>
+        \`;
+    }
+
+    function renderCampaignLanguages(campaign) {
+        const container = document.getElementById('cd-target-languages');
+        if (!container) return;
+        
+        let langs = campaign.languages;
+        if (!langs || (Array.isArray(langs) && langs.length === 0) || langs === '[]') {
+            container.innerHTML = \`<span class="text-muted">Not specified</span>\`;
+            return;
+        }
+
+        try {
+            if (typeof langs === 'string') {
+                langs = JSON.parse(langs);
+            }
+            if (Array.isArray(langs)) {
+                langs.sort((a, b) => a.localeCompare(b));
+                container.innerHTML = langs.map(lang => \`<span class="language-chip">\${lang}</span>\`).join('');
+            } else {
+                container.innerHTML = \`<span class="text-muted">Not specified</span>\`;
+            }
+        } catch(e) {
+            container.innerHTML = \`<span class="language-chip">\${langs}</span>\`;
+        }
     }
 
 
@@ -1782,6 +1994,12 @@ document.addEventListener('DOMContentLoaded', () => {
             addInfluencerView.classList.remove('hidden');
             const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
             if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
+            const campaignDetailsView = document.getElementById('campaign-details-view');
+            if (campaignDetailsView) campaignDetailsView.classList.add('hidden');
+            
+            // Set active state
+            document.querySelectorAll('.campaign-actions button').forEach(btn => btn.classList.remove('active'));
+            btnAddInfluencer.classList.add('active');
             
             // Always force-reset wizard state when opening Add Influencer
             resetAddInfluencerWizard();
@@ -2732,6 +2950,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (statusTrackingView) statusTrackingView.classList.add('hidden');
             const campaignAnalyticsView = document.getElementById('campaign-analytics-view');
             if (campaignAnalyticsView) campaignAnalyticsView.classList.add('hidden');
+            const campaignDetailsView = document.getElementById('campaign-details-view');
+            if (campaignDetailsView) campaignDetailsView.classList.add('hidden');
+            const addInfluencerView = document.getElementById('add-influencer-view');
+            if (addInfluencerView) addInfluencerView.classList.add('hidden');
+
+            document.querySelectorAll('.campaign-actions button').forEach(btn => btn.classList.remove('active'));
+            btnInfluencerListNav.classList.add('active');
             
             if (window.selectedCampaignId) {
                 loadCampaignInfluencers(window.selectedCampaignId);
@@ -6930,6 +7155,41 @@ document.addEventListener('DOMContentLoaded', () => {
             if (campaignActions) {
                 campaignActions.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
                 btnCampaignAnalytics.classList.add('active');
+            }
+        });
+    }
+
+    // --- Campaign Details Button ---
+    const btnCampaignDetails = document.getElementById('btn-campaign-details');
+    if (btnCampaignDetails) {
+        btnCampaignDetails.addEventListener('click', () => {
+            hideAllInfluencerViews();
+            
+            const campaignDetailsView = document.getElementById('campaign-details-view');
+            if (campaignDetailsView) {
+                campaignDetailsView.classList.remove('hidden');
+                campaignDetailsView.classList.remove('fade-in');
+                void campaignDetailsView.offsetWidth; // Trigger reflow for animation
+                campaignDetailsView.classList.add('fade-in');
+            }
+
+            const campaignActions = document.querySelector('.campaign-actions');
+            if (campaignActions) {
+                campaignActions.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                btnCampaignDetails.classList.add('active');
+            }
+
+            if (window.selectedCampaign && typeof window.renderCampaignDetailsDashboard === 'function') {
+                const loadingState = document.getElementById('campaign-details-loading');
+                const emptyState = document.getElementById('campaign-details-empty');
+                const contentContainer = document.getElementById('campaign-details-content');
+                if(loadingState) loadingState.classList.remove('hidden');
+                if(emptyState) emptyState.classList.add('hidden');
+                if(contentContainer) contentContainer.classList.add('hidden');
+                
+                setTimeout(() => {
+                    window.renderCampaignDetailsDashboard(window.selectedCampaign);
+                }, 300);
             }
         });
     }

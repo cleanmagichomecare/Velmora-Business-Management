@@ -1438,6 +1438,17 @@ input[type="date"].date-field::-webkit-calendar-picker-indicator {
 }
 
 /* Analytics Premium Components */
+.language-chip {
+    background: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-block;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
 .analytics-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
