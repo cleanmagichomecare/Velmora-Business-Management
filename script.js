@@ -2741,6 +2741,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Download CSV Logic
+    const btnDownloadCsv = document.getElementById('btn-download-csv');
+    if (btnDownloadCsv) {
+        btnDownloadCsv.addEventListener('click', () => {
+            const visibleCards = Array.from(document.querySelectorAll('#influencer-list-container .influencer-profile-card'))
+                .filter(card => card.style.display !== 'none');
+            
+            if (visibleCards.length === 0) {
+                if (window.showToast) window.showToast('⚠ No influencers available to export');
+                else alert('No influencers available to export');
+                return;
+            }
+
+            const productCodeMap = {
+                'diy detergent liquid': '1B',
+                'diy dishwash liquid': '1Y',
+                'diy fabric conditioner': '1P',
+                'magic sponge': '1S'
+            };
+
+            const headers = ['User Name', 'Influencer Name', 'Phone Number', 'City', 'State', 'Address', 'Products'];
+            const rows = [headers.join(',')];
+
+            visibleCards.forEach(card => {
+                const inf = card._influencerData;
+                if (!inf) return;
+
+                const userName = `"${(inf.username || '').replace(/"/g, '""')}"`;
+                const infName = `"${(inf.influencer_name || '').replace(/"/g, '""')}"`;
+                const phone = `"${(inf.phone_number || '').replace(/"/g, '""')}"`;
+                const city = `"${(inf.city || '').replace(/"/g, '""')}"`;
+                const state = `"${(inf.state || '').replace(/"/g, '""')}"`;
+                const address = `"${(inf.complete_address || '').replace(/"/g, '""')}"`;
+
+                const productCodes = new Set();
+                if (inf.products && inf.products.length > 0) {
+                    inf.products.forEach(p => {
+                        const pname = (p.product_name || '').toLowerCase().trim();
+                        if (productCodeMap[pname]) {
+                            productCodes.add(productCodeMap[pname]);
+                        }
+                    });
+                }
+                const productsStr = `"${Array.from(productCodes).join(',')}"`;
+
+                rows.push([userName, infName, phone, city, state, address, productsStr].join(','));
+            });
+
+            const csvContent = rows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            
+            const campaignName = window.selectedCampaign ? (window.selectedCampaign.campaign_name || 'export') : 'export';
+            const safeFileName = campaignName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `influencers-${safeFileName}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
     // --- Campaign Influencer Fetch & Render Logic ---
     async function loadCampaignInfluencers(campaignId) {
         window.currentInfluencerData = null; // Prevent bleeding from other campaigns
