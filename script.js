@@ -2741,18 +2741,112 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    window.selectedInfluencerIds = new Set();
+    
+    window.updateSelectionUI = function() {
+        const countSpan = document.getElementById('selected-influencer-count');
+        const selectAllCb = document.getElementById('cb-select-all-influencers');
+        if (countSpan) countSpan.textContent = `${window.selectedInfluencerIds.size} Selected`;
+        
+        // Update checkmarks visually
+        document.querySelectorAll('.influencer-profile-card').forEach(card => {
+            const cb = card.querySelector('.influencer-select-cb');
+            const id = parseInt(card.dataset.id, 10);
+            const isSelected = window.selectedInfluencerIds.has(id);
+            if (cb) cb.checked = isSelected;
+            if (isSelected) {
+                card.classList.add('selected-glow');
+            } else {
+                card.classList.remove('selected-glow');
+            }
+        });
+
+        // Check if all visible are selected
+        const visibleCards = Array.from(document.querySelectorAll('#influencer-list-container .influencer-profile-card')).filter(card => card.style.display !== 'none');
+        if (visibleCards.length > 0) {
+            const allSelected = visibleCards.every(card => window.selectedInfluencerIds.has(parseInt(card.dataset.id, 10)));
+            if (selectAllCb) selectAllCb.checked = allSelected;
+        } else {
+            if (selectAllCb) selectAllCb.checked = false;
+        }
+    };
+
+    const btnEnableSelection = document.getElementById('btn-enable-selection');
+    const btnCancelSelection = document.getElementById('btn-cancel-selection');
+    const defaultActions = document.getElementById('influencer-list-default-actions');
+    const selectionActions = document.getElementById('influencer-list-selection-actions');
+    const listContainer = document.getElementById('influencer-list-container');
+
+    if (btnEnableSelection) {
+        btnEnableSelection.addEventListener('click', () => {
+            window.selectedInfluencerIds.clear();
+            window.updateSelectionUI();
+            
+            if (defaultActions) {
+                defaultActions.style.opacity = '0';
+                setTimeout(() => {
+                    defaultActions.classList.add('hidden');
+                    if (selectionActions) {
+                        selectionActions.classList.remove('hidden');
+                        setTimeout(() => selectionActions.style.opacity = '1', 50);
+                    }
+                }, 300);
+            }
+            if (listContainer) listContainer.classList.add('influencer-selection-active');
+        });
+    }
+
+    if (btnCancelSelection) {
+        btnCancelSelection.addEventListener('click', () => {
+            window.selectedInfluencerIds.clear();
+            window.updateSelectionUI();
+            
+            if (selectionActions) {
+                selectionActions.style.opacity = '0';
+                setTimeout(() => {
+                    selectionActions.classList.add('hidden');
+                    if (defaultActions) {
+                        defaultActions.classList.remove('hidden');
+                        setTimeout(() => defaultActions.style.opacity = '1', 50);
+                    }
+                }, 300);
+            }
+            if (listContainer) listContainer.classList.remove('influencer-selection-active');
+        });
+    }
+
+    const cbSelectAll = document.getElementById('cb-select-all-influencers');
+    if (cbSelectAll) {
+        cbSelectAll.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            const visibleCards = document.querySelectorAll('#influencer-list-container .influencer-profile-card:not([style*="display: none"])');
+            visibleCards.forEach(card => {
+                const id = parseInt(card.dataset.id, 10);
+                if (isChecked) {
+                    window.selectedInfluencerIds.add(id);
+                } else {
+                    window.selectedInfluencerIds.delete(id);
+                }
+            });
+            window.updateSelectionUI();
+        });
+    }
+
     // Download CSV Logic
     const btnDownloadCsv = document.getElementById('btn-download-csv');
     if (btnDownloadCsv) {
         btnDownloadCsv.addEventListener('click', () => {
-            const visibleCards = Array.from(document.querySelectorAll('#influencer-list-container .influencer-profile-card'))
-                .filter(card => card.style.display !== 'none');
-            
-            if (visibleCards.length === 0) {
-                if (window.showToast) window.showToast('⚠ No influencers available to export');
-                else alert('No influencers available to export');
+            if (window.selectedInfluencerIds.size === 0) {
+                if (window.showToast) window.showToast('⚠ Select at least one influencer');
+                else alert('Select at least one influencer');
                 return;
             }
+
+            const allCards = Array.from(document.querySelectorAll('#influencer-list-container .influencer-profile-card'));
+            const selectedCards = allCards.filter(card => {
+                const id = parseInt(card.dataset.id, 10);
+                return window.selectedInfluencerIds.has(id);
+            });
 
             const productCodeMap = {
                 'diy detergent liquid': '1B',
@@ -2764,7 +2858,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const headers = ['User Name', 'Influencer Name', 'Phone Number', 'City', 'State', 'Address', 'Products'];
             const rows = [headers.join(',')];
 
-            visibleCards.forEach(card => {
+            selectedCards.forEach(card => {
                 const inf = card._influencerData;
                 if (!inf) return;
 
@@ -2899,6 +2993,24 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'influencer-profile-card popup-card mb-20';
             card.setAttribute('data-id', data.id);
             card.style.position = 'relative';
+
+            card.addEventListener('click', (e) => {
+                const listContainer = document.getElementById('influencer-list-container');
+                if (listContainer && listContainer.classList.contains('influencer-selection-active')) {
+                    // Ignore clicks on buttons/actions
+                    if (e.target.closest('button') || e.target.closest('.influencer-card-actions')) return;
+                    
+                    const id = parseInt(data.id, 10);
+                    if (window.selectedInfluencerIds.has(id)) {
+                        window.selectedInfluencerIds.delete(id);
+                    } else {
+                        window.selectedInfluencerIds.add(id);
+                    }
+                    if (typeof window.updateSelectionUI === 'function') {
+                        window.updateSelectionUI();
+                    }
+                }
+            });
 
             // Data storage directly on DOM for easy edit extraction
             card._influencerData = data;
@@ -3129,6 +3241,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const avatarUrl = data.profile_file_url || 'assets/images/default-profile.png';
 
             card.innerHTML = `
+                <div class="influencer-card-checkbox-container">
+                    <input type="checkbox" class="influencer-select-cb" value="${data.id}" tabindex="-1" style="pointer-events: none;">
+                </div>
                 <div class="influencer-header-section flex-row align-center" style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
                     <div class="avatar-wrapper" style="flex-shrink: 0;">
                         <img src="${avatarUrl}" alt="Profile Image" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); background: var(--card-bg);">

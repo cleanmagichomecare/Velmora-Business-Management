@@ -5890,3 +5890,51 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     padding: 16px;
     margin-bottom: 24px;
 }
+
+/* --- Influencer Selection Mode --- */
+.influencer-card-checkbox-container {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-main, #141423);
+    border-radius: 6px;
+    padding: 4px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    transition: opacity 0.3s ease;
+}
+
+.influencer-selection-active .influencer-card-checkbox-container {
+    display: flex;
+}
+
+.influencer-card-checkbox-container input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary-color, #4a6ee0);
+}
+
+.influencer-profile-card.selected-glow {
+    border-color: var(--primary-color, #4a6ee0) !important;
+    box-shadow: 0 0 15px rgba(74, 110, 224, 0.3) !important;
+}
+
+/* Prevent expand/collapse interactions during selection mode, except on buttons */
+.influencer-selection-active .influencer-profile-card {
+    cursor: pointer;
+}
+
+.influencer-selection-active .influencer-profile-card .card-body,
+.influencer-selection-active .influencer-profile-card .tabs-nav {
+    pointer-events: none;
+}
+
+.influencer-selection-active .influencer-profile-card .card-actions,
+.influencer-selection-active .influencer-profile-card button {
+    pointer-events: auto; /* Keep actions alive */
+}
+
