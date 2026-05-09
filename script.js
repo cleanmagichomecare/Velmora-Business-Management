@@ -790,6 +790,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper to hide all views to prevent overlap
     function hideAllInfluencerViews() {
+        if (typeof window.resetCampaignForm === 'function') {
+            window.resetCampaignForm();
+        }
         const viewsToHide = [
             'analytics-overview',
             'campaign-analytics-view',
@@ -880,6 +883,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnCreateCampaign && contentPlaceholder && campaignFormContainer) {
         btnCreateCampaign.addEventListener('click', () => {
+            if (typeof window.resetCampaignForm === 'function') {
+                window.resetCampaignForm();
+            }
             // Hide existing views in right panel
             contentPlaceholder.classList.add('hidden');
             const analyticsOverview = document.getElementById('analytics-overview');
@@ -912,6 +918,60 @@ document.addEventListener('DOMContentLoaded', () => {
     const campaignNameInput = document.getElementById('campaign-name-input');
     const emptyCampaignList = document.querySelector('.empty-campaign-list');
     const toastContainer = document.getElementById('toast-container');
+
+    window.isEditingCampaign = false;
+    window.editingCampaignId = null;
+
+    // --- Campaign Form Helpers ---
+    window.resetCampaignForm = function() {
+        window.isEditingCampaign = false;
+        window.editingCampaignId = null;
+        
+        const form = document.getElementById('campaign-form');
+        if (form) form.reset();
+        
+        const header = document.querySelector('#campaign-form-container .form-header');
+        if (header) header.textContent = 'Create Influencer Campaign';
+        
+        const btnSubmit = document.querySelector('#campaign-form .btn-submit');
+        if (btnSubmit) {
+            btnSubmit.textContent = 'Create Campaign';
+            btnSubmit.disabled = false;
+        }
+        
+        // Uncheck all language checkboxes
+        document.querySelectorAll('#campaign-form input[name="target_language"]').forEach(cb => cb.checked = false);
+    };
+
+    window.populateCampaignForm = function(campaign) {
+        if (!campaign) return;
+        const form = document.getElementById('campaign-form');
+        if (!form) return;
+        
+        form.elements['campaign_name'].value = campaign.campaign_name || '';
+        form.elements['campaign_type'].value = campaign.campaign_type || '';
+        form.elements['total_budget'].value = campaign.total_budget || '';
+        form.elements['expected_influencers'].value = campaign.expected_influencers || '';
+        form.elements['expected_videos'].value = campaign.expected_videos || '';
+        form.elements['avg_video_cost'].value = campaign.avg_per_video_cost || '';
+        form.elements['campaign_goal'].value = campaign.campaign_goal || '';
+        
+        if (campaign.start_date) form.elements['start_date'].value = campaign.start_date.split('T')[0];
+        if (campaign.end_date) form.elements['end_date'].value = campaign.end_date.split('T')[0];
+        
+        // Handle Languages
+        document.querySelectorAll('#campaign-form input[name="target_language"]').forEach(cb => cb.checked = false);
+        let langs = campaign.languages || campaign.target_languages;
+        if (typeof langs === 'string' && langs.startsWith('[')) {
+            try { langs = JSON.parse(langs); } catch(e) {}
+        }
+        if (Array.isArray(langs)) {
+            langs.forEach(lang => {
+                const cb = form.querySelector(`input[name="target_language"][value="${lang}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+    };
 
     // Helper: Show Alert Message
     function showAlert(message) {
@@ -1033,27 +1093,53 @@ document.addEventListener('DOMContentLoaded', () => {
                     status: 'active'
                 };
 
-                const { data, error } = await window.supabase
-                    .from('influencer_create_campaigns')
-                    .insert([payload])
-                    .select();
+                let dbData, dbError;
+                if (window.isEditingCampaign && window.editingCampaignId) {
+                    const { data, error } = await window.supabase
+                        .from('influencer_create_campaigns')
+                        .update(payload)
+                        .eq('id', window.editingCampaignId)
+                        .select();
+                    dbData = data;
+                    dbError = error;
+                } else {
+                    const { data, error } = await window.supabase
+                        .from('influencer_create_campaigns')
+                        .insert([payload])
+                        .select();
+                    dbData = data;
+                    dbError = error;
+                }
 
-                if (error) throw error;
+                if (dbError) throw dbError;
 
                 if (typeof showToast === 'function') {
-                    showToast('Campaign created successfully');
+                    showToast(window.isEditingCampaign ? 'Campaign updated successfully' : 'Campaign created successfully');
                 }
 
-                campaignForm.reset();
+                if (window.isEditingCampaign && dbData && dbData.length > 0) {
+                    window.selectedCampaign = dbData[0];
+                    window.resetCampaignForm();
+                    // Go back to Details View
+                    if (typeof window.renderCampaignDetailsDashboard === 'function') {
+                        hideAllInfluencerViews();
+                        const campaignDetailsView = document.getElementById('campaign-details-view');
+                        if (campaignDetailsView) {
+                            campaignDetailsView.classList.remove('hidden');
+                        }
+                        window.renderCampaignDetailsDashboard(window.selectedCampaign);
+                    }
+                } else {
+                    window.resetCampaignForm();
+                    // Clear active states and hide form
+                    if (emptyCampaignList) {
+                        const existingFolders = emptyCampaignList.querySelectorAll('.campaign-folder-item');
+                        existingFolders.forEach(folder => folder.classList.remove('active-folder'));
+                    }
 
-                // Clear active states and hide form
-                if (emptyCampaignList) {
-                    const existingFolders = emptyCampaignList.querySelectorAll('.campaign-folder-item');
-                    existingFolders.forEach(folder => folder.classList.remove('active-folder'));
+                    if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
+                    if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
                 }
-
-                if (contentPlaceholder) contentPlaceholder.classList.add('hidden');
-                if (campaignFormContainer) campaignFormContainer.classList.add('hidden');
 
                 // Reload the sidebar list
                 if (typeof renderCampaignList === 'function') {
@@ -1263,6 +1349,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 folderItem.addEventListener('click', () => {
+                    if (typeof window.resetCampaignForm === 'function') window.resetCampaignForm();
                     emptyCampaignList.querySelectorAll('.campaign-folder-item').forEach(f => f.classList.remove('active-folder'));
                     folderItem.classList.add('active-folder');
 
@@ -1988,6 +2075,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnAddInfluencer && addInfluencerView) {
         btnAddInfluencer.addEventListener('click', () => {
+            if (typeof window.resetCampaignForm === 'function') {
+                window.resetCampaignForm();
+            }
             // Keep header visible, but hide dashboard content view
             if (campaignDashboardView) campaignDashboardView.classList.add('hidden');
             
@@ -7193,6 +7283,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- Edit Campaign Button ---
+    const btnEditCampaign = document.getElementById('btn-edit-campaign');
+    if (btnEditCampaign) {
+        btnEditCampaign.addEventListener('click', () => {
+            if (!window.selectedCampaign) return;
+            
+            hideAllInfluencerViews();
+            
+            const campaignFormContainer = document.getElementById('campaign-form-container');
+            if (campaignFormContainer) {
+                campaignFormContainer.classList.remove('hidden');
+            }
+            
+            const header = document.querySelector('#campaign-form-container .form-header');
+            if (header) header.textContent = 'Edit Influencer Campaign';
+            
+            const btnSubmit = document.querySelector('#campaign-form .btn-submit');
+            if (btnSubmit) btnSubmit.textContent = 'Save Changes';
+            
+            window.isEditingCampaign = true;
+            window.editingCampaignId = window.selectedCampaign.id;
+            
+            if (typeof window.populateCampaignForm === 'function') {
+                window.populateCampaignForm(window.selectedCampaign);
+            }
+        });
+    }
+
 
     // --- Expense Tracker Logic ---
     const btnAddExpense = document.getElementById('btn-add-expense');
