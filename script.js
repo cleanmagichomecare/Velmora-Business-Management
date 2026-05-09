@@ -6440,8 +6440,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 stateCounts[formattedState] = (stateCounts[formattedState] || 0) + 1;
             });
 
+            const STATE_COLOR_MAP = {
+                'Andhra Pradesh': '#EE5253',     // Bright Red
+                'Arunachal Pradesh': '#00D2D3',  // Cyan
+                'Assam': '#ED4C67',              // Crimson
+                'Bihar': '#C4E538',              // Lime
+                'Chhattisgarh': '#FFC312',       // Sunflower Yellow
+                'Goa': '#FECA57',                // Yellow
+                'Gujarat': '#F368E0',            // Magenta
+                'Haryana': '#A3CB38',            // Green
+                'Himachal Pradesh': '#FF9FF3',   // Pink
+                'Jharkhand': '#833471',          // Plum
+                'Karnataka': '#1DD1A1',          // Mint Green
+                'Kerala': '#FF6B6B',             // Coral Red
+                'Madhya Pradesh': '#FDA7DF',     // Light Pink
+                'Maharashtra': '#2E86DE',        // Dodger Blue
+                'Manipur': '#D980FA',            // Lavender
+                'Meghalaya': '#B53471',          // Dark Pink
+                'Mizoram': '#12CBC4',            // Turquoise
+                'Nagaland': '#5758BB',           // Purple Blue
+                'Odisha': '#1289A7',             // Ocean Blue
+                'Punjab': '#54A0FF',             // Light Blue
+                'Rajasthan': '#01A3A4',          // Dark Cyan
+                'Sikkim': '#006266',             // Dark Green
+                'Tamil Nadu': '#5F27CD',         // Deep Purple
+                'Telangana': '#FF9F43',          // Orange
+                'Tripura': '#6F1E51',            // Maroon
+                'Uttar Pradesh': '#E1B12C',      // Mustard
+                'Uttarakhand': '#C23616',        // Rust
+                'West Bengal': '#341F97',        // Dark Indigo
+                'Andaman and Nicobar Islands': '#1B1464', // Navy Blue
+                'Chandigarh': '#009432',         // Forest Green
+                'Dadra and Nagar Haveli': '#0652DD', // Blue
+                'Daman and Diu': '#9980FA',      // Soft Purple
+                'Delhi': '#F79F1F',              // Golden Orange
+                'New Delhi': '#F79F1F',          // Golden Orange
+                'Jammu and Kashmir': '#8395A7',  // Blue Grey
+                'Ladakh': '#A4B0BE',             // Grey
+                'Lakshadweep': '#10AC84',        // Emerald
+                'Puducherry': '#EA2027',         // Deep Red
+                'Unknown': '#747D8C'             // Dark Grey
+            };
+            
+            function getStateColor(stateName) {
+                if (STATE_COLOR_MAP[stateName]) {
+                    return STATE_COLOR_MAP[stateName];
+                }
+                let hash = 0;
+                for (let i = 0; i < stateName.length; i++) {
+                    hash = stateName.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                const hue = Math.abs(hash) % 360;
+                return `hsl(${hue}, 70%, 60%)`;
+            }
+
             const stateLabels = Object.keys(stateCounts);
             const stateValues = Object.values(stateCounts);
+            const stateBackgroundColors = stateLabels.map(state => getStateColor(state));
 
             if (window.stateChartInstance) {
                 window.stateChartInstance.destroy();
@@ -6455,15 +6510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         labels: stateLabels,
                         datasets: [{
                             data: stateValues,
-                            backgroundColor: [
-                                '#7c5cff',
-                                '#22c55e',
-                                '#3b82f6',
-                                '#f59e0b',
-                                '#ef4444',
-                                '#14b8a6',
-                                '#ec4899'
-                            ],
+                            backgroundColor: stateBackgroundColors,
                             borderWidth: 0
                         }]
                     },
@@ -6538,22 +6585,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            const chartColors = [
-                '#7c5cff',
-                '#22c55e',
-                '#3b82f6',
-                '#f59e0b',
-                '#ef4444',
-                '#14b8a6',
-                '#ec4899'
-            ];
-
             const cardsContainer = document.getElementById('stateBreakdownCards');
             if (cardsContainer) {
                 cardsContainer.innerHTML = '';
 
-                Object.entries(stateAnalytics).forEach(([state, data], index) => {
-                    const stateColor = chartColors[index % chartColors.length];
+                Object.entries(stateAnalytics).forEach(([state, data]) => {
+                    const stateColor = getStateColor(state);
                     cardsContainer.innerHTML += `
                     <div class="state-card">
                       <div class="state-card-header">
