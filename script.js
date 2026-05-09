@@ -6441,45 +6441,48 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const STATE_COLOR_MAP = {
-                'Andhra Pradesh': '#EE5253',     // Bright Red
-                'Arunachal Pradesh': '#00D2D3',  // Cyan
-                'Assam': '#ED4C67',              // Crimson
-                'Bihar': '#C4E538',              // Lime
-                'Chhattisgarh': '#FFC312',       // Sunflower Yellow
-                'Goa': '#FECA57',                // Yellow
-                'Gujarat': '#F368E0',            // Magenta
-                'Haryana': '#A3CB38',            // Green
-                'Himachal Pradesh': '#FF9FF3',   // Pink
-                'Jharkhand': '#833471',          // Plum
-                'Karnataka': '#1DD1A1',          // Mint Green
-                'Kerala': '#FF6B6B',             // Coral Red
-                'Madhya Pradesh': '#FDA7DF',     // Light Pink
-                'Maharashtra': '#2E86DE',        // Dodger Blue
-                'Manipur': '#D980FA',            // Lavender
-                'Meghalaya': '#B53471',          // Dark Pink
-                'Mizoram': '#12CBC4',            // Turquoise
-                'Nagaland': '#5758BB',           // Purple Blue
-                'Odisha': '#1289A7',             // Ocean Blue
-                'Punjab': '#54A0FF',             // Light Blue
-                'Rajasthan': '#01A3A4',          // Dark Cyan
-                'Sikkim': '#006266',             // Dark Green
-                'Tamil Nadu': '#5F27CD',         // Deep Purple
-                'Telangana': '#FF9F43',          // Orange
-                'Tripura': '#6F1E51',            // Maroon
-                'Uttar Pradesh': '#E1B12C',      // Mustard
-                'Uttarakhand': '#C23616',        // Rust
-                'West Bengal': '#341F97',        // Dark Indigo
-                'Andaman and Nicobar Islands': '#1B1464', // Navy Blue
-                'Chandigarh': '#009432',         // Forest Green
-                'Dadra and Nagar Haveli': '#0652DD', // Blue
-                'Daman and Diu': '#9980FA',      // Soft Purple
-                'Delhi': '#F79F1F',              // Golden Orange
-                'New Delhi': '#F79F1F',          // Golden Orange
-                'Jammu and Kashmir': '#8395A7',  // Blue Grey
-                'Ladakh': '#A4B0BE',             // Grey
-                'Lakshadweep': '#10AC84',        // Emerald
-                'Puducherry': '#EA2027',         // Deep Red
-                'Unknown': '#747D8C'             // Dark Grey
+                // Top 12 Recommended Palette Style (High Contrast for Dark Theme)
+                'Karnataka': '#b388ff',       // Purple
+                'Tamil Nadu': '#69f0ae',      // Green
+                'Telangana': '#448aff',       // Blue
+                'Kerala': '#ffab40',          // Orange
+                'Uttar Pradesh': '#ff5252',   // Red
+                'Andhra Pradesh': '#18ffff',  // Cyan
+                'Jharkhand': '#ff4081',       // Pink
+                'Rajasthan': '#ffe57f',       // Yellow
+                'Maharashtra': '#64ffda',     // Teal
+                'Delhi': '#8c9eff',           // Indigo
+                'New Delhi': '#8c9eff',       // Indigo
+                'Gujarat': '#b2ff59',         // Lime
+                'West Bengal': '#ff8a65',     // Coral
+
+                // Remaining States (Unique Distinct Accents)
+                'Assam': '#ffd740',           // Amber
+                'Bihar': '#40c4ff',           // Light Blue
+                'Chhattisgarh': '#ff6e40',    // Deep Orange
+                'Goa': '#ff80ab',             // Rose
+                'Haryana': '#76ff03',         // Aquamarine
+                'Himachal Pradesh': '#84ffff',// Sky Blue
+                'Madhya Pradesh': '#ffd180',  // Peach
+                'Manipur': '#e040fb',         // Fuchsia
+                'Meghalaya': '#1de9b6',       // Mint
+                'Mizoram': '#ffca28',         // Gold
+                'Nagaland': '#ea80fc',        // Violet
+                'Odisha': '#00e676',          // Emerald
+                'Punjab': '#ff1744',          // Crimson
+                'Sikkim': '#2979ff',          // Royal Blue
+                'Tripura': '#c6ff00',         // Chartreuse
+                'Uttarakhand': '#ff3d00',     // Tomato
+                'Arunachal Pradesh': '#b0bec5',// Slate
+                'Andaman and Nicobar Islands': '#ce93d8', // Plum
+                'Chandigarh': '#00b8d4',      // Turquoise
+                'Dadra and Nagar Haveli': '#a7ffeb', // Seafoam
+                'Daman and Diu': '#b39ddb',   // Orchid
+                'Jammu and Kashmir': '#d84315',// Chocolate
+                'Ladakh': '#90caf9',          // Steel Blue
+                'Lakshadweep': '#f48fb1',     // Pale Violet Red
+                'Puducherry': '#00e5ff',      // Bright Cyan
+                'Unknown': '#9e9e9e'          // Grey
             };
             
             function getStateColor(stateName) {
