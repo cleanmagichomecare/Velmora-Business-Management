@@ -5186,8 +5186,10 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 .expense-top-bar {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .expense-view-title {
@@ -5201,6 +5203,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 /* ===== Focused Department View ===== */

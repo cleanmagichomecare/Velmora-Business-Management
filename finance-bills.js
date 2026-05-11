@@ -452,6 +452,71 @@
             btnSaveBill.parentNode.replaceChild(newBtn, btnSaveBill);
             newBtn.addEventListener('click', saveBill);
         }
+
+        // --- Action Panel Routing Logic ---
+        const btnFinanceTask = document.getElementById('btn-finance-task');
+        const btnFinanceAddExpense = document.getElementById('btn-finance-add-expense');
+        const btnFinanceViewExpense = document.getElementById('btn-finance-view-expense');
+        const btnFinanceUpcomingBill = document.getElementById('btn-finance-upcoming-bill');
+        const btnFinanceBankAccount = document.getElementById('btn-finance-bank-account');
+        const btnFinanceAnalytics = document.getElementById('btn-finance-analytics');
+
+        if (btnFinanceTask) {
+            btnFinanceTask.addEventListener('click', () => {
+                const taskCard = document.querySelector('[data-target="view-task"]');
+                if (taskCard) taskCard.click();
+            });
+        }
+
+        if (btnFinanceAddExpense) {
+            btnFinanceAddExpense.addEventListener('click', () => {
+                const expenseView = document.getElementById('view-expense');
+                if (expenseView) {
+                    document.querySelectorAll('.content-view').forEach(v => {
+                        v.classList.remove('active-view');
+                        v.classList.add('hidden');
+                    });
+                    expenseView.classList.remove('hidden');
+                    expenseView.classList.add('active-view');
+                    const formContainer = document.getElementById('expense-form-container');
+                    if (formContainer) formContainer.classList.remove('hidden');
+                }
+            });
+        }
+
+        if (btnFinanceViewExpense) {
+            btnFinanceViewExpense.addEventListener('click', () => {
+                const expenseView = document.getElementById('view-expense');
+                if (expenseView) {
+                    document.querySelectorAll('.content-view').forEach(v => {
+                        v.classList.remove('active-view');
+                        v.classList.add('hidden');
+                    });
+                    expenseView.classList.remove('hidden');
+                    expenseView.classList.add('active-view');
+                    const formContainer = document.getElementById('expense-form-container');
+                    if (formContainer) formContainer.classList.add('hidden');
+                }
+            });
+        }
+
+        if (btnFinanceUpcomingBill) {
+            btnFinanceUpcomingBill.addEventListener('click', () => {
+                if (typeof showToast === 'function') showToast('Upcoming Bills — Coming Soon');
+            });
+        }
+
+        if (btnFinanceBankAccount) {
+            btnFinanceBankAccount.addEventListener('click', () => {
+                if (typeof showToast === 'function') showToast('Bank Account — Coming Soon');
+            });
+        }
+
+        if (btnFinanceAnalytics) {
+            btnFinanceAnalytics.addEventListener('click', () => {
+                if (typeof showToast === 'function') showToast('Analytics — Coming Soon');
+            });
+        }
     }
 
     if (document.readyState === 'loading') {
