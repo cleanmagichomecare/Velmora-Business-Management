@@ -391,7 +391,7 @@ window.SharedCategoryService = {
                     'view-sales': 'Sales',
                     'view-document': 'Document Room',
                     'view-marketing': 'Marketing',
-                    'view-expense': 'Expense Tracker',
+                    'view-add-bill': 'Finance Management',
                     'view-vendor': 'Vendor Management',
                     'view-category': 'Category',
                     'view-research': 'Research & Development',
@@ -447,10 +447,10 @@ window.SharedCategoryService = {
         hideAllSidebars();
 
         // Show sub-sidebar for expense/vendor if needed
-        if (targetId === 'view-expense' && expenseSidebar) {
+        if (targetId === 'view-add-bill' && expenseSidebar) {
             expenseSidebar.classList.remove('hidden');
             if (typeof setExpenseSidebarActive === 'function') {
-                setExpenseSidebarActive(btnExpenseModule);
+                setExpenseSidebarActive(document.getElementById('btn-add-bill-module'));
             }
         } else if (targetId === 'view-vendor' && vendorSidebar) {
             vendorSidebar.classList.remove('hidden');
@@ -499,7 +499,7 @@ window.SharedCategoryService = {
             'view-sales': 'Sales',
             'view-document': 'Document Room',
             'view-marketing': 'Marketing',
-            'view-expense': 'Expense Tracker',
+            'view-add-bill': 'Finance Management',
             'view-vendor': 'Vendor Management',
             'view-category': 'Category',
             'view-research': 'Research & Development',
@@ -531,7 +531,6 @@ window.SharedCategoryService = {
     });
 
     // --- Expense Sidebar Navigation ---
-    const btnExpenseModule = document.getElementById('btn-expense-module');
     const btnFinanceCategoryModule = document.getElementById('btn-finance-category-module');
     const btnAddBillModule = document.getElementById('btn-add-bill-module');
 
@@ -541,21 +540,6 @@ window.SharedCategoryService = {
             btn.classList.remove('active');
         });
         if (activeBtn) activeBtn.classList.add('active');
-    }
-
-    if (btnExpenseModule) {
-        btnExpenseModule.addEventListener('click', () => {
-            setExpenseSidebarActive(btnExpenseModule);
-            contentViews.forEach(view => {
-                view.classList.remove('active-view');
-                view.classList.add('hidden');
-            });
-            const expenseView = document.getElementById('view-expense');
-            if (expenseView) {
-                expenseView.classList.remove('hidden');
-                expenseView.classList.add('active-view');
-            }
-        });
     }
 
     if (btnFinanceCategoryModule) {
