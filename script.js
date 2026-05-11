@@ -70,6 +70,11 @@ window.SharedCategoryService = {
         const dropdown = document.getElementById(dropdownId);
         if (!dropdown) return;
         
+        if (dropdown.tagName === 'INPUT' && dropdown.type === 'hidden') {
+            this.populateMultiSelectDropdown(dropdownId, dataArray, placeholderText, emptyText);
+            return;
+        }
+
         const previousValue = dropdown.value;
         dropdown.innerHTML = '';
         
@@ -91,10 +96,113 @@ window.SharedCategoryService = {
         if (previousValue && dataArray.includes(previousValue)) {
             dropdown.value = previousValue;
         }
+    },
+
+    populateMultiSelectDropdown(inputId, dataArray, placeholderText, emptyText) {
+        const input = document.getElementById(inputId);
+        const container = document.getElementById(`container-${inputId}`);
+        if (!input || !container) return;
+
+        const display = container.querySelector('.multi-select-display');
+        const displayValue = display.querySelector('.multi-select-value');
+        const dropdown = container.querySelector('.multi-select-dropdown');
+        
+        dropdown.innerHTML = '';
+        
+        if (!dataArray || dataArray.length === 0) {
+            displayValue.textContent = emptyText || 'No Sub Categories';
+            displayValue.title = '';
+            display.classList.add('disabled');
+            input.value = '';
+            input.dispatchEvent(new Event('change'));
+            return;
+        }
+
+        display.classList.remove('disabled');
+
+        let selectedValues = input.value ? input.value.split(',').map(v => v.trim()) : [];
+        selectedValues = selectedValues.filter(v => dataArray.includes(v));
+        input.value = selectedValues.join(', ');
+
+        const updateDisplay = () => {
+            if (selectedValues.length === 0) {
+                displayValue.textContent = placeholderText;
+                displayValue.title = '';
+                displayValue.classList.add('multi-select-placeholder');
+            } else {
+                displayValue.classList.remove('multi-select-placeholder');
+                const fullText = selectedValues.join(', ');
+                displayValue.title = fullText;
+                if (selectedValues.length > 3) {
+                    displayValue.textContent = `${selectedValues.length} Selected`;
+                } else {
+                    displayValue.textContent = fullText;
+                }
+            }
+            input.value = selectedValues.join(', ');
+            input.dispatchEvent(new Event('change'));
+        };
+
+        updateDisplay();
+
+        dataArray.forEach(val => {
+            const label = document.createElement('label');
+            label.className = 'multi-select-option';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = val;
+            checkbox.checked = selectedValues.includes(val);
+            
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    if (!selectedValues.includes(val)) selectedValues.push(val);
+                } else {
+                    selectedValues = selectedValues.filter(v => v !== val);
+                }
+                updateDisplay();
+            });
+
+            const span = document.createElement('span');
+            span.textContent = val;
+
+            label.appendChild(checkbox);
+            label.appendChild(span);
+            dropdown.appendChild(label);
+        });
+
+        // Event listener for opening dropdown (bind only once per container)
+        if (!container.dataset.initialized) {
+            display.addEventListener('click', (e) => {
+                if (display.classList.contains('disabled')) return;
+                
+                // Close other open multi-selects
+                document.querySelectorAll('.multi-select-container.open').forEach(c => {
+                    if (c !== container) {
+                        c.classList.remove('open');
+                        c.querySelector('.multi-select-dropdown').classList.add('hidden');
+                    }
+                });
+
+                container.classList.toggle('open');
+                dropdown.classList.toggle('hidden');
+            });
+            container.dataset.initialized = 'true';
+        }
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+    // --- Global Click Outside Listener for Multi-Select ---
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.multi-select-container')) {
+            document.querySelectorAll('.multi-select-container.open').forEach(c => {
+                c.classList.remove('open');
+                c.querySelector('.multi-select-dropdown').classList.add('hidden');
+            });
+        }
+    });
+
     // --- Global Navigation Injection ---
     // Remove any hardcoded global nav group to prevent duplicates
     const globalNav = document.querySelector('#content-views > .dept-nav-group');

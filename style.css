@@ -5946,6 +5946,120 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 .influencer-selection-active .influencer-profile-card .card-actions,
 .influencer-selection-active .influencer-profile-card button {
-    pointer-events: auto; /* Keep actions alive */
+}
+
+/* ==================================================
+   MULTI-SELECT COMPONENT (Sub Category 3 Upgrade)
+   ================================================== */
+
+.multi-select-container {
+    position: relative;
+    width: 100%;
+    font-family: inherit;
+}
+
+.multi-select-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: var(--transition);
+    min-height: 44px;
+    outline: none;
+}
+
+.multi-select-display:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(123, 140, 255, 0.2);
+}
+
+.multi-select-display.disabled {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .multi-select-display.disabled {
+    background-color: #1e293b;
+}
+
+.multi-select-value {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 10px;
+    flex: 1;
+}
+
+.multi-select-placeholder {
+    color: var(--text-muted);
+}
+
+.multi-select-arrow {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+}
+
+.multi-select-container.open .multi-select-arrow {
+    transform: rotate(180deg);
+}
+
+.multi-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+}
+
+.multi-select-dropdown.hidden {
+    display: none !important;
+}
+
+.multi-select-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    gap: 10px;
+}
+
+.multi-select-option:hover {
+    background-color: rgba(123, 140, 255, 0.08);
+}
+
+.multi-select-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+    margin: 0;
+}
+
+.multi-select-empty {
+    padding: 12px 16px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
 }
 

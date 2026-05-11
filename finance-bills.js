@@ -54,10 +54,9 @@
                 const mainVal = billMainCat.value;
                 billSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
                 billSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
-                if (billSub3) billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
+                if (window.SharedCategoryService) window.SharedCategoryService.populateDropdown('bill-sub-category3', [], 'Select Sub Category 3', 'No Sub Categories');
                 
                 billSub2.disabled = true;
-                if (billSub3) billSub3.disabled = true;
 
                 if (mainVal && _globals.sub1[mainVal]) {
                     billSub1.disabled = false;
@@ -76,8 +75,7 @@
                 console.log("billSub1 changed to:", billSub1.value);
                 const sub1Val = billSub1.value;
                 billSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
-                if (billSub3) billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
-                if (billSub3) billSub3.disabled = true;
+                if (window.SharedCategoryService) window.SharedCategoryService.populateDropdown('bill-sub-category3', [], 'Select Sub Category 3', 'No Sub Categories');
 
                 if (sub1Val && _globals.sub2[sub1Val]) {
                     billSub2.disabled = false;
@@ -97,20 +95,8 @@
                 const sub2Val = billSub2.value;
                 if (!billSub3) return;
 
-                billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
-
-                if (sub2Val && _globals.sub3[sub2Val]) {
-                    billSub3.disabled = false;
-                    _globals.sub3[sub2Val].forEach(sub => {
-                        const opt = document.createElement('option');
-                        opt.value = sub;
-                        opt.textContent = sub;
-                        billSub3.appendChild(opt);
-                    });
-                    console.log(`Populated billSub3 with options for ${sub2Val}:`, _globals.sub3[sub2Val]);
-                } else {
-                    billSub3.disabled = true;
-                    console.log(`No sub3 options found for sub2: ${sub2Val}`);
+                if (window.SharedCategoryService) {
+                    window.SharedCategoryService.populateDropdown('bill-sub-category3', sub2Val && _globals.sub3[sub2Val] ? _globals.sub3[sub2Val] : [], 'Select Sub Category 3', 'No Sub Categories');
                 }
             };
         }
@@ -439,9 +425,8 @@
                     billSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
                     billSub2.disabled = true;
                 }
-                if (billSub3) {
-                    billSub3.innerHTML = '<option value="">Select Sub Category 3</option>';
-                    billSub3.disabled = true;
+                if (window.SharedCategoryService) {
+                    window.SharedCategoryService.populateDropdown('bill-sub-category3', [], 'Select Sub Category 3', 'No Sub Categories');
                 }
 
                 // Hide form, show default
