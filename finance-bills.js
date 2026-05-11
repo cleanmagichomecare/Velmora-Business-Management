@@ -454,72 +454,142 @@
         }
 
         // --- Action Panel Routing Logic ---
-        const btnFinanceTask = document.getElementById('btn-finance-task');
-        const btnFinanceAddExpense = document.getElementById('btn-finance-add-expense');
-        const btnFinanceViewExpense = document.getElementById('btn-finance-view-expense');
-        const btnFinanceUpcomingBill = document.getElementById('btn-finance-upcoming-bill');
-        const btnFinanceBankAccount = document.getElementById('btn-finance-bank-account');
-        const btnFinanceExpenseAnalytics = document.getElementById('btn-finance-expense-analytics');
-        const btnFinanceBillAnalytics = document.getElementById('btn-finance-bill-analytics');
+        
+        function showFinanceModule(moduleName) {
+            const mainDashboard = document.getElementById('finance-main-dashboard');
+            const billsModule = document.getElementById('finance-bills-module');
+            const placeholderModule = document.getElementById('finance-placeholder-module');
+            const expenseView = document.getElementById('view-expense');
+            const mainFinanceView = document.getElementById('view-add-bill');
+            
+            // Default: hide all internal modules to prevent overlap
+            if (mainDashboard) mainDashboard.classList.add('hidden');
+            if (billsModule) billsModule.classList.add('hidden');
+            if (placeholderModule) placeholderModule.classList.add('hidden');
 
-        if (btnFinanceTask) {
-            btnFinanceTask.addEventListener('click', () => {
+            // Handle Top Level view switches safely
+            if (moduleName === 'expense') {
+                document.querySelectorAll('.content-view').forEach(v => {
+                    v.classList.remove('active-view');
+                    v.classList.add('hidden');
+                });
+                if (expenseView) {
+                    expenseView.classList.remove('hidden');
+                    expenseView.classList.add('active-view');
+                }
+            } else if (moduleName === 'task') {
                 const taskCard = document.querySelector('[data-target="view-task"]');
                 if (taskCard) taskCard.click();
-            });
+            } else {
+                // Ensure main finance view is active
+                document.querySelectorAll('.content-view').forEach(v => {
+                    v.classList.remove('active-view');
+                    v.classList.add('hidden');
+                });
+                if (mainFinanceView) {
+                    mainFinanceView.classList.remove('hidden');
+                    mainFinanceView.classList.add('active-view');
+                }
+
+                // Show specific internal module
+                if (moduleName === 'dashboard' && mainDashboard) {
+                    mainDashboard.classList.remove('hidden');
+                } else if (moduleName === 'bills' && billsModule) {
+                    billsModule.classList.remove('hidden');
+                } else if (moduleName === 'placeholder' && placeholderModule) {
+                    placeholderModule.classList.remove('hidden');
+                }
+            }
         }
 
-        if (btnFinanceAddExpense) {
-            btnFinanceAddExpense.addEventListener('click', () => {
-                const expenseView = document.getElementById('view-expense');
-                if (expenseView) {
-                    document.querySelectorAll('.content-view').forEach(v => {
-                        v.classList.remove('active-view');
-                        v.classList.add('hidden');
-                    });
-                    expenseView.classList.remove('hidden');
-                    expenseView.classList.add('active-view');
-                    const formContainer = document.getElementById('expense-form-container');
-                    if (formContainer) formContainer.classList.remove('hidden');
+        function showFinancePlaceholder(title, description) {
+            const titleEl = document.getElementById('finance-placeholder-title');
+            const descEl = document.getElementById('finance-placeholder-desc');
+            if (titleEl) titleEl.innerHTML = `Finance Management <span>></span> ${title}`;
+            if (descEl) descEl.textContent = description || 'This module is currently being built and will be available soon.';
+            
+            showFinanceModule('placeholder');
+        }
+
+        // Delegate clicks for the main dashboard cards
+        const financeMainDashboard = document.getElementById('finance-main-dashboard');
+        if (financeMainDashboard && !financeMainDashboard.hasAttribute('data-events-bound')) {
+            financeMainDashboard.setAttribute('data-events-bound', 'true');
+            
+            financeMainDashboard.addEventListener('click', (e) => {
+                const card = e.target.closest('.finance-module-card');
+                if (!card) return;
+                
+                const moduleName = card.getAttribute('data-finance-module');
+                if (moduleName === 'task') showFinanceModule('task');
+                else if (moduleName === 'expense') showFinanceModule('expense');
+                else if (moduleName === 'bills') showFinanceModule('bills');
+                else if (moduleName === 'bank') showFinancePlaceholder('Bank Account', 'Bank account management is under development.');
+                else if (moduleName === 'analytics') showFinancePlaceholder('Analytics', 'Comprehensive finance analytics are coming soon.');
+            });
+            
+            financeMainDashboard.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const card = e.target.closest('.finance-module-card');
+                    if (card) card.click();
                 }
             });
         }
 
-        if (btnFinanceViewExpense) {
+        // Back Buttons
+        const btnBackBills = document.getElementById('btn-back-bills-module');
+        const btnBackPlaceholder = document.getElementById('btn-back-placeholder-module');
+        const btnBackExpense = document.getElementById('btn-back-expense-module');
+        
+        const handleBackToDashboard = () => showFinanceModule('dashboard');
+
+        if (btnBackBills && !btnBackBills.hasAttribute('data-bound')) {
+            btnBackBills.setAttribute('data-bound', 'true');
+            btnBackBills.addEventListener('click', handleBackToDashboard);
+        }
+        if (btnBackPlaceholder && !btnBackPlaceholder.hasAttribute('data-bound')) {
+            btnBackPlaceholder.setAttribute('data-bound', 'true');
+            btnBackPlaceholder.addEventListener('click', handleBackToDashboard);
+        }
+        if (btnBackExpense && !btnBackExpense.hasAttribute('data-bound')) {
+            btnBackExpense.setAttribute('data-bound', 'true');
+            btnBackExpense.addEventListener('click', handleBackToDashboard);
+        }
+
+        // Expense Sub-Buttons
+        const btnFinanceAddExpense = document.getElementById('btn-add-expense'); // Existing button ID in view-expense
+        const btnFinanceViewExpense = document.getElementById('btn-view-expenses-list');
+        const btnFinanceExpenseAnalytics = document.getElementById('btn-finance-expense-analytics');
+
+        // Note: btn-add-expense already has existing listeners, we only bind the new ones safely
+        if (btnFinanceViewExpense && !btnFinanceViewExpense.hasAttribute('data-bound')) {
+            btnFinanceViewExpense.setAttribute('data-bound', 'true');
             btnFinanceViewExpense.addEventListener('click', () => {
-                const expenseView = document.getElementById('view-expense');
-                if (expenseView) {
-                    document.querySelectorAll('.content-view').forEach(v => {
-                        v.classList.remove('active-view');
-                        v.classList.add('hidden');
-                    });
-                    expenseView.classList.remove('hidden');
-                    expenseView.classList.add('active-view');
-                    const formContainer = document.getElementById('expense-form-container');
-                    if (formContainer) formContainer.classList.add('hidden');
-                }
+                const formContainer = document.getElementById('expense-form-container');
+                if (formContainer) formContainer.classList.add('hidden');
             });
         }
 
-        if (btnFinanceUpcomingBill) {
-            btnFinanceUpcomingBill.addEventListener('click', () => {
-                if (typeof showToast === 'function') showToast('Upcoming Bills — Coming Soon');
-            });
-        }
-
-        if (btnFinanceBankAccount) {
-            btnFinanceBankAccount.addEventListener('click', () => {
-                if (typeof showToast === 'function') showToast('Bank Account — Coming Soon');
-            });
-        }
-
-        if (btnFinanceExpenseAnalytics) {
+        if (btnFinanceExpenseAnalytics && !btnFinanceExpenseAnalytics.hasAttribute('data-bound')) {
+            btnFinanceExpenseAnalytics.setAttribute('data-bound', 'true');
             btnFinanceExpenseAnalytics.addEventListener('click', () => {
                 if (typeof showToast === 'function') showToast('Expense Analytics — Coming Soon');
             });
         }
 
-        if (btnFinanceBillAnalytics) {
+        // Bills Sub-Buttons
+        const btnFinanceUpcomingBill = document.getElementById('btn-finance-upcoming-bill');
+        const btnFinanceBillAnalytics = document.getElementById('btn-finance-bill-analytics');
+
+        if (btnFinanceUpcomingBill && !btnFinanceUpcomingBill.hasAttribute('data-bound')) {
+            btnFinanceUpcomingBill.setAttribute('data-bound', 'true');
+            btnFinanceUpcomingBill.addEventListener('click', () => {
+                if (typeof showToast === 'function') showToast('Upcoming Bills — Coming Soon');
+            });
+        }
+
+        if (btnFinanceBillAnalytics && !btnFinanceBillAnalytics.hasAttribute('data-bound')) {
+            btnFinanceBillAnalytics.setAttribute('data-bound', 'true');
             btnFinanceBillAnalytics.addEventListener('click', () => {
                 if (typeof showToast === 'function') showToast('Bill Analytics — Coming Soon');
             });
