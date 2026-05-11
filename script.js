@@ -10,6 +10,90 @@ window.subCategory1 = window.subCategory1 || {};
 window.subCategory2 = window.subCategory2 || {};
 window.subCategory3 = window.subCategory3 || {};
 
+// ==========================================
+// SHARED CATEGORY SERVICE (Finance as Master)
+// ==========================================
+window.SharedCategoryService = {
+    cache: null,
+    
+    async loadFinanceCategories() {
+        if (this.cache) return this.cache;
+        try {
+            const { data, error } = await window.supabase
+                .from('finance_categories')
+                .select('*')
+                .eq('status', 'active');
+            if (error) throw error;
+            this.cache = data || [];
+            return this.cache;
+        } catch (e) {
+            console.error("Error loading finance categories in SharedCategoryService:", e);
+            return [];
+        }
+    },
+    
+    async getMainCategories() {
+        const data = await this.loadFinanceCategories();
+        return [...new Set(data.map(c => c.main).filter(Boolean))].sort();
+    },
+    
+    async getSubCategories(main) {
+        if (!main) return [];
+        const data = await this.loadFinanceCategories();
+        return [...new Set(data.filter(c => c.main === main).map(c => c.sub1).filter(Boolean))].sort();
+    },
+    
+    async getSubSubCategories(main, sub1) {
+        if (!main || !sub1) return [];
+        const data = await this.loadFinanceCategories();
+        return [...new Set(data.filter(c => c.main === main && c.sub1 === sub1).map(c => c.sub2).filter(Boolean))].sort();
+    },
+    
+    async getSubSubSubCategories(main, sub1, sub2) {
+        if (!main || !sub1 || !sub2) return [];
+        const data = await this.loadFinanceCategories();
+        // Fallback for sub_sub_sub_category vs sub3 schema
+        return [...new Set(data.filter(c => c.main === main && c.sub1 === sub1 && c.sub2 === sub2).map(c => c.sub_sub_sub_category || c.sub3).filter(Boolean))].sort();
+    },
+
+    async getAllSubCategories() {
+        const data = await this.loadFinanceCategories();
+        return [...new Set(data.map(c => c.sub1).filter(Boolean))].sort();
+    },
+    
+    async getAllSubSubCategories() {
+        const data = await this.loadFinanceCategories();
+        return [...new Set(data.map(c => c.sub2).filter(Boolean))].sort();
+    },
+
+    populateDropdown(dropdownId, dataArray, placeholderText, emptyText) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        
+        const previousValue = dropdown.value;
+        dropdown.innerHTML = '';
+        
+        if (!dataArray || dataArray.length === 0) {
+            dropdown.innerHTML = `<option value="">${emptyText || 'No Sub Categories'}</option>`;
+            dropdown.disabled = true;
+            return;
+        }
+        
+        dropdown.innerHTML = `<option value="">${placeholderText}</option>`;
+        dataArray.forEach(val => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val;
+            dropdown.appendChild(opt);
+        });
+        
+        dropdown.disabled = false;
+        if (previousValue && dataArray.includes(previousValue)) {
+            dropdown.value = previousValue;
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Global Navigation Injection ---
     // Remove any hardcoded global nav group to prevent duplicates

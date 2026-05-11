@@ -158,186 +158,28 @@ console.log('task-category.js Loading...');
     };
 
     window.loadTaskSubSubSubCategories = async function(category, subCategory, subSubCategory, dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-
-        const previousValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Select Sub Category 3</option>';
-        if (!category || !subCategory || !subSubCategory) {
-            dropdown.disabled = true;
-            return;
-        }
-
-        try {
-            const { data, error } = await window.supabase
-                .from('task_categories')
-                .select('sub_sub_sub_category')
-                .eq('category', category)
-                .eq('sub_category', subCategory)
-                .eq('sub_sub_category', subSubCategory)
-                .eq('status', 'active')
-                .not('sub_sub_sub_category', 'is', null);
-
-            if (error) throw error;
-
-            const uniqueSubSubs = Array.from(new Set(
-                data.map(r => r.sub_sub_sub_category).filter(Boolean).map(c => c.trim())
-            )).sort();
-
-            uniqueSubSubs.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub;
-                opt.textContent = sub;
-                dropdown.appendChild(opt);
-            });
-
-            dropdown.disabled = false;
-            if (previousValue) dropdown.value = previousValue;
-        } catch (e) {
-            console.error('Error loading Task Sub Categories 3:', e);
-        }
+        const data = await window.SharedCategoryService.getSubSubSubCategories(category, subCategory, subSubCategory);
+        window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 3', 'Select Category First');
     };
 
     window.loadAllTaskSubSubCategories = async function(dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-
-        dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
-        try {
-            const { data, error } = await window.supabase
-                .from('task_categories')
-                .select('sub_sub_category')
-                .eq('status', 'active')
-                .not('sub_sub_category', 'is', null);
-            if (error) throw error;
-            
-            const uniqueSubs = Array.from(new Set(data.map(d => d.sub_sub_category).filter(Boolean))).sort();
-            uniqueSubs.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub;
-                opt.textContent = sub;
-                dropdown.appendChild(opt);
-            });
-        } catch(e) {
-            console.error("Error loading All Sub Category 2s", e);
-        }
+        const data = await window.SharedCategoryService.getAllSubSubCategories();
+        window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 2', 'No Sub Categories');
     };
 
     window.loadTaskCategories = async function(dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-
-        // Preserve current selection before rebuild
-        const previousValue = dropdown.value;
-
-        dropdown.innerHTML = '<option value="">Select Main Category</option>';
-
-        try {
-            const { data, error } = await window.supabase
-                .from('task_categories')
-                .select('category')
-                .eq('status', 'active');
-
-            if (error) throw error;
-
-            const uniqueCats = Array.from(new Set(
-                data.map(r => r.category).filter(Boolean).map(c => c.trim())
-            )).sort();
-
-            uniqueCats.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat;
-                opt.textContent = cat;
-                dropdown.appendChild(opt);
-            });
-
-            // Restore previous selection if it still exists
-            if (previousValue) {
-                dropdown.value = previousValue;
-                console.log(`[loadTaskCategories] Restored "${previousValue}" in #${dropdownId}`);
-            }
-        } catch (e) {
-            console.error('Error loading Task Categories:', e);
-        }
+        const data = await window.SharedCategoryService.getMainCategories();
+        window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Main Category', 'No Categories');
     };
 
     window.loadTaskSubCategories = async function(category, dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-
-        const previousValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Select Sub Category 1</option>';
-        if (!category) {
-            dropdown.disabled = true;
-            return;
-        }
-
-        try {
-            const { data, error } = await window.supabase
-                .from('task_categories')
-                .select('sub_category')
-                .eq('category', category)
-                .eq('status', 'active')
-                .not('sub_category', 'is', null);
-
-            if (error) throw error;
-
-            const uniqueSubs = Array.from(new Set(
-                data.map(r => r.sub_category).filter(Boolean).map(c => c.trim())
-            )).sort();
-
-            uniqueSubs.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub;
-                opt.textContent = sub;
-                dropdown.appendChild(opt);
-            });
-
-            dropdown.disabled = false;
-            if (previousValue) dropdown.value = previousValue;
-        } catch (e) {
-            console.error('Error loading Task Sub Categories 1:', e);
-        }
+        const data = await window.SharedCategoryService.getSubCategories(category);
+        window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 1', 'Select Category First');
     };
 
     window.loadTaskSubSubCategories = async function(category, subCategory, dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-
-        const previousValue = dropdown.value;
-        dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
-        if (!category || !subCategory) {
-            dropdown.disabled = true;
-            return;
-        }
-
-        try {
-            const { data, error } = await window.supabase
-                .from('task_categories')
-                .select('sub_sub_category')
-                .eq('category', category)
-                .eq('sub_category', subCategory)
-                .eq('status', 'active')
-                .not('sub_sub_category', 'is', null);
-
-            if (error) throw error;
-
-            const uniqueSubSubs = Array.from(new Set(
-                data.map(r => r.sub_sub_category).filter(Boolean).map(c => c.trim())
-            )).sort();
-
-            uniqueSubSubs.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub;
-                opt.textContent = sub;
-                dropdown.appendChild(opt);
-            });
-
-            dropdown.disabled = false;
-            if (previousValue) dropdown.value = previousValue;
-        } catch (e) {
-            console.error('Error loading Task Sub Categories 2:', e);
-        }
+        const data = await window.SharedCategoryService.getSubSubCategories(category, subCategory);
+        window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 2', 'Select Category First');
     };
 
     // Replace old global population call

@@ -799,8 +799,7 @@ window.insertSubSubSubCategory = async function(category, subCategory, subSubCat
         ]);
 
     console.log("Response:", data, error);
-
-    if (error) {
+    if (error) {
         console.error(error);
         alert("Insert failed");
     } else {
@@ -810,262 +809,33 @@ window.insertSubSubSubCategory = async function(category, subCategory, subSubCat
 };
 
 window.loadVendorMainCategories = async function(dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) {
-        console.error("DOM Binding Error: Dropdown not found with ID:", dropdownId);
-        return;
-    }
-
-    // Reset dropdown
-    dropdown.innerHTML = '<option value="">Select Main Category</option>';
-
-    const { data, error } = await window.supabase
-        .from('vendor_categories')
-        .select('category');
-
-    console.log("Supabase fetched data for main categories:", data, error);
-
-    if (error) {
-        console.error("Query issue:", error);
-        return;
-    }
-
-    // Remove null + duplicates
-    const unique = [...new Set(
-        data
-            .map(item => {
-                const val = item.category ? item.category.trim() : null;
-                return val === 'Operatons' ? 'Operations' : val;
-            })
-
-            .filter(Boolean)
-            .map(v => v.trim())
-    )];
-
-    console.log("Unique main categories to append:", unique);
-
-    unique.forEach(value => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        dropdown.appendChild(option);
-    });
+    const data = await window.SharedCategoryService.getMainCategories();
+    window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Main Category', 'No Categories');
 };
 
 window.loadVendorSubCategories = async function(category, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-
-    dropdown.innerHTML = '<option value="">Select Sub Category 1</option>';
-
-    if (!category) {
-        console.log("Missing Main Category. Cannot load Sub Category 1.");
-        return;
-    }
-
-    try {
-        const { data, error } = await window.supabase
-            .from('vendor_categories')
-            .select('sub_category')
-            .eq('category', category)
-            .not('sub_category', 'is', null);
-            
-        console.log(`Supabase fetched data for Sub Category 1 (Category: ${category}):`, data, error);
-
-        if (error) {
-            console.error("Query issue:", error);
-            return;
-        }
-
-        const unique = [...new Set(
-            data
-                .map(item => item.sub_category)
-                .filter(Boolean)
-                .map(v => v.trim())
-        )];
-
-        console.log("Unique sub category 1 to append:", unique);
-
-        unique.forEach(sub => {
-            const opt = document.createElement('option');
-            opt.value = sub;
-            opt.textContent = sub;
-            dropdown.appendChild(opt);
-        });
-    } catch (e) {
-        console.error('Error loading vendor sub categories:', e);
-    }
+    const data = await window.SharedCategoryService.getSubCategories(category);
+    window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 1', 'Select Category First');
 };
 
 window.loadAllVendorSubCategories = async function(dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-
-    dropdown.innerHTML = '<option value="">Select Sub Category 1</option>';
-
-    try {
-        const { data, error } = await window.supabase
-            .from('vendor_categories')
-            .select('sub_category')
-            .not('sub_category', 'is', null);
-            
-        if (error) {
-            console.error("Query issue:", error);
-            return;
-        }
-
-        const unique = [...new Set(
-            data
-                .map(item => item.sub_category)
-                .filter(Boolean)
-                .map(v => v.trim())
-        )];
-
-        unique.forEach(sub => {
-            const opt = document.createElement('option');
-            opt.value = sub;
-            opt.textContent = sub;
-            dropdown.appendChild(opt);
-        });
-    } catch (e) {
-        console.error('Error loading all vendor sub categories:', e);
-    }
+    const data = await window.SharedCategoryService.getAllSubCategories();
+    window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 1', 'No Sub Categories');
 };
 
-
 window.loadAllVendorSubSubCategories = async function(dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-
-    dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
-
-    try {
-        const { data, error } = await window.supabase
-            .from('vendor_categories')
-            .select('sub_sub_category')
-            .not('sub_sub_category', 'is', null);
-            
-        if (error) {
-            console.error("Query issue:", error);
-            return;
-        }
-
-        const unique = [...new Set(
-            data
-                .map(item => item.sub_sub_category)
-                .filter(Boolean)
-                .map(v => v.trim())
-        )];
-
-        unique.forEach(sub => {
-            const opt = document.createElement('option');
-            opt.value = sub;
-            opt.textContent = sub;
-            dropdown.appendChild(opt);
-        });
-    } catch (e) {
-        console.error('Error loading all vendor sub sub categories:', e);
-    }
+    const data = await window.SharedCategoryService.getAllSubSubCategories();
+    window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 2', 'No Sub Categories');
 };
 
 window.loadVendorSubSubCategories = async function(category, subCategory, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) {
-        console.error("DOM Binding Error: Dropdown not found with ID:", dropdownId);
-        return;
-    }
-
-    dropdown.innerHTML = '<option value="">Select Sub Category 2</option>';
-
-    if (!category || !subCategory) {
-        console.log("Missing Main Category or Sub Category 1. Cannot load Sub Category 2.");
-        return;
-    }
-
-    try {
-        const { data, error } = await window.supabase
-            .from('vendor_categories')
-            .select('sub_sub_category')
-            .eq('category', category)
-            .eq('sub_category', subCategory)
-            .not('sub_sub_category', 'is', null);
-            
-        console.log("Supabase fetched data for sub category 2:", data, error);
-
-        if (error) {
-            console.error("Query issue:", error);
-            return;
-        }
-
-        const unique = [...new Set(
-            data
-                .map(item => item.sub_sub_category)
-                .filter(Boolean)
-                .map(v => v.trim())
-        )];
-
-        console.log("Unique sub category 2 to append:", unique);
-
-        unique.forEach(subSub => {
-            const opt = document.createElement('option');
-            opt.value = subSub;
-            opt.textContent = subSub;
-            dropdown.appendChild(opt);
-        });
-    } catch (e) {
-        console.error('Error loading vendor sub sub categories:', e);
-    }
+    const data = await window.SharedCategoryService.getSubSubCategories(category, subCategory);
+    window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 2', 'Select Category First');
 };
 
-
 window.loadVendorSubSubSubCategories = async function(category, subCategory, subSubCategory, dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) {
-        console.error("DOM Binding Error: Dropdown not found with ID:", dropdownId);
-        return;
-    }
-
-    dropdown.innerHTML = '<option value="">Select Sub Category 3</option>';
-
-    if (!category || !subCategory || !subSubCategory) {
-        console.log("Missing parent categories. Cannot load Sub Category 3.");
-        return;
-    }
-
-    try {
-        const { data, error } = await window.supabase
-            .from('vendor_categories')
-            .select('sub_sub_sub_category')
-            .eq('category', category)
-            .eq('sub_category', subCategory)
-            .eq('sub_sub_category', subSubCategory)
-            .not('sub_sub_sub_category', 'is', null);
-            
-        console.log("Supabase fetched data for sub category 3:", data, error);
-
-        if (error) {
-            console.error("Query issue:", error);
-            return;
-        }
-
-        const unique = [...new Set(
-            data
-                .map(item => item.sub_sub_sub_category)
-                .filter(Boolean)
-                .map(v => v.trim())
-        )];
-
-        console.log("Unique sub category 3 to append:", unique);
-
-        unique.forEach(subSubSub => {
-            const opt = document.createElement('option');
-            opt.value = subSubSub;
-            opt.textContent = subSubSub;
-            dropdown.appendChild(opt);
-        });
-    } catch (e) {
-        console.error('Error loading vendor sub sub sub categories:', e);
-    }
+    const data = await window.SharedCategoryService.getSubSubSubCategories(category, subCategory, subSubCategory);
+    window.SharedCategoryService.populateDropdown(dropdownId, data, 'Select Sub Category 3', 'Select Category First');
 };
 
 document.addEventListener('DOMContentLoaded', () => {
