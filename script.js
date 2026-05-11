@@ -6972,6 +6972,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const elSpongeBudget = document.getElementById('spongeBudget');
             if (elSpongeBudget) elSpongeBudget.innerText = `₹${spongeBudget.toLocaleString()}`;
 
+            const avgBudgetPerVideo = totalVideos > 0 ? totalBudget / totalVideos : 0;
+            const avgDiyBudget = diyVideos > 0 ? diyBudget / diyVideos : 0;
+            const avgSpongeBudget = spongeVideos > 0 ? spongeBudget / spongeVideos : 0;
+
+            const elAvgBudget = document.getElementById('avgBudgetPerVideo');
+            if (elAvgBudget) elAvgBudget.innerText = `₹${Math.round(avgBudgetPerVideo).toLocaleString()}`;
+            
+            const elAvgDiyBudget = document.getElementById('avgDiyBudget');
+            if (elAvgDiyBudget) elAvgDiyBudget.innerText = `₹${Math.round(avgDiyBudget).toLocaleString()}`;
+            
+            const elAvgSpongeBudget = document.getElementById('avgSpongeBudget');
+            if (elAvgSpongeBudget) elAvgSpongeBudget.innerText = `₹${Math.round(avgSpongeBudget).toLocaleString()}`;
+
             // Create State Breakdown Chart
             const stateCounts = {};
             influencers?.forEach(inf => {
