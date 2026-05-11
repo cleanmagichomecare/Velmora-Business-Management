@@ -6972,18 +6972,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const elSpongeBudget = document.getElementById('spongeBudget');
             if (elSpongeBudget) elSpongeBudget.innerText = `₹${spongeBudget.toLocaleString()}`;
 
-            const avgBudgetPerVideo = totalVideos > 0 ? totalBudget / totalVideos : 0;
-            const avgDiyBudget = diyVideos > 0 ? diyBudget / diyVideos : 0;
-            const avgSpongeBudget = spongeVideos > 0 ? spongeBudget / spongeVideos : 0;
+            const computedAvgBudget = totalVideos > 0 ? Math.round(totalBudget / totalVideos) : 0;
+            const computedAvgDiy = diyVideos > 0 ? Math.round(diyBudget / diyVideos) : 0;
+            const computedAvgSponge = spongeVideos > 0 ? Math.round(spongeBudget / spongeVideos) : 0;
 
             const elAvgBudget = document.getElementById('avgBudgetPerVideo');
-            if (elAvgBudget) elAvgBudget.innerText = `₹${Math.round(avgBudgetPerVideo).toLocaleString()}`;
+            if (elAvgBudget) elAvgBudget.innerText = `₹${computedAvgBudget.toLocaleString()}`;
             
             const elAvgDiyBudget = document.getElementById('avgDiyBudget');
-            if (elAvgDiyBudget) elAvgDiyBudget.innerText = `₹${Math.round(avgDiyBudget).toLocaleString()}`;
+            if (elAvgDiyBudget) elAvgDiyBudget.innerText = `₹${computedAvgDiy.toLocaleString()}`;
             
             const elAvgSpongeBudget = document.getElementById('avgSpongeBudget');
-            if (elAvgSpongeBudget) elAvgSpongeBudget.innerText = `₹${Math.round(avgSpongeBudget).toLocaleString()}`;
+            if (elAvgSpongeBudget) elAvgSpongeBudget.innerText = `₹${computedAvgSponge.toLocaleString()}`;
 
             // Create State Breakdown Chart
             const stateCounts = {};
