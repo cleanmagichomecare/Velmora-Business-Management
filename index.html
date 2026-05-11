@@ -983,14 +983,44 @@
                         <div class="expense-top-bar">
                             <h2 class="expense-view-title">Finance Management</h2>
                             <div class="expense-top-actions">
-                                <button class="btn-secondary" id="btn-finance-task" data-navigate="view-task">Task</button>
-                                <button class="btn-secondary" id="btn-finance-add-expense">Add Expense</button>
-                                <button class="btn-secondary" id="btn-finance-view-expense">View Expense</button>
-                                <button class="btn-primary" id="btn-show-add-bill-form">Add Bill</button>
-                                <button class="btn-secondary" id="btn-view-bills-list">View Bills</button>
-                                <button class="btn-secondary" id="btn-finance-upcoming-bill">Upcoming Bill</button>
-                                <button class="btn-secondary" id="btn-finance-bank-account">Bank Account</button>
-                                <button class="btn-secondary" id="btn-finance-analytics">Analytics</button>
+                                <div class="finance-action-groups">
+                                    <!-- TASK -->
+                                    <div class="finance-action-group">
+                                        <span class="finance-group-title">Task</span>
+                                        <div class="finance-group-buttons">
+                                            <button class="btn-secondary" id="btn-finance-task" data-navigate="view-task">Task</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- EXPENSES -->
+                                    <div class="finance-action-group">
+                                        <span class="finance-group-title">Expenses</span>
+                                        <div class="finance-group-buttons">
+                                            <button class="btn-secondary" id="btn-finance-add-expense">Add Expense</button>
+                                            <button class="btn-secondary" id="btn-finance-view-expense">View Expense</button>
+                                            <button class="btn-secondary" id="btn-finance-expense-analytics">Expense Analytics</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- BILLS -->
+                                    <div class="finance-action-group">
+                                        <span class="finance-group-title">Bills</span>
+                                        <div class="finance-group-buttons">
+                                            <button class="btn-primary" id="btn-show-add-bill-form">Add Bill</button>
+                                            <button class="btn-secondary" id="btn-view-bills-list">View Bills</button>
+                                            <button class="btn-secondary" id="btn-finance-upcoming-bill">Upcoming Bills</button>
+                                            <button class="btn-secondary" id="btn-finance-bill-analytics">Bill Analytics</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- BANKING -->
+                                    <div class="finance-action-group">
+                                        <span class="finance-group-title">Banking</span>
+                                        <div class="finance-group-buttons">
+                                            <button class="btn-secondary" id="btn-finance-bank-account">Bank Account</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1141,7 +1171,7 @@
                             <div id="bill-default-state" class="vendor-empty-state">
                                 <div class="vendor-empty-icon">💸</div>
                                 <h3>Finance Management</h3>
-                                <p>Select a finance operation to continue.</p>
+                                <p>Select a finance module to continue.</p>
                             </div>
                         </div>
                     </div>

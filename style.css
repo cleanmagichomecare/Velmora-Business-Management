@@ -5201,9 +5201,36 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 .expense-top-actions {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+.finance-action-groups {
+    display: flex;
     flex-wrap: wrap;
+    gap: 24px;
+    width: 100%;
+}
+
+.finance-action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.finance-group-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.finance-group-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 /* ===== Focused Department View ===== */

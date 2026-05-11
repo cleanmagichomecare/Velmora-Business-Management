@@ -459,7 +459,8 @@
         const btnFinanceViewExpense = document.getElementById('btn-finance-view-expense');
         const btnFinanceUpcomingBill = document.getElementById('btn-finance-upcoming-bill');
         const btnFinanceBankAccount = document.getElementById('btn-finance-bank-account');
-        const btnFinanceAnalytics = document.getElementById('btn-finance-analytics');
+        const btnFinanceExpenseAnalytics = document.getElementById('btn-finance-expense-analytics');
+        const btnFinanceBillAnalytics = document.getElementById('btn-finance-bill-analytics');
 
         if (btnFinanceTask) {
             btnFinanceTask.addEventListener('click', () => {
@@ -512,9 +513,15 @@
             });
         }
 
-        if (btnFinanceAnalytics) {
-            btnFinanceAnalytics.addEventListener('click', () => {
-                if (typeof showToast === 'function') showToast('Analytics — Coming Soon');
+        if (btnFinanceExpenseAnalytics) {
+            btnFinanceExpenseAnalytics.addEventListener('click', () => {
+                if (typeof showToast === 'function') showToast('Expense Analytics — Coming Soon');
+            });
+        }
+
+        if (btnFinanceBillAnalytics) {
+            btnFinanceBillAnalytics.addEventListener('click', () => {
+                if (typeof showToast === 'function') showToast('Bill Analytics — Coming Soon');
             });
         }
     }
