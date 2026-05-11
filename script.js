@@ -741,11 +741,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Vendor Management Population Logic ---
     function initVendorFormPopulator() {
         if (vendorCategorySelect) {
-            if (window.mainCategories && window.mainCategories.length > 0) {
-                populateVendorDropdown(vendorCategorySelect, window.mainCategories, 'Select Category');
-            } else {
-                console.warn('Vendor Form: window.mainCategories is empty.');
-                populateVendorDropdown(vendorCategorySelect, [], 'Select Category');
+            if (window.loadVendorMainCategories) {
+                window.loadVendorMainCategories('vendorCategory');
             }
 
             if (vendorSubCategorySelect) {
@@ -755,6 +752,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (vendorSubSubCategorySelect) {
                 vendorSubSubCategorySelect.innerHTML = '<option value="">Select Sub Category First</option>';
                 vendorSubSubCategorySelect.disabled = true;
+            }
+            const vendorSubCategory3Select = document.getElementById('vendorSubCategory3');
+            if (vendorSubCategory3Select) {
+                vendorSubCategory3Select.innerHTML = '<option value="">Select Sub Category First</option>';
+                vendorSubCategory3Select.disabled = true;
             }
         }
     }
