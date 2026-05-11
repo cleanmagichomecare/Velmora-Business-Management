@@ -456,16 +456,26 @@
         // --- Action Panel Routing Logic ---
         
         function showFinanceModule(moduleName) {
-            const mainDashboard = document.getElementById('finance-main-dashboard');
             const billsModule = document.getElementById('finance-bills-module');
             const placeholderModule = document.getElementById('finance-placeholder-module');
             const expenseView = document.getElementById('view-expense');
             const mainFinanceView = document.getElementById('view-add-bill');
             
-            // Default: hide all internal modules to prevent overlap
-            if (mainDashboard) mainDashboard.classList.add('hidden');
+            // Default: hide internal modules
             if (billsModule) billsModule.classList.add('hidden');
             if (placeholderModule) placeholderModule.classList.add('hidden');
+
+            // Manage active button states across ALL finance nav bars
+            document.querySelectorAll('[data-finance-route]').forEach(btn => {
+                const route = btn.getAttribute('data-finance-route');
+                if (route === moduleName) {
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-primary');
+                } else {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-secondary');
+                }
+            });
 
             // Handle Top Level view switches safely
             if (moduleName === 'expense') {
@@ -492,12 +502,13 @@
                 }
 
                 // Show specific internal module
-                if (moduleName === 'dashboard' && mainDashboard) {
-                    mainDashboard.classList.remove('hidden');
-                } else if (moduleName === 'bills' && billsModule) {
+                if (moduleName === 'bills' && billsModule) {
                     billsModule.classList.remove('hidden');
                 } else if (moduleName === 'placeholder' && placeholderModule) {
                     placeholderModule.classList.remove('hidden');
+                } else if (moduleName === 'bank' || moduleName === 'analytics') {
+                    // It's a placeholder trigger, do not hide main view, show placeholder
+                    if (placeholderModule) placeholderModule.classList.remove('hidden');
                 }
             }
         }
@@ -505,56 +516,28 @@
         function showFinancePlaceholder(title, description) {
             const titleEl = document.getElementById('finance-placeholder-title');
             const descEl = document.getElementById('finance-placeholder-desc');
-            if (titleEl) titleEl.innerHTML = `Finance Management <span>></span> ${title}`;
+            if (titleEl) titleEl.textContent = title;
             if (descEl) descEl.textContent = description || 'This module is currently being built and will be available soon.';
-            
-            showFinanceModule('placeholder');
         }
 
-        // Delegate clicks for the main dashboard cards
-        const financeMainDashboard = document.getElementById('finance-main-dashboard');
-        if (financeMainDashboard && !financeMainDashboard.hasAttribute('data-events-bound')) {
-            financeMainDashboard.setAttribute('data-events-bound', 'true');
+        // Delegate clicks for the primary nav buttons
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-finance-route]');
+            if (!btn) return;
             
-            financeMainDashboard.addEventListener('click', (e) => {
-                const card = e.target.closest('.finance-module-card');
-                if (!card) return;
-                
-                const moduleName = card.getAttribute('data-finance-module');
-                if (moduleName === 'task') showFinanceModule('task');
-                else if (moduleName === 'expense') showFinanceModule('expense');
-                else if (moduleName === 'bills') showFinanceModule('bills');
-                else if (moduleName === 'bank') showFinancePlaceholder('Bank Account', 'Bank account management is under development.');
-                else if (moduleName === 'analytics') showFinancePlaceholder('Analytics', 'Comprehensive finance analytics are coming soon.');
-            });
-            
-            financeMainDashboard.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const card = e.target.closest('.finance-module-card');
-                    if (card) card.click();
-                }
-            });
-        }
-
-        // Back Buttons
-        const btnBackBills = document.getElementById('btn-back-bills-module');
-        const btnBackPlaceholder = document.getElementById('btn-back-placeholder-module');
-        const btnBackExpense = document.getElementById('btn-back-expense-module');
-        
-        const handleBackToDashboard = () => showFinanceModule('dashboard');
-
-        if (btnBackBills && !btnBackBills.hasAttribute('data-bound')) {
-            btnBackBills.setAttribute('data-bound', 'true');
-            btnBackBills.addEventListener('click', handleBackToDashboard);
-        }
-        if (btnBackPlaceholder && !btnBackPlaceholder.hasAttribute('data-bound')) {
-            btnBackPlaceholder.setAttribute('data-bound', 'true');
-            btnBackPlaceholder.addEventListener('click', handleBackToDashboard);
-        }
-        if (btnBackExpense && !btnBackExpense.hasAttribute('data-bound')) {
-            btnBackExpense.setAttribute('data-bound', 'true');
-            btnBackExpense.addEventListener('click', handleBackToDashboard);
-        }
+            const moduleName = btn.getAttribute('data-finance-route');
+            if (moduleName === 'task') showFinanceModule('task');
+            else if (moduleName === 'expense') showFinanceModule('expense');
+            else if (moduleName === 'bills') showFinanceModule('bills');
+            else if (moduleName === 'bank') {
+                showFinancePlaceholder('Bank Account', 'Bank account management is under development.');
+                showFinanceModule('bank');
+            }
+            else if (moduleName === 'analytics') {
+                showFinancePlaceholder('Analytics', 'Comprehensive finance analytics are coming soon.');
+                showFinanceModule('analytics');
+            }
+        });
 
         // Expense Sub-Buttons
         const btnFinanceAddExpense = document.getElementById('btn-add-expense'); // Existing button ID in view-expense
@@ -592,6 +575,18 @@
             btnFinanceBillAnalytics.setAttribute('data-bound', 'true');
             btnFinanceBillAnalytics.addEventListener('click', () => {
                 if (typeof showToast === 'function') showToast('Bill Analytics — Coming Soon');
+            });
+        }
+        
+        // Ensure state resets when entering from sidebar
+        const sidebarFinanceBtn = document.getElementById('btn-add-bill-module');
+        if (sidebarFinanceBtn && !sidebarFinanceBtn.hasAttribute('data-route-bound')) {
+            sidebarFinanceBtn.setAttribute('data-route-bound', 'true');
+            sidebarFinanceBtn.addEventListener('click', () => {
+                // Delay slightly to let script.js handle the view swap first
+                setTimeout(() => {
+                    showFinanceModule('bills');
+                }, 50);
             });
         }
     }
