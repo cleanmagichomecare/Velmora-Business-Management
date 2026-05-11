@@ -5235,30 +5235,32 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 /* ===== Finance Module Dashboard ===== */
 .finance-modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
     width: 100%;
 }
 
 .finance-module-card {
-    background-color: var(--bg-card);
+    background-color: transparent;
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 24px;
+    border-radius: 4px; /* Flatter edges */
+    padding: 30px 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 16px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+    transition: all 0.2s ease;
     text-align: center;
+    flex: 1 1 150px; /* Let them grow and shrink equally */
+    min-width: 150px;
 }
 
 .finance-module-card:hover, .finance-module-card:focus {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border-color: var(--primary-color);
     outline: none;
 }
@@ -5269,7 +5271,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 .finance-module-card svg {
     color: var(--primary-color);
-    margin-bottom: 8px;
+    margin-bottom: 0;
 }
 
 .finance-module-card h3 {
