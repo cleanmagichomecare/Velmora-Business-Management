@@ -5258,6 +5258,27 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     min-width: 150px;
 }
 
+/* Premium Sub-Navigation Toolbar */
+.finance-sub-navigation {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background-color: var(--bg-card); /* Match existing subtle backgrounds */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+}
+
+.finance-sub-navigation button {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .finance-module-card:hover, .finance-module-card:focus {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
