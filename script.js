@@ -169,37 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Load Vendor Main Categories dynamically from Supabase
+    // Load Vendor Main Categories dynamically
     async function loadVendorCategories() {
-        if (!vendorCategorySelect) return;
-        
-        vendorCategorySelect.innerHTML = '<option value="">Loading...</option>';
-        
-        try {
-            const { data, error } = await supabase
-                .from('finance_categories')
-                .select('main');
-                
-            if (error) throw error;
-            
-            vendorCategorySelect.innerHTML = '<option value="">Select Category</option>';
-            
-            const uniqueMains = [...new Set(data.map(row => {
-                let val = row.main ? row.main.trim() : null;
-                return val === 'Operatons' ? 'Operations' : val;
-            }).filter(Boolean).filter(v => v !== '-'))];
-
-            
-            uniqueMains.forEach(main => {
-                const opt = document.createElement('option');
-                opt.value = main;
-                opt.textContent = main;
-                vendorCategorySelect.appendChild(opt);
-            });
-            
-        } catch (err) {
-            console.error("Failed to load vendor categories", err);
-            vendorCategorySelect.innerHTML = '<option value="">Select Category</option>';
+        if (window.loadVendorMainCategories) {
+            window.loadVendorMainCategories('vendorCategory');
         }
     }
     
@@ -809,24 +782,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (vendorCategorySelect && vendorSubCategorySelect) {
         vendorCategorySelect.addEventListener('change', () => {
             const selectedCategory = vendorCategorySelect.value;
-            vendorSubCategorySelect.innerHTML = selectedCategory
-                ? `<option value="">Select ${selectedCategory} Type</option>`
-                : '<option value="">Select Category First</option>';
-            vendorSubCategorySelect.disabled = !selectedCategory;
-
+            if (window.loadVendorSubCategories) {
+                window.loadVendorSubCategories(selectedCategory, 'subCategory');
+            }
             if (vendorSubSubCategorySelect) {
                 vendorSubSubCategorySelect.innerHTML = '<option value="">Select Sub Category First</option>';
                 vendorSubSubCategorySelect.disabled = true;
             }
-
-            if (selectedCategory && window.subCategory1 && window.subCategory1[selectedCategory]) {
-                const options = window.subCategory1[selectedCategory];
-                options.forEach(opt => {
-                    const optEl = document.createElement('option');
-                    optEl.value = opt;
-                    optEl.textContent = opt;
-                    vendorSubCategorySelect.appendChild(optEl);
-                });
+            const vendorSubCategory3Select = document.getElementById('vendorSubCategory3');
+            if (vendorSubCategory3Select) {
+                vendorSubCategory3Select.innerHTML = '<option value="">Select Sub Category First</option>';
+                vendorSubCategory3Select.disabled = true;
             }
         });
     }
