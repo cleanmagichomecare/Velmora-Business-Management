@@ -848,20 +848,10 @@
                      (b.sub_category1 || 'Other') === subCategory
             );
 
-            // Determine grouping field: prefer sub_category3 if data exists, else sub_category2
-            let groupField = 'sub_category2';
-            const hasSub3 = filtered.some(b => b.sub_category3 && b.sub_category3.trim());
-            if (hasSub3) groupField = 'sub_category3';
-
-            // Group by chosen field → SUM(amount) + COUNT
+            // Group by sub_category2 → SUM(amount) + COUNT
             const deepMap = {};
             filtered.forEach(bill => {
-                let key;
-                if (groupField === 'sub_category3') {
-                    key = bill.sub_category3 && bill.sub_category3.trim() ? bill.sub_category3.trim() : 'Other';
-                } else {
-                    key = bill.sub_category2 && bill.sub_category2.trim() ? bill.sub_category2.trim() : 'Other';
-                }
+                const key = bill.sub_category2 && bill.sub_category2.trim() ? bill.sub_category2.trim() : 'Other';
                 if (!deepMap[key]) deepMap[key] = { amount: 0, count: 0 };
                 deepMap[key].amount += Number(bill.amount || 0);
                 deepMap[key].count += 1;
