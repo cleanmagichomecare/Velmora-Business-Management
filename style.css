@@ -6202,3 +6202,108 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     text-align: center;
 }
 
+/* --- Bill Cards UI --- */
+.bill-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    padding: 10px 0;
+}
+@media (min-width: 1400px) {
+    .bill-card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+}
+@media (max-width: 768px) {
+    .bill-card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.bill-card {
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.bill-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.bill-card.is-editing {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    background: linear-gradient(145deg, var(--card-bg), var(--bg-main));
+}
+
+.bill-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bill-card-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.bill-card-header-right {
+    display: flex;
+    gap: 8px;
+}
+
+.bill-card-body .edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.bill-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.bill-badge.autopay {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.bill-badge.manual {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.bill-badge.paid {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.bill-badge.pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.bill-badge.overdue {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}

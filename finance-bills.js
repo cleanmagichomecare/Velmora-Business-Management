@@ -169,6 +169,8 @@
             }
         };
 
+                window.currentlyEditingBillId = null;
+
         window.renderBillsTable = function() {
             const container = document.getElementById('bill-list-content');
             if (!container) return;
@@ -179,7 +181,7 @@
             // Filter in memory
             const activeBills = window.financeBills.filter(bill => {
                 if (searchTerm) {
-                    const haystack = `${bill.main_category} ${bill.sub_category1} ${bill.sub_category2} ${bill.sub_category3 || ''} ${bill.payment_type}`.toLowerCase();
+                    const haystack = ${bill.main_category}    .toLowerCase();
                     if (!haystack.includes(searchTerm)) return false;
                 }
                 return true;
@@ -187,107 +189,320 @@
 
             // Empty States
             if (window.financeBills.length === 0) {
-                container.innerHTML = `
+                container.innerHTML = 
                     <div class="vendor-empty-state" style="display:block;">
-                        <div class="vendor-empty-icon">💸</div>
+                        <div class="vendor-empty-icon">??</div>
                         <h3>No bills yet</h3>
                         <p>Click "+ Add Bill" to create your first bill.</p>
                     </div>
-                `;
+                ;
                 return;
             }
 
             if (activeBills.length === 0) {
-                container.innerHTML = `
+                container.innerHTML = 
                     <div class="vendor-empty-state" style="display:block;">
-                        <div class="vendor-empty-icon">🔍</div>
+                        <div class="vendor-empty-icon">??</div>
                         <h3>No matching bills</h3>
                         <p>Try adjusting your search.</p>
                     </div>
-                `;
+                ;
                 return;
             }
 
-            const formatDate = (dateStr) => {
-                if (!dateStr) return '-';
-                const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return dateStr;
-                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-            };
-
-            let html = `
-                <div class="finance-bills-table-wrapper" style="overflow-x: auto; padding-bottom: 10px;">
-                    <table class="vendor-table finance-bills-table" style="table-layout: fixed; width: 100%; min-width: 900px;">
-                        <colgroup>
-                            <col style="width: 11%;">
-                            <col style="width: 9%;">
-                            <col style="width: 9%;">
-                            <col style="width: 9%;">
-                            <col style="width: 8%;">
-                            <col style="width: 8%;">
-                            <col style="width: 7%;">
-                            <col style="width: 8%;">
-                            <col style="width: 8%;">
-                            <col style="width: 9%;">
-                            <col style="width: 7%;">
-                            <col style="width: 80px;">
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th>Main Category</th>
-                                <th>Sub Cat 1</th>
-                                <th>Sub Cat 2</th>
-                                <th>Sub Cat 3</th>
-                                <th>Amount</th>
-                                <th>Due Date</th>
-                                <th>Cycle</th>
-                                <th>Payment</th>
-                                <th>Mode</th>
-                                <th>Email</th>
-                                <th>Notes</th>
-                                <th style="text-align: center;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+            container.innerHTML = '<div class="bill-card-grid" id="bill-cards-grid"></div>';
+            const grid = document.getElementById('bill-cards-grid');
 
             activeBills.forEach(bill => {
-                const pType = bill.payment_type || '-';
-                let badgeClass = 'vendor-status-badge';
-                if (pType.toLowerCase() === 'manual') badgeClass += ' manual-badge';
-                else if (pType.toLowerCase() === 'autopay') badgeClass += ' autopay-badge';
+                const card = window.createSingleBillCard(bill);
+                grid.appendChild(card);
+            });
+            console.log("Bill cards rendered successfully");
+        };
 
-                html += `
-                    <tr>
-                        <td title="${bill.main_category || '-'}"><strong>${bill.main_category || '-'}</strong></td>
-                        <td title="${bill.sub_category1 || '-'}">${bill.sub_category1 || '-'}</td>
-                        <td title="${bill.sub_category2 || '-'}">${bill.sub_category2 || '-'}</td>
-                        <td title="${bill.sub_category3 || '-'}">${bill.sub_category3 || '-'}</td>
-                        <td title="₹${bill.amount != null ? bill.amount : '-'}">₹${bill.amount != null ? bill.amount : '-'}</td>
-                        <td title="${formatDate(bill.due_date)}">${formatDate(bill.due_date)}</td>
-                        <td title="${bill.billing_cycle || '-'}">${bill.billing_cycle || '-'}</td>
-                        <td><span class="${badgeClass}">${pType}</span></td>
-                        <td title="${bill.mode_of_pay || '-'}">${bill.mode_of_pay || '-'}</td>
-                        <td title="${bill.email || '-'}">${bill.email || '-'}</td>
-                        <td title="${bill.notes || '-'}">${bill.notes || '-'}</td>
-                        <td class="actions-cell" style="text-align: center;">
-                            <button class="btn-bill-archive" data-id="${bill.id}" title="Archive">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        };
+
+        window.createSingleBillCard = function(bill) {
+            const card = document.createElement('div');
+            card.className = 'bill-card mb-20';
+            card.setAttribute('data-id', bill.id);
+            window.renderSingleBillCard(card, bill);
+            return card;
+        };
+
+        window.renderSingleBillCard = function(card, bill) {
+            card.innerHTML = '';
+            card.classList.remove('is-editing');
+            
+            const pType = bill.payment_type || '-';
+            let pTypeBadgeClass = 'bill-badge ';
+            if (pType.toLowerCase() === 'manual') pTypeBadgeClass += 'manual';
+            else if (pType.toLowerCase() === 'autopay') pTypeBadgeClass += 'autopay';
+
+            let statusBadgeClass = 'bill-badge paid'; 
+            const bStatus = bill.bill_status || 'Pending';
+            if (bStatus.toLowerCase() === 'paid') statusBadgeClass = 'bill-badge paid';
+            else if (bStatus.toLowerCase() === 'pending') statusBadgeClass = 'bill-badge pending';
+            else if (bStatus.toLowerCase() === 'overdue') statusBadgeClass = 'bill-badge overdue';
+
+            card.innerHTML = 
+                <div class="bill-card-header">
+                    <div class="bill-card-header-left">
+                        <h3 style="margin:0; font-size: 16px; color: var(--text-main); font-weight: 600;">
+                            
+                        </h3>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                             
+                            
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                            <span class=""></span>
+                            <span class=""></span>
+                            <span class="bill-badge" style="background: rgba(123, 140, 255, 0.1); color: var(--primary-color);">Due: </span>
+                        </div>
+                    </div>
+                    <div class="bill-card-header-right">
+                        <button class="btn-secondary btn-edit-bill" style="padding: 6px 16px; font-size: 13px;">Edit</button>
+                        <button class="btn-primary btn-save-bill-inline hidden" style="padding: 6px 16px; font-size: 13px;">Save</button>
+                        <button class="btn-secondary btn-cancel-bill-inline hidden" style="padding: 6px 16px; font-size: 13px;">Cancel</button>
+                        <button class="btn-secondary btn-delete-bill" style="padding: 6px 12px; font-size: 13px; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="bill-card-body">
+                    <div class="grid-2">
+                        <div class="info-group" style="margin:0;"><label>Amount</label><div class="info-val" data-field="amount" style="font-weight: 600; font-size: 15px; color: var(--text-main);">?</div></div>
+                        <div class="info-group" style="margin:0;"><label>Billing Cycle</label><div class="info-val" data-field="billing_cycle"></div></div>
+                        <div class="info-group" style="margin:0;"><label>Payment Type</label><div class="info-val" data-field="payment_type"></div></div>
+                        <div class="info-group" style="margin:0;"><label>Mode of Pay</label><div class="info-val" data-field="mode_of_pay"></div></div>
+                        <div class="info-group" style="margin:0;"><label>Account</label><div class="info-val" data-field="account"></div></div>
+                        <div class="info-group" style="margin:0;"><label>Email</label><div class="info-val" data-field="email"></div></div>
+                    </div>
+                    <div class="info-group mt-15"><label>Notes</label><div class="info-val" data-field="notes"></div></div>
+                    <div class="hidden category-edit-group mt-15">
+                        <div style="font-size: 13px; font-weight: 600; color: var(--primary-color); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">Edit Categories</div>
+                        <div class="grid-2">
+                            <div class="info-group" style="margin:0;"><label>Main Category</label><div class="info-val" data-field="main_category"></div></div>
+                            <div class="info-group" style="margin:0;"><label>Sub Category 1</label><div class="info-val" data-field="sub_category1"></div></div>
+                            <div class="info-group" style="margin:0;"><label>Sub Category 2</label><div class="info-val" data-field="sub_category2"></div></div>
+                            <div class="info-group" style="margin:0;"><label>Sub Category 3</label><div class="info-val" data-field="sub_category3"></div></div>
+                            <div class="info-group" style="margin:0;"><label>Due Date</label><div class="info-val" data-field="due_date"></div></div>
+                            <div class="info-group" style="margin:0;"><label>Bill Status</label><div class="info-val" data-field="bill_status"></div></div>
+                        </div>
+                    </div>
+                </div>
+            ;
+
+            const btnEdit = card.querySelector('.btn-edit-bill');
+            const btnSave = card.querySelector('.btn-save-bill-inline');
+            const btnCancel = card.querySelector('.btn-cancel-bill-inline');
+            const btnDelete = card.querySelector('.btn-delete-bill');
+
+            btnDelete.addEventListener('click', async () => {
+                await window.archiveBill(bill.id);
             });
 
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-            console.log("Bills rendered successfully");
+            btnEdit.addEventListener('click', () => {
+                if (window.currentlyEditingBillId && window.currentlyEditingBillId !== bill.id) {
+                    if (window.showToast) window.showToast('? Finish editing current bill first');
+                    else alert('Finish editing current bill first');
+                    return;
+                }
 
-            document.querySelectorAll('.btn-bill-archive').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const id = e.currentTarget.getAttribute('data-id');
-                    await window.archiveBill(id);
+                window.currentlyEditingBillId = bill.id;
+                card.classList.add('is-editing');
+                btnEdit.classList.add('hidden');
+                btnDelete.classList.add('hidden');
+                btnSave.classList.remove('hidden');
+                btnCancel.classList.remove('hidden');
+
+                const body = card.querySelector('.bill-card-body');
+                const basicGrid = body.querySelector('.grid-2');
+                basicGrid.classList.remove('grid-2');
+                basicGrid.classList.add('edit-grid');
+                
+                body.querySelector('.category-edit-group').classList.remove('hidden');
+
+                const globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
+
+                ['amount', 'billing_cycle', 'account', 'email', 'notes', 'due_date'].forEach(f => {
+                    const valDiv = body.querySelector(\ + .info-val[data-field=""]); // Escaping backtick in py
+                    if (valDiv) {
+                        const val = valDiv.textContent.replace('?', '') === '-' ? '' : valDiv.textContent.replace('?', '').trim();
+                        if (f === 'notes') {
+                            valDiv.innerHTML = <textarea class="edit-input" data-edit="" rows="2" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: inherit;"></textarea>;
+                        } else if (f === 'due_date') {
+                            valDiv.innerHTML = <input type="date" class="edit-input" data-edit="" value="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">;
+                        } else if (f === 'amount') {
+                            valDiv.innerHTML = <input type="number" class="edit-input" data-edit="" value="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">;
+                        } else {
+                            valDiv.innerHTML = <input type="text" class="edit-input" data-edit="" value="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">;
+                        }
+                    }
                 });
+
+                const selects = {
+                    'payment_type': ['Manual', 'Autopay'],
+                    'mode_of_pay': ['GPay', 'Account Transfer', 'Cash', 'Card'],
+                    'bill_status': ['Pending', 'Paid', 'Overdue']
+                };
+                Object.keys(selects).forEach(f => {
+                    const valDiv = body.querySelector(\ + .info-val[data-field=""]);
+                    if (valDiv) {
+                        const currentVal = valDiv.textContent === '-' ? '' : valDiv.textContent.trim();
+                        let options = selects[f].map(opt => <option value="" ></option>).join('');
+                        valDiv.innerHTML = <select class="edit-input" data-edit="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select</option></select>;
+                    }
+                });
+
+                const mainDiv = body.querySelector('.info-val[data-field="main_category"]');
+                const sub1Div = body.querySelector('.info-val[data-field="sub_category1"]');
+                const sub2Div = body.querySelector('.info-val[data-field="sub_category2"]');
+                const sub3Div = body.querySelector('.info-val[data-field="sub_category3"]');
+
+                let mainOptions = globals.mains.map(m => <option value="" ></option>).join('');
+                mainDiv.innerHTML = <select class="edit-input" data-edit="main_category" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Main Category</option></select>;
+                sub1Div.innerHTML = <select class="edit-input" data-edit="sub_category1" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Sub Category 1</option></select>;
+                sub2Div.innerHTML = <select class="edit-input" data-edit="sub_category2" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Sub Category 2</option></select>;
+                
+                const sub3Id = 'edit-sub3-' + bill.id;
+                sub3Div.innerHTML = 
+                    <div class="multi-select-container" id="container-">
+                        <div class="multi-select-display disabled" tabindex="0">
+                            <span class="multi-select-value multi-select-placeholder">Select Sub Category 3</span>
+                            <svg class="multi-select-arrow" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="multi-select-dropdown hidden"></div>
+                        <input type="hidden" class="edit-input" data-edit="sub_category3" id="" value="">
+                    </div>
+                ;
+
+                const mainSel = body.querySelector('[data-edit="main_category"]');
+                const sub1Sel = body.querySelector('[data-edit="sub_category1"]');
+                const sub2Sel = body.querySelector('[data-edit="sub_category2"]');
+
+                const populateSub1 = (mainVal, selectedVal) => {
+                    sub1Sel.innerHTML = '<option value="">Select Sub Category 1</option>';
+                    if (mainVal && globals.sub1[mainVal]) {
+                        sub1Sel.disabled = false;
+                        globals.sub1[mainVal].forEach(sub => {
+                            const opt = document.createElement('option');
+                            opt.value = sub;
+                            opt.textContent = sub;
+                            if (sub === selectedVal) opt.selected = true;
+                            sub1Sel.appendChild(opt);
+                        });
+                    } else {
+                        sub1Sel.disabled = true;
+                    }
+                };
+
+                const populateSub2 = (sub1Val, selectedVal) => {
+                    sub2Sel.innerHTML = '<option value="">Select Sub Category 2</option>';
+                    if (sub1Val && globals.sub2[sub1Val]) {
+                        sub2Sel.disabled = false;
+                        globals.sub2[sub1Val].forEach(sub => {
+                            const opt = document.createElement('option');
+                            opt.value = sub;
+                            opt.textContent = sub;
+                            if (sub === selectedVal) opt.selected = true;
+                            sub2Sel.appendChild(opt);
+                        });
+                    } else {
+                        sub2Sel.disabled = true;
+                    }
+                };
+
+                const populateSub3 = (sub2Val) => {
+                    if (window.SharedCategoryService) {
+                        const dataArray = (sub2Val && globals.sub3[sub2Val]) ? globals.sub3[sub2Val] : [];
+                        window.SharedCategoryService.populateDropdown(sub3Id, dataArray, 'Select Sub Category 3', 'No Sub Categories');
+                    }
+                };
+
+                mainSel.addEventListener('change', () => {
+                    populateSub1(mainSel.value, null);
+                    populateSub2(null, null);
+                    populateSub3(null);
+                });
+
+                sub1Sel.addEventListener('change', () => {
+                    populateSub2(sub1Sel.value, null);
+                    populateSub3(null);
+                });
+
+                sub2Sel.addEventListener('change', () => {
+                    populateSub3(sub2Sel.value);
+                });
+
+                populateSub1(bill.main_category, bill.sub_category1);
+                populateSub2(bill.sub_category1, bill.sub_category2);
+                
+                setTimeout(() => {
+                    populateSub3(bill.sub_category2);
+                }, 50);
+            });
+
+            btnCancel.addEventListener('click', () => {
+                window.currentlyEditingBillId = null;
+                window.renderSingleBillCard(card, bill);
+            });
+
+            btnSave.addEventListener('click', async () => {
+                const updated = {};
+                card.querySelectorAll('.edit-input').forEach(input => {
+                    const field = input.getAttribute('data-edit');
+                    if (field) {
+                        let val = input.value;
+                        if (field === 'amount') val = parseFloat(val) || 0;
+                        if (typeof val === 'string') val = val.trim();
+                        updated[field] = val;
+                    }
+                });
+
+                btnSave.textContent = 'Saving...';
+                btnSave.disabled = true;
+                btnCancel.disabled = true;
+
+                try {
+                    const { error } = await window.supabase
+                        .from('finance_bills')
+                        .update(updated)
+                        .eq('id', bill.id);
+
+                    if (error) {
+                        if (error.code === '42703' && error.message.includes('bill_status')) {
+                            // Column might not exist, silently ignore bill_status or notify user
+                            console.warn("bill_status column might not exist. Retrying without bill_status.");
+                            delete updated['bill_status'];
+                            const retry = await window.supabase.from('finance_bills').update(updated).eq('id', bill.id);
+                            if (retry.error) throw retry.error;
+                        } else {
+                            throw error;
+                        }
+                    }
+
+                    Object.assign(bill, updated);
+                    
+                    window.currentlyEditingBillId = null;
+                    window.renderSingleBillCard(card, bill);
+                    
+                    if (window.showToast) window.showToast('? Bill updated successfully');
+                } catch (error) {
+                    console.error('Update failed:', error);
+                    if (window.showToast) window.showToast('? Failed to update bill');
+                    else alert('Failed to update bill');
+                    
+                    btnSave.textContent = 'Save';
+                    btnSave.disabled = false;
+                    btnCancel.disabled = false;
+                }
             });
         };
 
