@@ -1331,12 +1331,14 @@
         function showFinanceModule(moduleName) {
             const billsModule = document.getElementById('finance-bills-module');
             const placeholderModule = document.getElementById('finance-placeholder-module');
+            const purchaseOrderModule = document.getElementById('finance-purchase-order-module');
             const expenseView = document.getElementById('view-expense');
             const mainFinanceView = document.getElementById('view-add-bill');
             
             // Default: hide internal modules
             if (billsModule) billsModule.classList.add('hidden');
             if (placeholderModule) placeholderModule.classList.add('hidden');
+            if (purchaseOrderModule) purchaseOrderModule.classList.add('hidden');
 
             // Manage active button states across ALL finance nav bars
             document.querySelectorAll('[data-finance-route]').forEach(btn => {
@@ -1377,6 +1379,8 @@
                 // Show specific internal module
                 if (moduleName === 'bills' && billsModule) {
                     billsModule.classList.remove('hidden');
+                } else if (moduleName === 'purchase-order' && purchaseOrderModule) {
+                    purchaseOrderModule.classList.remove('hidden');
                 } else if (moduleName === 'placeholder' && placeholderModule) {
                     placeholderModule.classList.remove('hidden');
                 } else if (moduleName === 'bank' || moduleName === 'analytics') {
@@ -1402,6 +1406,7 @@
             if (moduleName === 'task') showFinanceModule('task');
             else if (moduleName === 'expense') showFinanceModule('expense');
             else if (moduleName === 'bills') showFinanceModule('bills');
+            else if (moduleName === 'purchase-order') showFinanceModule('purchase-order');
             else if (moduleName === 'bank') {
                 showFinancePlaceholder('Bank Account', 'Bank account management is under development.');
                 showFinanceModule('bank');
@@ -1415,6 +1420,30 @@
         // Expense Sub-Buttons (Migrated to central delegated click handler)
 
         // Bills Sub-Buttons (Migrated to central delegated click handler)
+
+        // Purchase Order Sub-Buttons
+        document.addEventListener('click', (e) => {
+            const addBtn = e.target.closest('#btn-add-purchase-order');
+            const viewBtn = e.target.closest('#btn-view-purchase-orders');
+            if (!addBtn && !viewBtn) return;
+
+            const addView = document.getElementById('add-purchase-order-view');
+            const viewView = document.getElementById('view-purchase-order-view');
+
+            if (addBtn) {
+                addBtn.classList.replace('btn-secondary', 'btn-primary');
+                const vBtn = document.getElementById('btn-view-purchase-orders');
+                if (vBtn) vBtn.classList.replace('btn-primary', 'btn-secondary');
+                if (addView) addView.classList.remove('hidden');
+                if (viewView) viewView.classList.add('hidden');
+            } else if (viewBtn) {
+                viewBtn.classList.replace('btn-secondary', 'btn-primary');
+                const aBtn = document.getElementById('btn-add-purchase-order');
+                if (aBtn) aBtn.classList.replace('btn-primary', 'btn-secondary');
+                if (viewView) viewView.classList.remove('hidden');
+                if (addView) addView.classList.add('hidden');
+            }
+        });
         
         // Ensure state resets when entering from sidebar
         const sidebarFinanceBtn = document.getElementById('btn-add-bill-module');
