@@ -181,7 +181,7 @@
             // Filter in memory
             const activeBills = window.financeBills.filter(bill => {
                 if (searchTerm) {
-                    const haystack = ${bill.main_category}    .toLowerCase();
+                    const haystack = `${bill.main_category} ${bill.sub_category1} ${bill.sub_category2} ${bill.sub_category3 || ''} ${bill.payment_type}`.toLowerCase();
                     if (!haystack.includes(searchTerm)) return false;
                 }
                 return true;
@@ -189,24 +189,24 @@
 
             // Empty States
             if (window.financeBills.length === 0) {
-                container.innerHTML = 
+                container.innerHTML = `
                     <div class="vendor-empty-state" style="display:block;">
-                        <div class="vendor-empty-icon">??</div>
+                        <div class="vendor-empty-icon">💸</div>
                         <h3>No bills yet</h3>
                         <p>Click "+ Add Bill" to create your first bill.</p>
                     </div>
-                ;
+                `;
                 return;
             }
 
             if (activeBills.length === 0) {
-                container.innerHTML = 
+                container.innerHTML = `
                     <div class="vendor-empty-state" style="display:block;">
-                        <div class="vendor-empty-icon">??</div>
+                        <div class="vendor-empty-icon">🔍</div>
                         <h3>No matching bills</h3>
                         <p>Try adjusting your search.</p>
                     </div>
-                ;
+                `;
                 return;
             }
 
@@ -250,20 +250,20 @@
             else if (bStatus.toLowerCase() === 'pending') statusBadgeClass = 'bill-badge pending';
             else if (bStatus.toLowerCase() === 'overdue') statusBadgeClass = 'bill-badge overdue';
 
-            card.innerHTML = 
+            card.innerHTML = `
                 <div class="bill-card-header">
                     <div class="bill-card-header-left">
                         <h3 style="margin:0; font-size: 16px; color: var(--text-main); font-weight: 600;">
-                            
+                            ${bill.main_category || '-'}
                         </h3>
                         <div style="font-size: 12px; color: var(--text-muted);">
-                             
-                            
+                            ${bill.sub_category1 || ''} 
+                            ${bill.sub_category2 ? ' › ' + bill.sub_category2 : ''}
                         </div>
                         <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                            <span class=""></span>
-                            <span class=""></span>
-                            <span class="bill-badge" style="background: rgba(123, 140, 255, 0.1); color: var(--primary-color);">Due: </span>
+                            <span class="${pTypeBadgeClass}">${pType}</span>
+                            <span class="${statusBadgeClass}">${bStatus}</span>
+                            <span class="bill-badge" style="background: rgba(123, 140, 255, 0.1); color: var(--primary-color);">Due: ${formatDate(bill.due_date)}</span>
                         </div>
                     </div>
                     <div class="bill-card-header-right">
@@ -277,27 +277,27 @@
                 </div>
                 <div class="bill-card-body">
                     <div class="grid-2">
-                        <div class="info-group" style="margin:0;"><label>Amount</label><div class="info-val" data-field="amount" style="font-weight: 600; font-size: 15px; color: var(--text-main);">?</div></div>
-                        <div class="info-group" style="margin:0;"><label>Billing Cycle</label><div class="info-val" data-field="billing_cycle"></div></div>
-                        <div class="info-group" style="margin:0;"><label>Payment Type</label><div class="info-val" data-field="payment_type"></div></div>
-                        <div class="info-group" style="margin:0;"><label>Mode of Pay</label><div class="info-val" data-field="mode_of_pay"></div></div>
-                        <div class="info-group" style="margin:0;"><label>Account</label><div class="info-val" data-field="account"></div></div>
-                        <div class="info-group" style="margin:0;"><label>Email</label><div class="info-val" data-field="email"></div></div>
+                        <div class="info-group" style="margin:0;"><label>Amount</label><div class="info-val" data-field="amount" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${bill.amount != null ? bill.amount : '-'}</div></div>
+                        <div class="info-group" style="margin:0;"><label>Billing Cycle</label><div class="info-val" data-field="billing_cycle">${bill.billing_cycle || '-'}</div></div>
+                        <div class="info-group" style="margin:0;"><label>Payment Type</label><div class="info-val" data-field="payment_type">${bill.payment_type || '-'}</div></div>
+                        <div class="info-group" style="margin:0;"><label>Mode of Pay</label><div class="info-val" data-field="mode_of_pay">${bill.mode_of_pay || '-'}</div></div>
+                        <div class="info-group" style="margin:0;"><label>Account</label><div class="info-val" data-field="account">${bill.account || '-'}</div></div>
+                        <div class="info-group" style="margin:0;"><label>Email</label><div class="info-val" data-field="email">${bill.email || '-'}</div></div>
                     </div>
-                    <div class="info-group mt-15"><label>Notes</label><div class="info-val" data-field="notes"></div></div>
+                    <div class="info-group mt-15"><label>Notes</label><div class="info-val" data-field="notes">${bill.notes || '-'}</div></div>
                     <div class="hidden category-edit-group mt-15">
                         <div style="font-size: 13px; font-weight: 600; color: var(--primary-color); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">Edit Categories</div>
                         <div class="grid-2">
-                            <div class="info-group" style="margin:0;"><label>Main Category</label><div class="info-val" data-field="main_category"></div></div>
-                            <div class="info-group" style="margin:0;"><label>Sub Category 1</label><div class="info-val" data-field="sub_category1"></div></div>
-                            <div class="info-group" style="margin:0;"><label>Sub Category 2</label><div class="info-val" data-field="sub_category2"></div></div>
-                            <div class="info-group" style="margin:0;"><label>Sub Category 3</label><div class="info-val" data-field="sub_category3"></div></div>
-                            <div class="info-group" style="margin:0;"><label>Due Date</label><div class="info-val" data-field="due_date"></div></div>
-                            <div class="info-group" style="margin:0;"><label>Bill Status</label><div class="info-val" data-field="bill_status"></div></div>
+                            <div class="info-group" style="margin:0;"><label>Main Category</label><div class="info-val" data-field="main_category">${bill.main_category || ''}</div></div>
+                            <div class="info-group" style="margin:0;"><label>Sub Category 1</label><div class="info-val" data-field="sub_category1">${bill.sub_category1 || ''}</div></div>
+                            <div class="info-group" style="margin:0;"><label>Sub Category 2</label><div class="info-val" data-field="sub_category2">${bill.sub_category2 || ''}</div></div>
+                            <div class="info-group" style="margin:0;"><label>Sub Category 3</label><div class="info-val" data-field="sub_category3">${bill.sub_category3 || ''}</div></div>
+                            <div class="info-group" style="margin:0;"><label>Due Date</label><div class="info-val" data-field="due_date">${bill.due_date || ''}</div></div>
+                            <div class="info-group" style="margin:0;"><label>Bill Status</label><div class="info-val" data-field="bill_status">${bStatus}</div></div>
                         </div>
                     </div>
                 </div>
-            ;
+            `;
 
             const btnEdit = card.querySelector('.btn-edit-bill');
             const btnSave = card.querySelector('.btn-save-bill-inline');
@@ -310,7 +310,7 @@
 
             btnEdit.addEventListener('click', () => {
                 if (window.currentlyEditingBillId && window.currentlyEditingBillId !== bill.id) {
-                    if (window.showToast) window.showToast('? Finish editing current bill first');
+                    if (window.showToast) window.showToast('⚠ Finish editing current bill first');
                     else alert('Finish editing current bill first');
                     return;
                 }
@@ -332,17 +332,17 @@
                 const globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
 
                 ['amount', 'billing_cycle', 'account', 'email', 'notes', 'due_date'].forEach(f => {
-                    const valDiv = body.querySelector(\ + .info-val[data-field=""]); // Escaping backtick in py
+                    const valDiv = body.querySelector(`.info-val[data-field="${f}"]`);
                     if (valDiv) {
-                        const val = valDiv.textContent.replace('?', '') === '-' ? '' : valDiv.textContent.replace('?', '').trim();
+                        const val = valDiv.textContent.replace('₹', '') === '-' ? '' : valDiv.textContent.replace('₹', '').trim();
                         if (f === 'notes') {
-                            valDiv.innerHTML = <textarea class="edit-input" data-edit="" rows="2" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: inherit;"></textarea>;
+                            valDiv.innerHTML = `<textarea class="edit-input" data-edit="${f}" rows="2" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-family: inherit;">${val}</textarea>`;
                         } else if (f === 'due_date') {
-                            valDiv.innerHTML = <input type="date" class="edit-input" data-edit="" value="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">;
+                            valDiv.innerHTML = `<input type="date" class="edit-input" data-edit="${f}" value="${val}" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">`;
                         } else if (f === 'amount') {
-                            valDiv.innerHTML = <input type="number" class="edit-input" data-edit="" value="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">;
+                            valDiv.innerHTML = `<input type="number" class="edit-input" data-edit="${f}" value="${val}" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">`;
                         } else {
-                            valDiv.innerHTML = <input type="text" class="edit-input" data-edit="" value="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">;
+                            valDiv.innerHTML = `<input type="text" class="edit-input" data-edit="${f}" value="${val}" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);">`;
                         }
                     }
                 });
@@ -353,11 +353,11 @@
                     'bill_status': ['Pending', 'Paid', 'Overdue']
                 };
                 Object.keys(selects).forEach(f => {
-                    const valDiv = body.querySelector(\ + .info-val[data-field=""]);
+                    const valDiv = body.querySelector(`.info-val[data-field="${f}"]`);
                     if (valDiv) {
                         const currentVal = valDiv.textContent === '-' ? '' : valDiv.textContent.trim();
-                        let options = selects[f].map(opt => <option value="" ></option>).join('');
-                        valDiv.innerHTML = <select class="edit-input" data-edit="" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select</option></select>;
+                        let options = selects[f].map(opt => `<option value="${opt}" ${opt === currentVal ? 'selected' : ''}>${opt}</option>`).join('');
+                        valDiv.innerHTML = `<select class="edit-input" data-edit="${f}" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select</option>${options}</select>`;
                     }
                 });
 
@@ -366,22 +366,22 @@
                 const sub2Div = body.querySelector('.info-val[data-field="sub_category2"]');
                 const sub3Div = body.querySelector('.info-val[data-field="sub_category3"]');
 
-                let mainOptions = globals.mains.map(m => <option value="" ></option>).join('');
-                mainDiv.innerHTML = <select class="edit-input" data-edit="main_category" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Main Category</option></select>;
-                sub1Div.innerHTML = <select class="edit-input" data-edit="sub_category1" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Sub Category 1</option></select>;
-                sub2Div.innerHTML = <select class="edit-input" data-edit="sub_category2" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Sub Category 2</option></select>;
+                let mainOptions = globals.mains.map(m => `<option value="${m}" ${m === bill.main_category ? 'selected' : ''}>${m}</option>`).join('');
+                mainDiv.innerHTML = `<select class="edit-input" data-edit="main_category" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Main Category</option>${mainOptions}</select>`;
+                sub1Div.innerHTML = `<select class="edit-input" data-edit="sub_category1" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Sub Category 1</option></select>`;
+                sub2Div.innerHTML = `<select class="edit-input" data-edit="sub_category2" style="width: 100%; border-radius: 6px; padding: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main);"><option value="">Select Sub Category 2</option></select>`;
                 
                 const sub3Id = 'edit-sub3-' + bill.id;
-                sub3Div.innerHTML = 
-                    <div class="multi-select-container" id="container-">
+                sub3Div.innerHTML = `
+                    <div class="multi-select-container" id="container-${sub3Id}">
                         <div class="multi-select-display disabled" tabindex="0">
                             <span class="multi-select-value multi-select-placeholder">Select Sub Category 3</span>
                             <svg class="multi-select-arrow" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                         <div class="multi-select-dropdown hidden"></div>
-                        <input type="hidden" class="edit-input" data-edit="sub_category3" id="" value="">
+                        <input type="hidden" class="edit-input" data-edit="sub_category3" id="${sub3Id}" value="${bill.sub_category3 || ''}">
                     </div>
-                ;
+                `;
 
                 const mainSel = body.querySelector('[data-edit="main_category"]');
                 const sub1Sel = body.querySelector('[data-edit="sub_category1"]');
@@ -478,7 +478,6 @@
 
                     if (error) {
                         if (error.code === '42703' && error.message.includes('bill_status')) {
-                            // Column might not exist, silently ignore bill_status or notify user
                             console.warn("bill_status column might not exist. Retrying without bill_status.");
                             delete updated['bill_status'];
                             const retry = await window.supabase.from('finance_bills').update(updated).eq('id', bill.id);
@@ -493,10 +492,10 @@
                     window.currentlyEditingBillId = null;
                     window.renderSingleBillCard(card, bill);
                     
-                    if (window.showToast) window.showToast('? Bill updated successfully');
+                    if (window.showToast) window.showToast('✅ Bill updated successfully');
                 } catch (error) {
                     console.error('Update failed:', error);
-                    if (window.showToast) window.showToast('? Failed to update bill');
+                    if (window.showToast) window.showToast('❌ Failed to update bill');
                     else alert('Failed to update bill');
                     
                     btnSave.textContent = 'Save';
@@ -550,37 +549,71 @@
             });
         }
 
-        if (btnShowAddForm) {
-            btnShowAddForm.addEventListener('click', () => {
+        function showBillsView(viewName) {
+            hideAllBillViews();
+            
+            const addBillFormContainer = document.getElementById('add-bill-form-container');
+            const billListContainer = document.getElementById('bill-list-container');
+            const billDefaultState = document.getElementById('bill-default-state');
+
+            if (viewName === 'add') {
                 setBillsActiveTab('btn-show-add-bill-form');
-                hideAllBillViews();
                 if (addBillFormContainer) {
                     addBillFormContainer.classList.remove('hidden');
-                    addBillForm.reset();
-                    populateBillCategories();
+                    const addBillForm = document.getElementById('add-bill-form');
+                    if (addBillForm) addBillForm.reset();
+                    if (typeof populateBillCategories === 'function') populateBillCategories();
                 }
-            });
-        }
-
-        if (btnViewBillsList) {
-            btnViewBillsList.addEventListener('click', () => {
+            } else if (viewName === 'view') {
                 setBillsActiveTab('btn-view-bills-list');
-                hideAllBillViews();
                 if (billListContainer) {
                     billListContainer.classList.remove('hidden');
+                    const billSearchInput = document.getElementById('bill-search');
                     if (billSearchInput) billSearchInput.value = ''; // Clear search on open
-                    window.fetchBillsData();
+                    if (typeof window.fetchBillsData === 'function') window.fetchBillsData();
                 }
-            });
+            } else if (viewName === 'upcoming') {
+                setBillsActiveTab('btn-finance-upcoming-bill');
+                if (billDefaultState) billDefaultState.classList.remove('hidden');
+                if (typeof showToast === 'function') showToast('Upcoming Bills — Coming Soon');
+            } else if (viewName === 'analytics') {
+                setBillsActiveTab('btn-finance-bill-analytics');
+                if (billDefaultState) billDefaultState.classList.remove('hidden');
+                if (typeof showToast === 'function') showToast('Bill Analytics — Coming Soon');
+            } else if (viewName === 'default') {
+                setBillsActiveTab(null);
+                if (billDefaultState) billDefaultState.classList.remove('hidden');
+            }
         }
 
-        if (btnCancelBill) {
-            btnCancelBill.addEventListener('click', () => {
-                setBillsActiveTab(null);
-                hideAllBillViews();
-                if (billDefaultState) billDefaultState.classList.remove('hidden');
-            });
-        }
+        document.addEventListener('click', (e) => {
+            // Bills Navigation
+            if (e.target.closest('#btn-show-add-bill-form')) {
+                console.log('Add Bill clicked');
+                showBillsView('add');
+            } else if (e.target.closest('#btn-view-bills-list')) {
+                console.log('View Bills clicked');
+                showBillsView('view');
+            } else if (e.target.closest('#btn-finance-upcoming-bill')) {
+                console.log('Upcoming Bills clicked');
+                showBillsView('upcoming');
+            } else if (e.target.closest('#btn-finance-bill-analytics')) {
+                console.log('Bill Analytics clicked');
+                showBillsView('analytics');
+            } else if (e.target.closest('#btn-cancel-bill')) {
+                showBillsView('default');
+            }
+
+            // Expense Navigation
+            if (e.target.closest('#btn-view-expenses-list')) {
+                console.log('View Expenses clicked');
+                const formContainer = document.getElementById('expense-form-container');
+                if (formContainer) formContainer.classList.add('hidden');
+            } else if (e.target.closest('#btn-finance-expense-analytics')) {
+                console.log('Expense Analytics clicked');
+                if (typeof showToast === 'function') showToast('Expense Analytics — Coming Soon');
+            }
+        });
 
         // CREATE async saveBill() FUNCTION
         async function saveBill() {
@@ -780,50 +813,9 @@
             }
         });
 
-        // Expense Sub-Buttons
-        const btnFinanceAddExpense = document.getElementById('btn-add-expense'); // Existing button ID in view-expense
-        const btnFinanceViewExpense = document.getElementById('btn-view-expenses-list');
-        const btnFinanceExpenseAnalytics = document.getElementById('btn-finance-expense-analytics');
+        // Expense Sub-Buttons (Migrated to central delegated click handler)
 
-        // Note: btn-add-expense already has existing listeners, we only bind the new ones safely
-        if (btnFinanceViewExpense && !btnFinanceViewExpense.hasAttribute('data-bound')) {
-            btnFinanceViewExpense.setAttribute('data-bound', 'true');
-            btnFinanceViewExpense.addEventListener('click', () => {
-                const formContainer = document.getElementById('expense-form-container');
-                if (formContainer) formContainer.classList.add('hidden');
-            });
-        }
-
-        if (btnFinanceExpenseAnalytics && !btnFinanceExpenseAnalytics.hasAttribute('data-bound')) {
-            btnFinanceExpenseAnalytics.setAttribute('data-bound', 'true');
-            btnFinanceExpenseAnalytics.addEventListener('click', () => {
-                if (typeof showToast === 'function') showToast('Expense Analytics — Coming Soon');
-            });
-        }
-
-        // Bills Sub-Buttons
-        const btnFinanceUpcomingBill = document.getElementById('btn-finance-upcoming-bill');
-        const btnFinanceBillAnalytics = document.getElementById('btn-finance-bill-analytics');
-
-        if (btnFinanceUpcomingBill && !btnFinanceUpcomingBill.hasAttribute('data-bound')) {
-            btnFinanceUpcomingBill.setAttribute('data-bound', 'true');
-            btnFinanceUpcomingBill.addEventListener('click', () => {
-                setBillsActiveTab('btn-finance-upcoming-bill');
-                hideAllBillViews();
-                if (billDefaultState) billDefaultState.classList.remove('hidden');
-                if (typeof showToast === 'function') showToast('Upcoming Bills — Coming Soon');
-            });
-        }
-
-        if (btnFinanceBillAnalytics && !btnFinanceBillAnalytics.hasAttribute('data-bound')) {
-            btnFinanceBillAnalytics.setAttribute('data-bound', 'true');
-            btnFinanceBillAnalytics.addEventListener('click', () => {
-                setBillsActiveTab('btn-finance-bill-analytics');
-                hideAllBillViews();
-                if (billDefaultState) billDefaultState.classList.remove('hidden');
-                if (typeof showToast === 'function') showToast('Bill Analytics — Coming Soon');
-            });
-        }
+        // Bills Sub-Buttons (Migrated to central delegated click handler)
         
         // Ensure state resets when entering from sidebar
         const sidebarFinanceBtn = document.getElementById('btn-add-bill-module');
