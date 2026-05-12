@@ -931,17 +931,12 @@
                 }
             });
 
-            // Render Level 3 legend (clickable for inline Level 4 expand)
+            // Render Level 3 legend (clickable → updates right panel)
             legendEl.innerHTML = '';
             labels.forEach((label, i) => {
                 const color = level3Palette[i % level3Palette.length];
                 const amt = amounts[i];
                 const cnt = counts[i];
-
-                // Wrapper for item + inline sub3 rows
-                const wrapper = document.createElement('div');
-                wrapper.className = 'legend-item-wrapper';
-
                 const item = document.createElement('div');
                 item.className = 'analytics-legend-item clickable';
                 item.setAttribute('data-sub2category', label);
@@ -952,14 +947,24 @@
                     </div>
                     <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
                 `;
-
-                item.addEventListener('click', () => {
-                    toggleSub3Inline(wrapper, item, mainCategory, subCategory, label);
-                });
-
-                wrapper.appendChild(item);
-                legendEl.appendChild(wrapper);
+                item.addEventListener('click', () => selectSub2Category(mainCategory, subCategory, label));
+                legendEl.appendChild(item);
             });
+
+            // Auto-select largest sub_category2
+            if (labels.length > 0) {
+                let maxIdx = 0;
+                amounts.forEach((a, i) => { if (a > amounts[maxIdx]) maxIdx = i; });
+                selectSub2Category(mainCategory, subCategory, labels[maxIdx]);
+            } else {
+                // Clear right panel if no sub2 data
+                const titleEl4 = document.getElementById('level4Title');
+                if (titleEl4) titleEl4.textContent = 'No Data Available';
+                const legendEl4 = document.getElementById('billLevel4Legend');
+                if (legendEl4) legendEl4.innerHTML = '';
+                const barCanvas = document.getElementById('billLevel4Bar');
+                if (barCanvas) barCanvas.style.display = 'none';
+            }
         }
 
         // Level 4 palette
@@ -969,24 +974,26 @@
             '#fca5a5', '#93c5fd', '#d9f99d', '#c4b5fd'
         ];
 
-        function toggleSub3Inline(wrapper, clickedItem, mainCategory, sub1, sub2) {
+        window._level4BarChart = null;
+
+        function selectSub2Category(mainCategory, sub1, sub2) {
+            // Highlight active item
             const legendEl = document.getElementById('billLevel3Legend');
-            if (!legendEl) return;
-
-            // If already expanded, collapse it
-            const existingRows = wrapper.querySelector('.sub3-inline-rows');
-            if (existingRows) {
-                existingRows.remove();
-                clickedItem.classList.remove('expanded');
-                return;
+            if (legendEl) {
+                legendEl.querySelectorAll('.analytics-legend-item').forEach(el => {
+                    el.classList.toggle('active', el.getAttribute('data-sub2category') === sub2);
+                });
             }
+            renderLevel4Bar(mainCategory, sub1, sub2);
+        }
 
-            // Collapse any other expanded item first
-            legendEl.querySelectorAll('.sub3-inline-rows').forEach(el => el.remove());
-            legendEl.querySelectorAll('.analytics-legend-item.expanded').forEach(el => el.classList.remove('expanded'));
+        function renderLevel4Bar(mainCategory, sub1, sub2) {
+            const titleEl = document.getElementById('level4Title');
+            const canvas = document.getElementById('billLevel4Bar');
+            const legendEl = document.getElementById('billLevel4Legend');
+            if (!canvas || !legendEl) return;
 
-            // Mark this item as expanded
-            clickedItem.classList.add('expanded');
+            if (titleEl) titleEl.textContent = sub2 + ' Details';
 
             // Filter bills
             const filtered = (window._analyticsBills || []).filter(
@@ -1005,32 +1012,111 @@
                 sub3Map[key].count += 1;
             });
 
-            const sub3Labels = Object.keys(sub3Map);
+            const labels = Object.keys(sub3Map);
+            const amounts = labels.map(l => sub3Map[l].amount);
+            const counts = labels.map(l => sub3Map[l].count);
 
-            // Build inline rows container
-            const rowsDiv = document.createElement('div');
-            rowsDiv.className = 'sub3-inline-rows';
-
-            if (sub3Labels.length === 0) {
-                rowsDiv.innerHTML = '<div style="font-size: 0.82rem; color: var(--text-muted); padding: 6px 8px; border-left: 2px solid var(--border-color);">No deeper breakdown</div>';
-            } else {
-                sub3Labels.forEach((lbl, j) => {
-                    const c = level4Palette[j % level4Palette.length];
-                    const a = sub3Map[lbl].amount;
-                    const n = sub3Map[lbl].count;
-                    rowsDiv.innerHTML += `
-                        <div class="sub3-inline-row">
-                            <div class="legend-label">
-                                <span class="legend-dot" style="background: ${c};"></span>
-                                <span>${lbl}</span>
-                            </div>
-                            <span class="legend-count">${formatINR(a)} <span style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">| ${n} Bill${n !== 1 ? 's' : ''}</span></span>
-                        </div>
-                    `;
-                });
+            // Destroy old bar chart
+            if (window._level4BarChart) {
+                window._level4BarChart.destroy();
+                window._level4BarChart = null;
             }
 
-            wrapper.appendChild(rowsDiv);
+            // Empty state
+            if (labels.length === 0) {
+                canvas.style.display = 'none';
+                legendEl.innerHTML = `
+                    <div class="drilldown-empty">
+                        <div class="drilldown-empty-icon">📭</div>
+                        <p>No deeper breakdown available for ${sub2}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            canvas.style.display = 'block';
+            const colors = labels.map((_, i) => level4Palette[i % level4Palette.length]);
+
+            // Detect dark mode for axis/grid colors
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+            const tickColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
+
+            const ctx = canvas.getContext('2d');
+            window._level4BarChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: amounts,
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'x',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            titleFont: { size: 12, weight: '600' },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(ctx) {
+                                    const total = amounts.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                                    return ` ${formatINR(ctx.raw)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: tickColor,
+                                font: { size: 10 },
+                                callback: function(val) { return '₹' + Number(val).toLocaleString('en-IN'); }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: tickColor,
+                                font: { size: 10, weight: '500' },
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    },
+                    animation: { duration: 600 }
+                }
+            });
+
+            // Render legend
+            legendEl.innerHTML = '';
+            labels.forEach((label, i) => {
+                const color = colors[i];
+                const amt = amounts[i];
+                const cnt = counts[i];
+                legendEl.innerHTML += `
+                    <div class="analytics-legend-item">
+                        <div class="legend-label">
+                            <span class="legend-dot" style="background: ${color};"></span>
+                            <span>${label}</span>
+                        </div>
+                        <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
+                    </div>
+                `;
+            });
         }
 
                 window.archiveBill = async function(id) {

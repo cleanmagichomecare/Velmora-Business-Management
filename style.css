@@ -6513,52 +6513,16 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     margin-bottom: 12px;
 }
 
-/* Level 3 card right panel */
-.bill-level3-card .analytics-right {
-    justify-content: flex-start;
+/* Level 3 card layout */
+.bill-level3-card .analytics-left {
     overflow-y: auto;
-    max-height: 500px;
+    max-height: 520px;
 }
 
-/* Inline sub_category3 expand rows */
-.sub3-inline-rows {
-    padding: 6px 0 4px 22px;
-    animation: fadeIn 0.25s ease;
+/* Bar chart wrapper — non-square */
+#level4ChartWrap {
+    aspect-ratio: auto;
+    max-width: 100%;
+    max-height: 260px;
 }
 
-.sub3-inline-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px 8px;
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    border-left: 2px solid var(--border-color);
-    margin-bottom: 2px;
-}
-
-.sub3-inline-row .legend-dot {
-    width: 8px;
-    height: 8px;
-}
-
-.sub3-inline-row .legend-label {
-    gap: 8px;
-    font-weight: 400;
-}
-
-.sub3-inline-row .legend-count {
-    font-weight: 600;
-    font-size: 0.8rem;
-}
-
-/* Expanded parent item */
-.analytics-legend-item.expanded {
-    background: rgba(99, 102, 241, 0.06);
-    border-radius: 8px;
-    border-bottom-color: transparent;
-}
-
-[data-theme="dark"] .analytics-legend-item.expanded {
-    background: rgba(99, 102, 241, 0.12);
-}
