@@ -260,10 +260,9 @@
                             ${bill.sub_category1 || ''} 
                             ${bill.sub_category2 ? ' › ' + bill.sub_category2 : ''}
                         </div>
-                        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
                             <span class="${pTypeBadgeClass}">${pType}</span>
                             <span class="${statusBadgeClass}">${bStatus}</span>
-                            <span class="bill-badge" style="background: rgba(123, 140, 255, 0.1); color: var(--primary-color);">Due: ${formatDate(bill.due_date)}</span>
                         </div>
                     </div>
                     <div class="bill-card-header-right">
@@ -276,15 +275,19 @@
                     </div>
                 </div>
                 <div class="bill-card-body">
-                    <div class="grid-2">
-                        <div class="info-group" style="margin:0;"><label>Amount</label><div class="info-val" data-field="amount" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${bill.amount != null ? bill.amount : '-'}</div></div>
-                        <div class="info-group" style="margin:0;"><label>Billing Cycle</label><div class="info-val" data-field="billing_cycle">${bill.billing_cycle || '-'}</div></div>
-                        <div class="info-group" style="margin:0;"><label>Payment Type</label><div class="info-val" data-field="payment_type">${bill.payment_type || '-'}</div></div>
-                        <div class="info-group" style="margin:0;"><label>Mode of Pay</label><div class="info-val" data-field="mode_of_pay">${bill.mode_of_pay || '-'}</div></div>
-                        <div class="info-group" style="margin:0;"><label>Account</label><div class="info-val" data-field="account">${bill.account || '-'}</div></div>
-                        <div class="info-group" style="margin:0;"><label>Email</label><div class="info-val" data-field="email">${bill.email || '-'}</div></div>
+                    <div class="grid-2" style="column-gap: 24px; row-gap: 4px;">
+                        <div class="info-group"><label>Amount</label><div class="info-val" data-field="amount" style="font-weight: 600; font-size: 15px; color: var(--text-main);">₹${bill.amount != null ? bill.amount : '-'}</div></div>
+                        <div class="info-group"><label>Mode of Pay</label><div class="info-val" data-field="mode_of_pay">${bill.mode_of_pay || '-'}</div></div>
+                        
+                        <div class="info-group"><label>Billing Cycle</label><div class="info-val" data-field="billing_cycle">${bill.billing_cycle || '-'}</div></div>
+                        <div class="info-group"><label>Account</label><div class="info-val" data-field="account">${bill.account || '-'}</div></div>
+                        
+                        <div class="info-group"><label>Payment Type</label><div class="info-val" data-field="payment_type">${bill.payment_type || '-'}</div></div>
+                        <div class="info-group"><label>Email</label><div class="info-val" data-field="email">${bill.email || '-'}</div></div>
+                        
+                        <div class="info-group"><label>Due Date</label><div class="info-val" data-field="due_date">${formatDate(bill.due_date)}</div></div>
+                        <div class="info-group"><label>Notes</label><div class="info-val" data-field="notes">${bill.notes || '-'}</div></div>
                     </div>
-                    <div class="info-group mt-15"><label>Notes</label><div class="info-val" data-field="notes">${bill.notes || '-'}</div></div>
                     <div class="hidden category-edit-group mt-15">
                         <div style="font-size: 13px; font-weight: 600; color: var(--primary-color); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color);">Edit Categories</div>
                         <div class="grid-2">

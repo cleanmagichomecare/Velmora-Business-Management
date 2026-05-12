@@ -6225,7 +6225,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     border: 1px solid var(--border-color);
     background: var(--card-bg);
     border-radius: 12px;
-    padding: 20px;
+    padding: 24px;
     position: relative;
     overflow: hidden;
 }
@@ -6259,7 +6259,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 .bill-card-header-right {
     display: flex;
-    gap: 8px;
+    gap: 12px;
 }
 
 .bill-card-body .edit-grid {
@@ -6307,3 +6307,17 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     color: #ef4444;
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
+
+.bill-card .info-val {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+.bill-card .info-group {
+    margin-bottom: 12px !important;
+}
+.bill-card-header {
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+}
+
