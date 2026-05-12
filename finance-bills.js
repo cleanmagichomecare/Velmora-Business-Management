@@ -518,6 +518,8 @@
             const centerNum = document.getElementById('doughnutCenterNumber');
             if (!canvas || !legendEl) return;
 
+            const formatINR = (val) => '₹' + Number(val).toLocaleString('en-IN');
+
             // Fetch fresh bill data for analytics
             let bills = window.financeBills || [];
             if (bills.length === 0) {
@@ -533,16 +535,16 @@
                 }
             }
 
-            // Group by main_category
+            // Group by main_category → SUM(amount)
             const categoryMap = {};
             bills.forEach(bill => {
                 const cat = bill.main_category || 'Uncategorized';
-                categoryMap[cat] = (categoryMap[cat] || 0) + 1;
+                categoryMap[cat] = (categoryMap[cat] || 0) + Number(bill.amount || 0);
             });
 
             const labels = Object.keys(categoryMap);
-            const counts = Object.values(categoryMap);
-            const total = counts.reduce((a, b) => a + b, 0);
+            const amounts = Object.values(categoryMap);
+            const total = amounts.reduce((a, b) => a + b, 0);
 
             // Premium color palette
             const palette = [
@@ -551,8 +553,8 @@
                 '#84cc16', '#e11d48', '#8b5cf6', '#10b981'
             ];
 
-            // Update center number
-            if (centerNum) centerNum.textContent = total;
+            // Update center number with ₹ formatted total
+            if (centerNum) centerNum.textContent = formatINR(total);
 
             // Destroy old chart if exists
             if (window._billDoughnutChart) {
@@ -567,7 +569,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        data: counts,
+                        data: amounts,
                         backgroundColor: palette.slice(0, labels.length),
                         borderWidth: 0,
                         hoverOffset: 8
@@ -588,7 +590,7 @@
                             callbacks: {
                                 label: function(context) {
                                     const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
-                                    return ` ${context.label}: ${context.raw} (${pct}%)`;
+                                    return ` ${context.label}: ${formatINR(context.raw)} (${pct}%)`;
                                 }
                             }
                         }
@@ -604,14 +606,14 @@
             legendEl.innerHTML = '';
             labels.forEach((label, i) => {
                 const color = palette[i % palette.length];
-                const count = counts[i];
+                const amt = amounts[i];
                 legendEl.innerHTML += `
                     <div class="analytics-legend-item">
                         <div class="legend-label">
                             <span class="legend-dot" style="background: ${color};"></span>
                             <span>${label}</span>
                         </div>
-                        <span class="legend-count">${count}</span>
+                        <span class="legend-count">${formatINR(amt)}</span>
                     </div>
                 `;
             });
