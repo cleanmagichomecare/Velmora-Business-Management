@@ -32,6 +32,28 @@
             });
         }
 
+        function setBillsActiveTab(activeId) {
+            const billNavButtons = [
+                'btn-show-add-bill-form',
+                'btn-view-bills-list',
+                'btn-finance-upcoming-bill',
+                'btn-finance-bill-analytics'
+            ];
+            billNavButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    if (id === activeId) {
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('btn-primary');
+                    } else {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-secondary');
+                    }
+                }
+            });
+        }
+
+
         function populateBillCategories() {
             if (!billMainCat) return;
 
@@ -315,6 +337,7 @@
 
         if (btnShowAddForm) {
             btnShowAddForm.addEventListener('click', () => {
+                setBillsActiveTab('btn-show-add-bill-form');
                 hideAllBillViews();
                 if (addBillFormContainer) {
                     addBillFormContainer.classList.remove('hidden');
@@ -326,6 +349,7 @@
 
         if (btnViewBillsList) {
             btnViewBillsList.addEventListener('click', () => {
+                setBillsActiveTab('btn-view-bills-list');
                 hideAllBillViews();
                 if (billListContainer) {
                     billListContainer.classList.remove('hidden');
@@ -337,6 +361,7 @@
 
         if (btnCancelBill) {
             btnCancelBill.addEventListener('click', () => {
+                setBillsActiveTab(null);
                 hideAllBillViews();
                 if (billDefaultState) billDefaultState.classList.remove('hidden');
             });
@@ -432,6 +457,7 @@
                 // Hide form, show default
                 hideAllBillViews();
                 if (billDefaultState) billDefaultState.classList.remove('hidden');
+                setBillsActiveTab(null);
 
             } catch (err) {
                 console.error("Supabase insert error:", err);
@@ -567,6 +593,9 @@
         if (btnFinanceUpcomingBill && !btnFinanceUpcomingBill.hasAttribute('data-bound')) {
             btnFinanceUpcomingBill.setAttribute('data-bound', 'true');
             btnFinanceUpcomingBill.addEventListener('click', () => {
+                setBillsActiveTab('btn-finance-upcoming-bill');
+                hideAllBillViews();
+                if (billDefaultState) billDefaultState.classList.remove('hidden');
                 if (typeof showToast === 'function') showToast('Upcoming Bills — Coming Soon');
             });
         }
@@ -574,6 +603,9 @@
         if (btnFinanceBillAnalytics && !btnFinanceBillAnalytics.hasAttribute('data-bound')) {
             btnFinanceBillAnalytics.setAttribute('data-bound', 'true');
             btnFinanceBillAnalytics.addEventListener('click', () => {
+                setBillsActiveTab('btn-finance-bill-analytics');
+                hideAllBillViews();
+                if (billDefaultState) billDefaultState.classList.remove('hidden');
                 if (typeof showToast === 'function') showToast('Bill Analytics — Coming Soon');
             });
         }
