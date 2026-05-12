@@ -974,23 +974,23 @@
             '#fca5a5', '#93c5fd', '#d9f99d', '#c4b5fd'
         ];
 
-        window._level4BarChart = null;
+        window._level4DoughnutChart = null;
 
         function selectSub2Category(mainCategory, sub1, sub2) {
-            // Highlight active item
             const legendEl = document.getElementById('billLevel3Legend');
             if (legendEl) {
                 legendEl.querySelectorAll('.analytics-legend-item').forEach(el => {
                     el.classList.toggle('active', el.getAttribute('data-sub2category') === sub2);
                 });
             }
-            renderLevel4Bar(mainCategory, sub1, sub2);
+            renderLevel4Doughnut(mainCategory, sub1, sub2);
         }
 
-        function renderLevel4Bar(mainCategory, sub1, sub2) {
+        function renderLevel4Doughnut(mainCategory, sub1, sub2) {
             const titleEl = document.getElementById('level4Title');
-            const canvas = document.getElementById('billLevel4Bar');
+            const canvas = document.getElementById('billLevel4Doughnut');
             const legendEl = document.getElementById('billLevel4Legend');
+            const centerNum = document.getElementById('level4CenterNumber');
             if (!canvas || !legendEl) return;
 
             if (titleEl) titleEl.textContent = sub2 + ' Details';
@@ -1015,16 +1015,21 @@
             const labels = Object.keys(sub3Map);
             const amounts = labels.map(l => sub3Map[l].amount);
             const counts = labels.map(l => sub3Map[l].count);
+            const total = amounts.reduce((a, b) => a + b, 0);
 
-            // Destroy old bar chart
-            if (window._level4BarChart) {
-                window._level4BarChart.destroy();
-                window._level4BarChart = null;
+            if (centerNum) centerNum.textContent = formatINR(total);
+
+            // Destroy old chart
+            if (window._level4DoughnutChart) {
+                window._level4DoughnutChart.destroy();
+                window._level4DoughnutChart = null;
             }
 
             // Empty state
             if (labels.length === 0) {
                 canvas.style.display = 'none';
+                const cl = document.getElementById('level4CenterLabel');
+                if (cl) cl.style.display = 'none';
                 legendEl.innerHTML = `
                     <div class="drilldown-empty">
                         <div class="drilldown-empty-icon">📭</div>
@@ -1035,69 +1040,46 @@
             }
 
             canvas.style.display = 'block';
+            const cl = document.getElementById('level4CenterLabel');
+            if (cl) cl.style.display = 'flex';
             const colors = labels.map((_, i) => level4Palette[i % level4Palette.length]);
 
-            // Detect dark mode for axis/grid colors
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-            const tickColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
-
             const ctx = canvas.getContext('2d');
-            window._level4BarChart = new Chart(ctx, {
-                type: 'bar',
+            window._level4DoughnutChart = new Chart(ctx, {
+                type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: amounts,
                         backgroundColor: colors,
-                        borderRadius: 6,
-                        borderSkipped: false,
-                        barPercentage: 0.6,
-                        categoryPercentage: 0.7
+                        borderWidth: 0,
+                        hoverOffset: 8
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'x',
+                    maintainAspectRatio: true,
+                    cutout: '65%',
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.85)',
-                            titleFont: { size: 12, weight: '600' },
-                            bodyFont: { size: 11 },
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 13, weight: '600' },
+                            bodyFont: { size: 12 },
                             padding: 10,
                             cornerRadius: 8,
                             callbacks: {
-                                label: function(ctx) {
-                                    const total = amounts.reduce((a, b) => a + b, 0);
-                                    const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
-                                    return ` ${formatINR(ctx.raw)} (${pct}%)`;
+                                label: function(context) {
+                                    const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${formatINR(context.raw)} (${pct}%)`;
                                 }
                             }
                         }
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: gridColor },
-                            ticks: {
-                                color: tickColor,
-                                font: { size: 10 },
-                                callback: function(val) { return '₹' + Number(val).toLocaleString('en-IN'); }
-                            }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                color: tickColor,
-                                font: { size: 10, weight: '500' },
-                                maxRotation: 45,
-                                minRotation: 0
-                            }
-                        }
-                    },
-                    animation: { duration: 600 }
+                    animation: {
+                        animateRotate: true,
+                        duration: 600
+                    }
                 }
             });
 

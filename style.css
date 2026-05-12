@@ -6519,10 +6519,3 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     max-height: 520px;
 }
 
-/* Bar chart wrapper — non-square */
-#level4ChartWrap {
-    aspect-ratio: auto;
-    max-width: 100%;
-    max-height: 260px;
-}
-
