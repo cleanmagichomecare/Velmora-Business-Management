@@ -1155,6 +1155,32 @@
                                 </div>
                             </div>
 
+                            <!-- Bill Analytics -->
+                            <div id="bill-analytics-container" class="hidden" style="width: 95%; margin: 0 auto; animation: fadeIn 0.3s ease forwards;">
+                                <div class="bill-analytics-card">
+                                    <div class="analytics-left">
+                                        <div class="analytics-section-title">Main Category Total Bills</div>
+                                        <div class="analytics-chart-wrap">
+                                            <canvas id="billCategoryDoughnut"></canvas>
+                                            <div class="doughnut-center-label" id="doughnutCenterLabel">
+                                                <span class="doughnut-center-number" id="doughnutCenterNumber">0</span>
+                                                <span class="doughnut-center-text">TOTAL</span>
+                                            </div>
+                                        </div>
+                                        <div class="analytics-legend-list" id="billCategoryLegend">
+                                            <!-- Legend items rendered by JS -->
+                                        </div>
+                                    </div>
+                                    <div class="analytics-right">
+                                        <div class="analytics-section-title">Upcoming Analytics</div>
+                                        <div class="analytics-placeholder-inner">
+                                            <div style="font-size: 3rem; opacity: 0.4; margin-bottom: 16px;">📊</div>
+                                            <p style="color: var(--text-muted); font-size: 0.95rem;">More analytics modules are coming soon.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Default State -->
                             <div id="bill-default-state" class="vendor-empty-state hidden">
                                 <div class="vendor-empty-icon">💸</div>

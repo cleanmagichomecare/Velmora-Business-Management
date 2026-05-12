@@ -27,7 +27,8 @@
         const billSub3 = document.getElementById('bill-sub-category3');
 
         function hideAllBillViews() {
-            [addBillFormContainer, billListContainer, billDefaultState].forEach(el => {
+            const billAnalyticsContainer = document.getElementById('bill-analytics-container');
+            [addBillFormContainer, billListContainer, billDefaultState, billAnalyticsContainer].forEach(el => {
                 if (el) el.classList.add('hidden');
             });
         }
@@ -508,6 +509,119 @@
             });
         };
 
+        // ========== Bill Analytics ==========
+        window._billDoughnutChart = null;
+
+        window.renderBillAnalytics = async function() {
+            const canvas = document.getElementById('billCategoryDoughnut');
+            const legendEl = document.getElementById('billCategoryLegend');
+            const centerNum = document.getElementById('doughnutCenterNumber');
+            if (!canvas || !legendEl) return;
+
+            // Fetch fresh bill data for analytics
+            let bills = window.financeBills || [];
+            if (bills.length === 0) {
+                try {
+                    const { data, error } = await window.supabase
+                        .from('finance_bills')
+                        .select('*');
+                    if (!error && data) {
+                        bills = data.filter(b => b.status !== 'archived');
+                    }
+                } catch (e) {
+                    console.error('Analytics fetch error:', e);
+                }
+            }
+
+            // Group by main_category
+            const categoryMap = {};
+            bills.forEach(bill => {
+                const cat = bill.main_category || 'Uncategorized';
+                categoryMap[cat] = (categoryMap[cat] || 0) + 1;
+            });
+
+            const labels = Object.keys(categoryMap);
+            const counts = Object.values(categoryMap);
+            const total = counts.reduce((a, b) => a + b, 0);
+
+            // Premium color palette
+            const palette = [
+                '#6366f1', '#f59e0b', '#22c55e', '#ef4444', '#3b82f6',
+                '#ec4899', '#14b8a6', '#a855f7', '#f97316', '#06b6d4',
+                '#84cc16', '#e11d48', '#8b5cf6', '#10b981'
+            ];
+
+            // Update center number
+            if (centerNum) centerNum.textContent = total;
+
+            // Destroy old chart if exists
+            if (window._billDoughnutChart) {
+                window._billDoughnutChart.destroy();
+                window._billDoughnutChart = null;
+            }
+
+            // Render doughnut
+            const ctx = canvas.getContext('2d');
+            window._billDoughnutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: palette.slice(0, labels.length),
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 13, weight: '600' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${context.raw} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 800
+                    }
+                }
+            });
+
+            // Render legend
+            legendEl.innerHTML = '';
+            labels.forEach((label, i) => {
+                const color = palette[i % palette.length];
+                const count = counts[i];
+                legendEl.innerHTML += `
+                    <div class="analytics-legend-item">
+                        <div class="legend-label">
+                            <span class="legend-dot" style="background: ${color};"></span>
+                            <span>${label}</span>
+                        </div>
+                        <span class="legend-count">${count}</span>
+                    </div>
+                `;
+            });
+
+            // Empty state
+            if (labels.length === 0) {
+                legendEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px 0;">No bill data available yet.</p>';
+            }
+        };
+
                 window.archiveBill = async function(id) {
             if (!confirm("Archive this bill?")) return;
             try {
@@ -581,8 +695,11 @@
                 if (typeof showToast === 'function') showToast('Upcoming Bills — Coming Soon');
             } else if (viewName === 'analytics') {
                 setBillsActiveTab('btn-finance-bill-analytics');
-                if (billDefaultState) billDefaultState.classList.remove('hidden');
-                if (typeof showToast === 'function') showToast('Bill Analytics — Coming Soon');
+                const billAnalyticsContainer = document.getElementById('bill-analytics-container');
+                if (billAnalyticsContainer) {
+                    billAnalyticsContainer.classList.remove('hidden');
+                    window.renderBillAnalytics();
+                }
             } else if (viewName === 'default') {
                 setBillsActiveTab(null);
                 if (billDefaultState) billDefaultState.classList.remove('hidden');
