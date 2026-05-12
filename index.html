@@ -1172,10 +1172,16 @@
                                         </div>
                                     </div>
                                     <div class="analytics-right">
-                                        <div class="analytics-section-title">Upcoming Analytics</div>
-                                        <div class="analytics-placeholder-inner">
-                                            <div style="font-size: 3rem; opacity: 0.4; margin-bottom: 16px;">📊</div>
-                                            <p style="color: var(--text-muted); font-size: 0.95rem;">More analytics modules are coming soon.</p>
+                                        <div class="analytics-section-title" id="drilldownTitle">Select a Category</div>
+                                        <div class="analytics-chart-wrap">
+                                            <canvas id="billDrilldownDoughnut"></canvas>
+                                            <div class="doughnut-center-label" id="drilldownCenterLabel">
+                                                <span class="doughnut-center-number" id="drilldownCenterNumber">-</span>
+                                                <span class="doughnut-center-text">TOTAL</span>
+                                            </div>
+                                        </div>
+                                        <div class="analytics-legend-list" id="billDrilldownLegend">
+                                            <!-- Drilldown legend rendered by JS -->
                                         </div>
                                     </div>
                                 </div>

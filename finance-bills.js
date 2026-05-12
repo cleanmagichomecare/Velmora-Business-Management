@@ -511,14 +511,24 @@
 
         // ========== Bill Analytics ==========
         window._billDoughnutChart = null;
+        window._drilldownDoughnutChart = null;
+        window._analyticsBills = [];
+        window._selectedMainCategory = null;
+
+        const formatINR = (val) => '₹' + Number(val).toLocaleString('en-IN');
+
+        // Secondary palette for drilldown chart
+        const drilldownPalette = [
+            '#14b8a6', '#f97316', '#8b5cf6', '#06b6d4', '#84cc16',
+            '#e11d48', '#a855f7', '#3b82f6', '#f59e0b', '#22c55e',
+            '#ec4899', '#6366f1', '#10b981', '#ef4444'
+        ];
 
         window.renderBillAnalytics = async function() {
             const canvas = document.getElementById('billCategoryDoughnut');
             const legendEl = document.getElementById('billCategoryLegend');
             const centerNum = document.getElementById('doughnutCenterNumber');
             if (!canvas || !legendEl) return;
-
-            const formatINR = (val) => '₹' + Number(val).toLocaleString('en-IN');
 
             // Fetch fresh bill data for analytics
             let bills = window.financeBills || [];
@@ -534,6 +544,7 @@
                     console.error('Analytics fetch error:', e);
                 }
             }
+            window._analyticsBills = bills;
 
             // Group by main_category → SUM(amount) + COUNT
             const categoryMap = {};
@@ -601,14 +612,165 @@
                     animation: {
                         animateRotate: true,
                         duration: 800
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const idx = elements[0].index;
+                            const cat = labels[idx];
+                            selectMainCategory(cat);
+                        }
                     }
                 }
             });
 
-            // Render legend
+            // Render legend with click handlers
             legendEl.innerHTML = '';
             labels.forEach((label, i) => {
                 const color = palette[i % palette.length];
+                const amt = amounts[i];
+                const cnt = counts[i];
+                const item = document.createElement('div');
+                item.className = 'analytics-legend-item clickable';
+                item.setAttribute('data-category', label);
+                item.innerHTML = `
+                    <div class="legend-label">
+                        <span class="legend-dot" style="background: ${color};"></span>
+                        <span>${label}</span>
+                    </div>
+                    <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
+                `;
+                item.addEventListener('click', () => selectMainCategory(label));
+                legendEl.appendChild(item);
+            });
+
+            // Empty state
+            if (labels.length === 0) {
+                legendEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px 0;">No bill data available yet.</p>';
+            }
+
+            // Auto-select largest category
+            if (labels.length > 0) {
+                let maxIdx = 0;
+                amounts.forEach((a, i) => { if (a > amounts[maxIdx]) maxIdx = i; });
+                selectMainCategory(labels[maxIdx]);
+            }
+        };
+
+        function selectMainCategory(category) {
+            window._selectedMainCategory = category;
+
+            // Highlight active legend item
+            const legendEl = document.getElementById('billCategoryLegend');
+            if (legendEl) {
+                legendEl.querySelectorAll('.analytics-legend-item').forEach(el => {
+                    el.classList.toggle('active', el.getAttribute('data-category') === category);
+                });
+            }
+
+            // Render drilldown
+            renderDrilldown(category);
+        }
+
+        function renderDrilldown(mainCategory) {
+            const titleEl = document.getElementById('drilldownTitle');
+            const canvas = document.getElementById('billDrilldownDoughnut');
+            const legendEl = document.getElementById('billDrilldownLegend');
+            const centerNum = document.getElementById('drilldownCenterNumber');
+            if (!canvas || !legendEl) return;
+
+            // Update title
+            if (titleEl) titleEl.textContent = mainCategory + ' Breakdown';
+
+            // Filter bills for this main category
+            const filtered = (window._analyticsBills || []).filter(
+                b => (b.main_category || 'Uncategorized') === mainCategory
+            );
+
+            // Group by sub_category1 → SUM(amount) + COUNT
+            const subMap = {};
+            filtered.forEach(bill => {
+                const sub = bill.sub_category1 || 'Other';
+                if (!subMap[sub]) subMap[sub] = { amount: 0, count: 0 };
+                subMap[sub].amount += Number(bill.amount || 0);
+                subMap[sub].count += 1;
+            });
+
+            const labels = Object.keys(subMap);
+            const amounts = labels.map(l => subMap[l].amount);
+            const counts = labels.map(l => subMap[l].count);
+            const total = amounts.reduce((a, b) => a + b, 0);
+
+            // Update center
+            if (centerNum) centerNum.textContent = formatINR(total);
+
+            // Destroy old drilldown chart
+            if (window._drilldownDoughnutChart) {
+                window._drilldownDoughnutChart.destroy();
+                window._drilldownDoughnutChart = null;
+            }
+
+            // Empty state
+            if (labels.length === 0) {
+                canvas.style.display = 'none';
+                const centerLabel = document.getElementById('drilldownCenterLabel');
+                if (centerLabel) centerLabel.style.display = 'none';
+                legendEl.innerHTML = `
+                    <div class="drilldown-empty">
+                        <div class="drilldown-empty-icon">📭</div>
+                        <p>No breakdown data available for ${mainCategory}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            canvas.style.display = 'block';
+            const centerLabel = document.getElementById('drilldownCenterLabel');
+            if (centerLabel) centerLabel.style.display = 'flex';
+
+            // Render drilldown doughnut
+            const ctx = canvas.getContext('2d');
+            window._drilldownDoughnutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: amounts,
+                        backgroundColor: drilldownPalette.slice(0, labels.length),
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 13, weight: '600' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${formatINR(context.raw)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 600
+                    }
+                }
+            });
+
+            // Render drilldown legend
+            legendEl.innerHTML = '';
+            labels.forEach((label, i) => {
+                const color = drilldownPalette[i % drilldownPalette.length];
                 const amt = amounts[i];
                 const cnt = counts[i];
                 legendEl.innerHTML += `
@@ -621,12 +783,7 @@
                     </div>
                 `;
             });
-
-            // Empty state
-            if (labels.length === 0) {
-                legendEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px 0;">No bill data available yet.</p>';
-            }
-        };
+        }
 
                 window.archiveBill = async function(id) {
             if (!confirm("Archive this bill?")) return;

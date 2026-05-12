@@ -6467,3 +6467,48 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 [data-theme="dark"] .analytics-placeholder-inner {
     background: rgba(255, 255, 255, 0.02);
 }
+
+/* Interactive legend items */
+.analytics-legend-item.clickable {
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 0 -10px;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.analytics-legend-item.clickable:hover {
+    background: rgba(99, 102, 241, 0.06);
+    transform: translateX(2px);
+}
+
+[data-theme="dark"] .analytics-legend-item.clickable:hover {
+    background: rgba(99, 102, 241, 0.12);
+}
+
+.analytics-legend-item.active {
+    background: rgba(99, 102, 241, 0.1);
+    border-bottom-color: transparent;
+}
+
+[data-theme="dark"] .analytics-legend-item.active {
+    background: rgba(99, 102, 241, 0.18);
+}
+
+.drilldown-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 200px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    padding: 40px 20px;
+}
+
+.drilldown-empty-icon {
+    font-size: 2.5rem;
+    opacity: 0.4;
+    margin-bottom: 12px;
+}
