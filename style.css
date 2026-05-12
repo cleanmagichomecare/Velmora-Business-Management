@@ -6513,20 +6513,52 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     margin-bottom: 12px;
 }
 
-/* Level 3 Drilldown Card */
+/* Level 3 card right panel */
 .bill-level3-card .analytics-right {
     justify-content: flex-start;
     overflow-y: auto;
-    max-height: 560px;
+    max-height: 500px;
 }
 
-.bill-level3-card .analytics-right .analytics-legend-list {
-    flex: 1;
+/* Inline sub_category3 expand rows */
+.sub3-inline-rows {
+    padding: 6px 0 4px 22px;
+    animation: fadeIn 0.25s ease;
 }
 
-/* Level 4 divider */
-.level4-divider {
-    height: 1px;
-    background: var(--border-color);
-    margin: 12px 0 14px;
+.sub3-inline-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    border-left: 2px solid var(--border-color);
+    margin-bottom: 2px;
+}
+
+.sub3-inline-row .legend-dot {
+    width: 8px;
+    height: 8px;
+}
+
+.sub3-inline-row .legend-label {
+    gap: 8px;
+    font-weight: 400;
+}
+
+.sub3-inline-row .legend-count {
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+/* Expanded parent item */
+.analytics-legend-item.expanded {
+    background: rgba(99, 102, 241, 0.06);
+    border-radius: 8px;
+    border-bottom-color: transparent;
+}
+
+[data-theme="dark"] .analytics-legend-item.expanded {
+    background: rgba(99, 102, 241, 0.12);
 }

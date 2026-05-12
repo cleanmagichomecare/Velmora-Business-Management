@@ -838,9 +838,7 @@
             const centerNum = document.getElementById('level3CenterNumber');
             if (!canvas || !legendEl) return;
 
-            // Hide Level 4 when Level 3 re-renders
-            const level4Container = document.getElementById('level4-details');
-            if (level4Container) level4Container.classList.add('hidden');
+
 
             // Update titles
             if (titleEl) titleEl.textContent = subCategory + ' Breakdown';
@@ -933,12 +931,17 @@
                 }
             });
 
-            // Render Level 3 legend (clickable for Level 4)
+            // Render Level 3 legend (clickable for inline Level 4 expand)
             legendEl.innerHTML = '';
             labels.forEach((label, i) => {
                 const color = level3Palette[i % level3Palette.length];
                 const amt = amounts[i];
                 const cnt = counts[i];
+
+                // Wrapper for item + inline sub3 rows
+                const wrapper = document.createElement('div');
+                wrapper.className = 'legend-item-wrapper';
+
                 const item = document.createElement('div');
                 item.className = 'analytics-legend-item clickable';
                 item.setAttribute('data-sub2category', label);
@@ -949,16 +952,14 @@
                     </div>
                     <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
                 `;
-                item.addEventListener('click', () => selectSub2Category(mainCategory, subCategory, label));
-                legendEl.appendChild(item);
-            });
 
-            // Auto-select the largest sub_category2
-            if (labels.length > 0) {
-                let maxIdx = 0;
-                amounts.forEach((a, i) => { if (a > amounts[maxIdx]) maxIdx = i; });
-                selectSub2Category(mainCategory, subCategory, labels[maxIdx]);
-            }
+                item.addEventListener('click', () => {
+                    toggleSub3Inline(wrapper, item, mainCategory, subCategory, label);
+                });
+
+                wrapper.appendChild(item);
+                legendEl.appendChild(wrapper);
+            });
         }
 
         // Level 4 palette
@@ -968,78 +969,68 @@
             '#fca5a5', '#93c5fd', '#d9f99d', '#c4b5fd'
         ];
 
-        function selectSub2Category(mainCategory, sub1, sub2) {
-            // Highlight active sub2 legend item
+        function toggleSub3Inline(wrapper, clickedItem, mainCategory, sub1, sub2) {
             const legendEl = document.getElementById('billLevel3Legend');
-            if (legendEl) {
-                legendEl.querySelectorAll('.analytics-legend-item').forEach(el => {
-                    el.classList.toggle('active', el.getAttribute('data-sub2category') === sub2);
-                });
+            if (!legendEl) return;
+
+            // If already expanded, collapse it
+            const existingRows = wrapper.querySelector('.sub3-inline-rows');
+            if (existingRows) {
+                existingRows.remove();
+                clickedItem.classList.remove('expanded');
+                return;
             }
 
-            renderLevel4Breakdown(mainCategory, sub1, sub2);
-        }
+            // Collapse any other expanded item first
+            legendEl.querySelectorAll('.sub3-inline-rows').forEach(el => el.remove());
+            legendEl.querySelectorAll('.analytics-legend-item.expanded').forEach(el => el.classList.remove('expanded'));
 
-        function renderLevel4Breakdown(mainCategory, sub1, sub2) {
-            const container = document.getElementById('level4-details');
-            const titleEl = document.getElementById('level4Title');
-            const legendEl = document.getElementById('billLevel4Legend');
-            if (!container || !legendEl) return;
+            // Mark this item as expanded
+            clickedItem.classList.add('expanded');
 
-            // Update title
-            if (titleEl) titleEl.textContent = sub2 + ' Details';
-
-            // Filter bills: main_category + sub_category1 + sub_category2
+            // Filter bills
             const filtered = (window._analyticsBills || []).filter(
                 b => (b.main_category || 'Uncategorized') === mainCategory &&
                      (b.sub_category1 || 'Other') === sub1 &&
                      (b.sub_category2 || 'Other') === sub2
             );
 
-            // Group by sub_category3 → SUM(amount) + COUNT
+            // Group by sub_category3
             const sub3Map = {};
             filtered.forEach(bill => {
                 const key = bill.sub_category3 && bill.sub_category3.trim() ? bill.sub_category3.trim() : '';
-                if (!key) return; // Skip bills with no sub_category3
+                if (!key) return;
                 if (!sub3Map[key]) sub3Map[key] = { amount: 0, count: 0 };
                 sub3Map[key].amount += Number(bill.amount || 0);
                 sub3Map[key].count += 1;
             });
 
-            const labels = Object.keys(sub3Map);
+            const sub3Labels = Object.keys(sub3Map);
 
-            // Empty state
-            if (labels.length === 0) {
-                container.classList.remove('hidden');
-                legendEl.innerHTML = `
-                    <div class="drilldown-empty" style="min-height: 80px; padding: 20px 10px;">
-                        <p style="font-size: 0.85rem;">No deeper breakdown available for ${sub2}.</p>
-                    </div>
-                `;
-                return;
+            // Build inline rows container
+            const rowsDiv = document.createElement('div');
+            rowsDiv.className = 'sub3-inline-rows';
+
+            if (sub3Labels.length === 0) {
+                rowsDiv.innerHTML = '<div style="font-size: 0.82rem; color: var(--text-muted); padding: 6px 8px; border-left: 2px solid var(--border-color);">No deeper breakdown</div>';
+            } else {
+                sub3Labels.forEach((lbl, j) => {
+                    const c = level4Palette[j % level4Palette.length];
+                    const a = sub3Map[lbl].amount;
+                    const n = sub3Map[lbl].count;
+                    rowsDiv.innerHTML += `
+                        <div class="sub3-inline-row">
+                            <div class="legend-label">
+                                <span class="legend-dot" style="background: ${c};"></span>
+                                <span>${lbl}</span>
+                            </div>
+                            <span class="legend-count">${formatINR(a)} <span style="color: var(--text-muted); font-weight: 400; font-size: 0.75rem;">| ${n} Bill${n !== 1 ? 's' : ''}</span></span>
+                        </div>
+                    `;
+                });
             }
 
-            const amounts = labels.map(l => sub3Map[l].amount);
-            const counts = labels.map(l => sub3Map[l].count);
-
-            container.classList.remove('hidden');
-
-            // Render Level 4 legend
-            legendEl.innerHTML = '';
-            labels.forEach((label, i) => {
-                const color = level4Palette[i % level4Palette.length];
-                const amt = amounts[i];
-                const cnt = counts[i];
-                legendEl.innerHTML += `
-                    <div class="analytics-legend-item">
-                        <div class="legend-label">
-                            <span class="legend-dot" style="background: ${color};"></span>
-                            <span>${label}</span>
-                        </div>
-                        <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
-                    </div>
-                `;
-            });
+            wrapper.appendChild(rowsDiv);
         }
 
                 window.archiveBill = async function(id) {
