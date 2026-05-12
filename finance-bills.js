@@ -838,6 +838,10 @@
             const centerNum = document.getElementById('level3CenterNumber');
             if (!canvas || !legendEl) return;
 
+            // Hide Level 4 when Level 3 re-renders
+            const level4Container = document.getElementById('level4-details');
+            if (level4Container) level4Container.classList.add('hidden');
+
             // Update titles
             if (titleEl) titleEl.textContent = subCategory + ' Breakdown';
             if (legendTitleEl) legendTitleEl.textContent = subCategory + ' Details';
@@ -929,10 +933,101 @@
                 }
             });
 
-            // Render Level 3 legend
+            // Render Level 3 legend (clickable for Level 4)
             legendEl.innerHTML = '';
             labels.forEach((label, i) => {
                 const color = level3Palette[i % level3Palette.length];
+                const amt = amounts[i];
+                const cnt = counts[i];
+                const item = document.createElement('div');
+                item.className = 'analytics-legend-item clickable';
+                item.setAttribute('data-sub2category', label);
+                item.innerHTML = `
+                    <div class="legend-label">
+                        <span class="legend-dot" style="background: ${color};"></span>
+                        <span>${label}</span>
+                    </div>
+                    <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
+                `;
+                item.addEventListener('click', () => selectSub2Category(mainCategory, subCategory, label));
+                legendEl.appendChild(item);
+            });
+
+            // Auto-select the largest sub_category2
+            if (labels.length > 0) {
+                let maxIdx = 0;
+                amounts.forEach((a, i) => { if (a > amounts[maxIdx]) maxIdx = i; });
+                selectSub2Category(mainCategory, subCategory, labels[maxIdx]);
+            }
+        }
+
+        // Level 4 palette
+        const level4Palette = [
+            '#e879f9', '#67e8f9', '#fbbf24', '#a78bfa', '#34d399',
+            '#fb7185', '#38bdf8', '#bef264', '#f9a8d4', '#5eead4',
+            '#fca5a5', '#93c5fd', '#d9f99d', '#c4b5fd'
+        ];
+
+        function selectSub2Category(mainCategory, sub1, sub2) {
+            // Highlight active sub2 legend item
+            const legendEl = document.getElementById('billLevel3Legend');
+            if (legendEl) {
+                legendEl.querySelectorAll('.analytics-legend-item').forEach(el => {
+                    el.classList.toggle('active', el.getAttribute('data-sub2category') === sub2);
+                });
+            }
+
+            renderLevel4Breakdown(mainCategory, sub1, sub2);
+        }
+
+        function renderLevel4Breakdown(mainCategory, sub1, sub2) {
+            const container = document.getElementById('level4-details');
+            const titleEl = document.getElementById('level4Title');
+            const legendEl = document.getElementById('billLevel4Legend');
+            if (!container || !legendEl) return;
+
+            // Update title
+            if (titleEl) titleEl.textContent = sub2 + ' Details';
+
+            // Filter bills: main_category + sub_category1 + sub_category2
+            const filtered = (window._analyticsBills || []).filter(
+                b => (b.main_category || 'Uncategorized') === mainCategory &&
+                     (b.sub_category1 || 'Other') === sub1 &&
+                     (b.sub_category2 || 'Other') === sub2
+            );
+
+            // Group by sub_category3 → SUM(amount) + COUNT
+            const sub3Map = {};
+            filtered.forEach(bill => {
+                const key = bill.sub_category3 && bill.sub_category3.trim() ? bill.sub_category3.trim() : '';
+                if (!key) return; // Skip bills with no sub_category3
+                if (!sub3Map[key]) sub3Map[key] = { amount: 0, count: 0 };
+                sub3Map[key].amount += Number(bill.amount || 0);
+                sub3Map[key].count += 1;
+            });
+
+            const labels = Object.keys(sub3Map);
+
+            // Empty state
+            if (labels.length === 0) {
+                container.classList.remove('hidden');
+                legendEl.innerHTML = `
+                    <div class="drilldown-empty" style="min-height: 80px; padding: 20px 10px;">
+                        <p style="font-size: 0.85rem;">No deeper breakdown available for ${sub2}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const amounts = labels.map(l => sub3Map[l].amount);
+            const counts = labels.map(l => sub3Map[l].count);
+
+            container.classList.remove('hidden');
+
+            // Render Level 4 legend
+            legendEl.innerHTML = '';
+            labels.forEach((label, i) => {
+                const color = level4Palette[i % level4Palette.length];
                 const amt = amounts[i];
                 const cnt = counts[i];
                 legendEl.innerHTML += `

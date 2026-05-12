@@ -6517,9 +6517,16 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 .bill-level3-card .analytics-right {
     justify-content: flex-start;
     overflow-y: auto;
-    max-height: 420px;
+    max-height: 560px;
 }
 
 .bill-level3-card .analytics-right .analytics-legend-list {
     flex: 1;
+}
+
+/* Level 4 divider */
+.level4-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 12px 0 14px;
 }
