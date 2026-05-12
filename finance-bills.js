@@ -535,15 +535,18 @@
                 }
             }
 
-            // Group by main_category → SUM(amount)
+            // Group by main_category → SUM(amount) + COUNT
             const categoryMap = {};
             bills.forEach(bill => {
                 const cat = bill.main_category || 'Uncategorized';
-                categoryMap[cat] = (categoryMap[cat] || 0) + Number(bill.amount || 0);
+                if (!categoryMap[cat]) categoryMap[cat] = { amount: 0, count: 0 };
+                categoryMap[cat].amount += Number(bill.amount || 0);
+                categoryMap[cat].count += 1;
             });
 
             const labels = Object.keys(categoryMap);
-            const amounts = Object.values(categoryMap);
+            const amounts = labels.map(l => categoryMap[l].amount);
+            const counts = labels.map(l => categoryMap[l].count);
             const total = amounts.reduce((a, b) => a + b, 0);
 
             // Premium color palette
@@ -607,13 +610,14 @@
             labels.forEach((label, i) => {
                 const color = palette[i % palette.length];
                 const amt = amounts[i];
+                const cnt = counts[i];
                 legendEl.innerHTML += `
                     <div class="analytics-legend-item">
                         <div class="legend-label">
                             <span class="legend-dot" style="background: ${color};"></span>
                             <span>${label}</span>
                         </div>
-                        <span class="legend-count">${formatINR(amt)}</span>
+                        <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
                     </div>
                 `;
             });
