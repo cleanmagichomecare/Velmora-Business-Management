@@ -6512,3 +6512,14 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     opacity: 0.4;
     margin-bottom: 12px;
 }
+
+/* Level 3 Drilldown Card */
+.bill-level3-card .analytics-right {
+    justify-content: flex-start;
+    overflow-y: auto;
+    max-height: 420px;
+}
+
+.bill-level3-card .analytics-right .analytics-legend-list {
+    flex: 1;
+}

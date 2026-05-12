@@ -667,9 +667,22 @@
                 });
             }
 
+            // Hide Level 3 when switching main category
+            const level3Container = document.getElementById('bill-level3-container');
+            if (level3Container) level3Container.classList.add('hidden');
+
             // Render drilldown
             renderDrilldown(category);
         }
+
+        // Third palette for Level 3 chart
+        const level3Palette = [
+            '#f43f5e', '#0ea5e9', '#d946ef', '#eab308', '#22d3ee',
+            '#a3e635', '#fb923c', '#818cf8', '#2dd4bf', '#f472b6',
+            '#38bdf8', '#facc15', '#c084fc', '#34d399'
+        ];
+
+        window._level3DoughnutChart = null;
 
         function renderDrilldown(mainCategory) {
             const titleEl = document.getElementById('drilldownTitle');
@@ -763,14 +776,173 @@
                     animation: {
                         animateRotate: true,
                         duration: 600
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const idx = elements[0].index;
+                            selectSubCategory(mainCategory, labels[idx]);
+                        }
                     }
                 }
             });
 
-            // Render drilldown legend
+            // Render drilldown legend (clickable)
             legendEl.innerHTML = '';
             labels.forEach((label, i) => {
                 const color = drilldownPalette[i % drilldownPalette.length];
+                const amt = amounts[i];
+                const cnt = counts[i];
+                const item = document.createElement('div');
+                item.className = 'analytics-legend-item clickable';
+                item.setAttribute('data-subcategory', label);
+                item.innerHTML = `
+                    <div class="legend-label">
+                        <span class="legend-dot" style="background: ${color};"></span>
+                        <span>${label}</span>
+                    </div>
+                    <span class="legend-count">${formatINR(amt)} <span style="color: var(--text-muted); font-weight: 500; font-size: 0.8rem;">| ${cnt} Bill${cnt !== 1 ? 's' : ''}</span></span>
+                `;
+                item.addEventListener('click', () => selectSubCategory(mainCategory, label));
+                legendEl.appendChild(item);
+            });
+
+            // Auto-select the largest sub-category
+            if (labels.length > 0) {
+                let maxIdx = 0;
+                amounts.forEach((a, i) => { if (a > amounts[maxIdx]) maxIdx = i; });
+                selectSubCategory(mainCategory, labels[maxIdx]);
+            }
+        }
+
+        function selectSubCategory(mainCategory, subCategory) {
+            // Highlight active sub-category legend item
+            const legendEl = document.getElementById('billDrilldownLegend');
+            if (legendEl) {
+                legendEl.querySelectorAll('.analytics-legend-item').forEach(el => {
+                    el.classList.toggle('active', el.getAttribute('data-subcategory') === subCategory);
+                });
+            }
+
+            // Show and render Level 3
+            const level3Container = document.getElementById('bill-level3-container');
+            if (level3Container) level3Container.classList.remove('hidden');
+
+            renderLevel3Drilldown(mainCategory, subCategory);
+        }
+
+        function renderLevel3Drilldown(mainCategory, subCategory) {
+            const titleEl = document.getElementById('level3Title');
+            const legendTitleEl = document.getElementById('level3LegendTitle');
+            const canvas = document.getElementById('billLevel3Doughnut');
+            const legendEl = document.getElementById('billLevel3Legend');
+            const centerNum = document.getElementById('level3CenterNumber');
+            if (!canvas || !legendEl) return;
+
+            // Update titles
+            if (titleEl) titleEl.textContent = subCategory + ' Breakdown';
+            if (legendTitleEl) legendTitleEl.textContent = subCategory + ' Details';
+
+            // Filter bills: main_category + sub_category1
+            const filtered = (window._analyticsBills || []).filter(
+                b => (b.main_category || 'Uncategorized') === mainCategory &&
+                     (b.sub_category1 || 'Other') === subCategory
+            );
+
+            // Determine grouping field: prefer sub_category3 if data exists, else sub_category2
+            let groupField = 'sub_category2';
+            const hasSub3 = filtered.some(b => b.sub_category3 && b.sub_category3.trim());
+            if (hasSub3) groupField = 'sub_category3';
+
+            // Group by chosen field → SUM(amount) + COUNT
+            const deepMap = {};
+            filtered.forEach(bill => {
+                let key;
+                if (groupField === 'sub_category3') {
+                    key = bill.sub_category3 && bill.sub_category3.trim() ? bill.sub_category3.trim() : 'Other';
+                } else {
+                    key = bill.sub_category2 && bill.sub_category2.trim() ? bill.sub_category2.trim() : 'Other';
+                }
+                if (!deepMap[key]) deepMap[key] = { amount: 0, count: 0 };
+                deepMap[key].amount += Number(bill.amount || 0);
+                deepMap[key].count += 1;
+            });
+
+            const labels = Object.keys(deepMap);
+            const amounts = labels.map(l => deepMap[l].amount);
+            const counts = labels.map(l => deepMap[l].count);
+            const total = amounts.reduce((a, b) => a + b, 0);
+
+            // Update center
+            if (centerNum) centerNum.textContent = formatINR(total);
+
+            // Destroy old Level 3 chart
+            if (window._level3DoughnutChart) {
+                window._level3DoughnutChart.destroy();
+                window._level3DoughnutChart = null;
+            }
+
+            // Empty state
+            if (labels.length === 0 || (labels.length === 1 && labels[0] === 'Other')) {
+                canvas.style.display = 'none';
+                const centerLabel = document.getElementById('level3CenterLabel');
+                if (centerLabel) centerLabel.style.display = 'none';
+                legendEl.innerHTML = `
+                    <div class="drilldown-empty">
+                        <div class="drilldown-empty-icon">📭</div>
+                        <p>No deeper breakdown available for ${subCategory}.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            canvas.style.display = 'block';
+            const centerLabel = document.getElementById('level3CenterLabel');
+            if (centerLabel) centerLabel.style.display = 'flex';
+
+            // Render Level 3 doughnut
+            const ctx = canvas.getContext('2d');
+            window._level3DoughnutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: amounts,
+                        backgroundColor: level3Palette.slice(0, labels.length),
+                        borderWidth: 0,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 13, weight: '600' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${formatINR(context.raw)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 600
+                    }
+                }
+            });
+
+            // Render Level 3 legend
+            legendEl.innerHTML = '';
+            labels.forEach((label, i) => {
+                const color = level3Palette[i % level3Palette.length];
                 const amt = amounts[i];
                 const cnt = counts[i];
                 legendEl.innerHTML += `
