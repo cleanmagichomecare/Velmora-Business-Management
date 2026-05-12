@@ -6332,6 +6332,18 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     border-radius: 16px;
     padding: 32px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.bill-analytics-card .analytics-left,
+.bill-analytics-card .analytics-right {
+    overflow-x: hidden;
+    min-width: 0;
+}
+
+.bill-analytics-card canvas {
+    display: block;
+    max-width: 100%;
 }
 
 [data-theme="dark"] .bill-analytics-card {
