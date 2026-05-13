@@ -369,9 +369,14 @@ body {
 
 /* Marketing Sub-view Specifics */
 #view-marketing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 40px;
+    padding-left: 36px;
+    height: auto;
     min-height: auto;
-    padding-top: 0;
-    padding-bottom: 60px;
     flex: none;
 }
 
@@ -386,17 +391,15 @@ body {
 #view-marketing .dept-default-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    width: 100%;
 }
 
 .marketing-options-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 2rem;
-    flex: none;
-    padding: 2rem;
-    margin-top: 0;
+    gap: 28px;
+    margin-top: 48px;
 }
 
 .option-card {
