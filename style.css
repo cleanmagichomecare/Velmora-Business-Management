@@ -369,37 +369,48 @@ body {
 
 /* Marketing Sub-view Specifics */
 #view-marketing {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding-top: 40px;
-    padding-left: 36px;
+    display: block;
+    width: 100%;
     height: auto;
     min-height: auto;
-    flex: none;
+    padding: 36px;
+    position: relative;
+    overflow-x: hidden;
 }
 
 #view-marketing > .dept-nav-group {
     margin-bottom: 8px;
 }
 
-#view-marketing > div:nth-of-type(2) {
-    margin-bottom: 32px;
-}
-
-#view-marketing .dept-default-content {
+.marketing-content-wrapper {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     width: 100%;
+    padding-top: 12px;
 }
 
-.marketing-options-container {
+.marketing-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 18px;
+}
+
+.marketing-cards-wrapper {
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-top: 60px;
+}
+
+.marketing-cards-grid {
+    display: flex;
     gap: 28px;
-    margin-top: 48px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .option-card {
