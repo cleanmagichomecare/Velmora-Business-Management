@@ -6673,9 +6673,22 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     outline: none;
 }
 
+.product-details-section {
+    padding: 24px 32px;
+}
+
+.po-product-table {
+    margin-right: 24px;
+    width: calc(100% - 24px);
+}
+
+.purchase-order-actions {
+    padding-right: 32px;
+    padding-bottom: 24px;
+}
+
 @media (max-width: 900px) {
     .purchase-order-split-layout {
         grid-template-columns: 1fr;
     }
 }
-
