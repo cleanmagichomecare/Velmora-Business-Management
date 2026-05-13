@@ -174,4 +174,72 @@ window.initPurchaseOrderForm = async function() {
             }
         };
     }
+
+    // 6. Product Table Logic
+    const tbody = document.getElementById('po-product-tbody');
+    const addProductBtn = document.getElementById('btn-add-po-product');
+    const subtotalEl = document.getElementById('po-subtotal-val');
+    const grandTotalEl = document.getElementById('po-grand-total-val');
+    let rowCount = 0;
+
+    const calculateGrandTotal = () => {
+        let subtotal = 0;
+        const totalInputs = document.querySelectorAll('.po-row-total');
+        totalInputs.forEach(input => {
+            const val = parseFloat(input.textContent.replace(/[^0-9.-]+/g,"")) || 0;
+            subtotal += val;
+        });
+
+        const grandTotal = subtotal;
+
+        if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;
+        if (grandTotalEl) grandTotalEl.textContent = `₹${grandTotal.toFixed(2)}`;
+    };
+
+    const calculateRowTotal = (row) => {
+        const qtyInput = row.querySelector('.po-qty');
+        const priceInput = row.querySelector('.po-price');
+        const totalSpan = row.querySelector('.po-row-total');
+
+        const qty = parseFloat(qtyInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const total = qty * price;
+
+        if (totalSpan) totalSpan.textContent = `₹${total.toFixed(2)}`;
+        calculateGrandTotal();
+    };
+
+    const addProductRow = () => {
+        rowCount++;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
+            <td><input type="text" class="form-control po-desc" placeholder="Enter product description..." required></td>
+            <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
+            <td><input type="number" class="form-control po-price" placeholder="0.00" min="0" step="0.01" required></td>
+            <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
+        `;
+
+        const qtyInput = tr.querySelector('.po-qty');
+        const priceInput = tr.querySelector('.po-price');
+
+        if (qtyInput) qtyInput.addEventListener('input', () => calculateRowTotal(tr));
+        if (priceInput) priceInput.addEventListener('input', () => calculateRowTotal(tr));
+
+        if (tbody) tbody.appendChild(tr);
+    };
+
+    // Initialize with one starter row
+    if (tbody) {
+        tbody.innerHTML = '';
+        rowCount = 0;
+        addProductRow();
+    }
+
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', () => {
+            addProductRow();
+        });
+    }
+
 };
