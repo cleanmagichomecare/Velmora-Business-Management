@@ -1436,6 +1436,7 @@
                 if (vBtn) vBtn.classList.replace('btn-primary', 'btn-secondary');
                 if (addView) addView.classList.remove('hidden');
                 if (viewView) viewView.classList.add('hidden');
+                if (window.initPurchaseOrderForm) window.initPurchaseOrderForm();
             } else if (viewBtn) {
                 viewBtn.classList.replace('btn-secondary', 'btn-primary');
                 const aBtn = document.getElementById('btn-add-purchase-order');
