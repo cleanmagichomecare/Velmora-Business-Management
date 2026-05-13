@@ -1257,80 +1257,107 @@
                                         </div>
                                     </div>
 
-                                    <form id="purchase-order-form" class="campaign-form" style="margin-top: 24px;">
+                                    <form id="purchase-order-form" class="campaign-form" style="margin-top: 24px; display: flex; gap: 24px; flex-wrap: wrap; align-items: stretch;">
                                         
-                                        <div class="form-section">
-                                            <div class="section-heading">Vendor Details</div>
-                                            <div class="grid-2">
-                                                <div class="form-group">
-                                                    <label>Vendor Name <span class="required">*</span></label>
-                                                    <select id="po-vendor-name" class="form-control" required>
-                                                        <option value="">Select Vendor</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>PO Number</label>
-                                                    <input type="text" id="po-number-input" class="form-control" readonly>
-                                                </div>
+                                        <!-- LEFT SIDE: Static Buyer Details -->
+                                        <div class="po-buyer-details" style="flex: 0 0 300px; background: var(--bg-secondary, rgba(0,0,0,0.2)); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+                                            <div style="font-size: 11px; font-weight: 700; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">BUYER DETAILS</div>
+                                            
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Company Name</div>
+                                                <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">VELMORA CONSUMER PRODUCTS LLP</div>
+                                            </div>
+                                            
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">GSTIN</div>
+                                                <div style="font-size: 14px; font-weight: 500; color: var(--text-main); font-family: monospace;">33ABBFV8530C1ZG</div>
+                                            </div>
+                                            
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Address</div>
+                                                <div style="font-size: 13px; color: var(--text-main); line-height: 1.5;">No. 4/1, East Street,<br>Punjailakkapuram,<br>Erode, Tamil Nadu - 638002</div>
+                                            </div>
+                                            
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Contact</div>
+                                                <div style="font-size: 14px; color: var(--text-main);">97517 22100</div>
+                                            </div>
+                                            
+                                            <div>
+                                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Email</div>
+                                                <div style="font-size: 14px; color: var(--text-main);">velmora1010@gmail.com</div>
                                             </div>
                                         </div>
 
-                                        <div class="form-section">
-                                            <div class="section-heading">Purchase Categories</div>
-                                            <div class="grid-2">
-                                                <div class="form-group">
-                                                    <label>Main Category <span class="required">*</span></label>
-                                                    <select id="po-main-category" class="form-control" required>
-                                                        <option value="">Select Main Category</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Sub Category 1 <span class="required">*</span></label>
-                                                    <select id="po-sub-category1" class="form-control" required disabled>
-                                                        <option value="">Select Category First</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="grid-2">
-                                                <div class="form-group">
-                                                    <label>Sub Category 2 <span class="required">*</span></label>
-                                                    <select id="po-sub-category2" class="form-control" required disabled>
-                                                        <option value="">Select Category First</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Sub Category 3 (Optional)</label>
-                                                    <div class="multi-select-container" id="container-po-sub-category3">
-                                                        <div class="multi-select-display disabled" tabindex="0">
-                                                            <span class="multi-select-value multi-select-placeholder">Select Sub Category 3</span>
-                                                            <svg class="multi-select-arrow" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                                        </div>
-                                                        <div class="multi-select-dropdown hidden"></div>
-                                                        <input type="hidden" id="po-sub-category3" value="">
+                                        <!-- RIGHT SIDE: Vendor Form -->
+                                        <div class="po-vendor-form" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 20px;">
+                                            <div class="form-section" style="margin:0;">
+                                                <div class="section-heading">Vendor Details</div>
+                                                <div class="grid-2">
+                                                    <div class="form-group">
+                                                        <label>Vendor Name <span class="required">*</span></label>
+                                                        <select id="po-vendor-name" class="form-control" required>
+                                                            <option value="">Select Vendor</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>PO Number</label>
+                                                        <input type="text" id="po-number-input" class="form-control" readonly>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="grid-2">
-                                                <div class="form-group">
-                                                    <label>Date</label>
-                                                    <input type="text" id="po-date-input" class="form-control" readonly>
+
+                                            <div class="form-section" style="margin:0;">
+                                                <div class="section-heading">Purchase Categories</div>
+                                                <div class="grid-2">
+                                                    <div class="form-group">
+                                                        <label>Main Category <span class="required">*</span></label>
+                                                        <select id="po-main-category" class="form-control" required>
+                                                            <option value="">Select Main Category</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Sub Category 1 <span class="required">*</span></label>
+                                                        <select id="po-sub-category1" class="form-control" required disabled>
+                                                            <option value="">Select Category First</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="grid-2">
+                                                    <div class="form-group">
+                                                        <label>Sub Category 2 <span class="required">*</span></label>
+                                                        <select id="po-sub-category2" class="form-control" required disabled>
+                                                            <option value="">Select Category First</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Sub Category 3 (Optional)</label>
+                                                        <div class="multi-select-container" id="container-po-sub-category3">
+                                                            <div class="multi-select-display disabled" tabindex="0">
+                                                                <span class="multi-select-value multi-select-placeholder">Select Sub Category 3</span>
+                                                                <svg class="multi-select-arrow" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                            </div>
+                                                            <div class="multi-select-dropdown hidden"></div>
+                                                            <input type="hidden" id="po-sub-category3" value="">
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <!-- Future Ready Placeholders -->
-                                        <div id="po-future-placeholders" style="display:none;">
-                                            <div class="form-group"><label>Item Details</label><input type="text" class="form-control"></div>
-                                            <div class="form-group"><label>Quantity</label><input type="number" class="form-control"></div>
-                                            <div class="form-group"><label>Unit Price</label><input type="number" class="form-control"></div>
-                                            <div class="form-group"><label>Total Amount</label><input type="number" class="form-control"></div>
-                                            <div class="form-group"><label>Delivery Date</label><input type="date" class="form-control"></div>
-                                            <div class="form-group"><label>Notes</label><textarea class="form-control"></textarea></div>
-                                        </div>
+                                            <!-- Future Ready Placeholders -->
+                                            <div id="po-future-placeholders" style="display:none;">
+                                                <div class="form-group"><label>Item Details</label><input type="text" class="form-control"></div>
+                                                <div class="form-group"><label>Quantity</label><input type="number" class="form-control"></div>
+                                                <div class="form-group"><label>Unit Price</label><input type="number" class="form-control"></div>
+                                                <div class="form-group"><label>Total Amount</label><input type="number" class="form-control"></div>
+                                                <div class="form-group"><label>Delivery Date</label><input type="date" class="form-control"></div>
+                                                <div class="form-group"><label>Notes</label><textarea class="form-control"></textarea></div>
+                                            </div>
 
-                                        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
-                                            <button type="button" class="btn-secondary" id="btn-cancel-po">Cancel</button>
-                                            <button type="button" class="btn-primary" id="btn-save-po">Save Purchase Order</button>
+                                            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: auto;">
+                                                <button type="button" class="btn-secondary" id="btn-cancel-po">Cancel</button>
+                                                <button type="button" class="btn-primary" id="btn-save-po">Save Purchase Order</button>
+                                            </div>
                                         </div>
                                     </form>
                                 </div>
