@@ -6596,3 +6596,17 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     max-height: 520px;
 }
 
+/* Purchase Order Split Layout */
+.purchase-order-split-layout {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .purchase-order-split-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
