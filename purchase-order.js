@@ -177,24 +177,7 @@ window.initPurchaseOrderForm = async function() {
 
     // 6. Product Table Logic
     const tbody = document.getElementById('po-product-tbody');
-    const addProductBtn = document.getElementById('btn-add-po-product');
-    const subtotalEl = document.getElementById('po-subtotal-val');
-    const grandTotalEl = document.getElementById('po-grand-total-val');
     let rowCount = 0;
-
-    const calculateGrandTotal = () => {
-        let subtotal = 0;
-        const totalInputs = document.querySelectorAll('.po-row-total');
-        totalInputs.forEach(input => {
-            const val = parseFloat(input.textContent.replace(/[^0-9.-]+/g,"")) || 0;
-            subtotal += val;
-        });
-
-        const grandTotal = subtotal;
-
-        if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;
-        if (grandTotalEl) grandTotalEl.textContent = `₹${grandTotal.toFixed(2)}`;
-    };
 
     const calculateRowTotal = (row) => {
         const qtyInput = row.querySelector('.po-qty');
@@ -206,7 +189,6 @@ window.initPurchaseOrderForm = async function() {
         const total = qty * price;
 
         if (totalSpan) totalSpan.textContent = `₹${total.toFixed(2)}`;
-        calculateGrandTotal();
     };
 
     const addProductRow = () => {
@@ -234,12 +216,6 @@ window.initPurchaseOrderForm = async function() {
         tbody.innerHTML = '';
         rowCount = 0;
         addProductRow();
-    }
-
-    if (addProductBtn) {
-        addProductBtn.addEventListener('click', () => {
-            addProductRow();
-        });
     }
 
 };

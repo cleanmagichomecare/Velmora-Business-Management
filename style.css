@@ -6673,39 +6673,6 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     outline: none;
 }
 
-.po-summary-section {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border-color);
-}
-
-.po-summary-box {
-    width: 300px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 8px;
-    padding: 16px;
-    border: 1px solid var(--border-color);
-}
-
-.po-summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.po-summary-row.total {
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 12px;
-    margin-bottom: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-main);
-}
-
 @media (max-width: 900px) {
     .purchase-order-split-layout {
         grid-template-columns: 1fr;
