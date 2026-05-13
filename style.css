@@ -6599,9 +6599,10 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 /* Purchase Order Split Layout */
 .purchase-order-split-layout {
     display: grid;
-    grid-template-columns: 40% 60%;
-    gap: 24px;
-    align-items: start;
+    grid-template-columns: 35% 65%;
+    gap: 32px;
+    align-items: stretch;
+    width: 100%;
 }
 
 @media (max-width: 900px) {
