@@ -326,8 +326,10 @@ body {
 .main-content {
     flex: 1;
     padding: 2rem 2.5rem;
-    display: flex;
-    flex-direction: column;
+    display: block;
+    height: auto;
+    min-height: auto;
+    overflow-x: hidden;
 }
 
 .top-bar {
@@ -341,8 +343,10 @@ body {
 /* Dynamic Content Views */
 .content-container {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    display: block;
+    height: auto;
+    min-height: auto;
+    overflow-x: hidden;
     position: relative;
 }
 
@@ -354,8 +358,10 @@ body {
 }
 
 .content-view.active-view {
-    display: flex;
-    flex-direction: column;
+    display: block;
+    height: auto;
+    min-height: auto;
+    overflow-x: hidden;
 }
 
 .dashboard-title {
@@ -368,14 +374,23 @@ body {
 }
 
 /* Marketing Sub-view Specifics */
-#view-marketing {
+#view-marketing,
+.marketing-view,
+.vendor-view {
     display: block;
     width: 100%;
     height: auto;
     min-height: auto;
-    padding: 36px;
+    padding: 32px 36px;
     position: relative;
     overflow-x: hidden;
+}
+
+.page-inner-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
 }
 
 #view-marketing > .dept-nav-group {
@@ -398,15 +413,14 @@ body {
     gap: 18px;
 }
 
-.marketing-cards-wrapper {
+.module-cards-wrapper {
     width: 100%;
     display: flex;
     justify-content: center;
-    align-items: center;
     margin-top: 60px;
 }
 
-.marketing-cards-grid {
+.module-cards-grid {
     display: flex;
     gap: 28px;
     flex-wrap: wrap;
