@@ -6968,9 +6968,52 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     box-sizing: border-box;
 }
 
-.po-product-table-wrapper,
-.po-product-table {
+.po-product-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.po-product-table-wrapper {
     width: 100%;
     max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     box-sizing: border-box;
+}
+
+.po-product-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-color);
+    box-sizing: border-box;
+}
+
+.po-product-table th {
+    background: var(--sidebar-bg);
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.po-product-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.po-product-table tr:last-child td {
+    border-bottom: none;
 }
