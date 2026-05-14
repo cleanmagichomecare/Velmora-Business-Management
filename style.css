@@ -6820,6 +6820,11 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     -webkit-appearance: none;
     width: 20px;
     height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    max-width: 20px;
+    max-height: 20px;
+    flex-shrink: 0;
     background: var(--sidebar-bg);
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -6858,4 +6863,5 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     color: var(--text-main);
     cursor: pointer;
     user-select: none;
+    white-space: nowrap;
 }
