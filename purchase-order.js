@@ -179,6 +179,31 @@ window.initPurchaseOrderForm = async function() {
     const tbody = document.getElementById('po-product-tbody');
     let rowCount = 0;
 
+    const calculateOverallTotals = () => {
+        let subTotal = 0;
+        if (tbody) {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.po-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.po-price').value) || 0;
+                subTotal += (qty * price);
+            });
+        }
+
+        const gstTotal = subTotal * 0.18;
+        const shippingInput = document.getElementById('po-shipping-charge');
+        const shipping = shippingInput ? parseFloat(shippingInput.value) || 0 : 0;
+        const grandTotal = subTotal + gstTotal + shipping;
+
+        const subTotalSpan = document.getElementById('po-sub-total');
+        const gstSpan = document.getElementById('po-gst-total');
+        const grandTotalSpan = document.getElementById('po-grand-total');
+
+        if (subTotalSpan) subTotalSpan.textContent = `₹${subTotal.toFixed(2)}`;
+        if (gstSpan) gstSpan.textContent = `₹${gstTotal.toFixed(2)}`;
+        if (grandTotalSpan) grandTotalSpan.textContent = `₹${grandTotal.toFixed(2)}`;
+    };
+
     const calculateRowTotal = (row) => {
         const qtyInput = row.querySelector('.po-qty');
         const priceInput = row.querySelector('.po-price');
@@ -189,7 +214,13 @@ window.initPurchaseOrderForm = async function() {
         const total = qty * price;
 
         if (totalSpan) totalSpan.textContent = `₹${total.toFixed(2)}`;
+        calculateOverallTotals();
     };
+
+    const shippingInput = document.getElementById('po-shipping-charge');
+    if (shippingInput) {
+        shippingInput.addEventListener('input', calculateOverallTotals);
+    }
 
     const addProductRow = () => {
         rowCount++;
@@ -209,6 +240,7 @@ window.initPurchaseOrderForm = async function() {
         if (priceInput) priceInput.addEventListener('input', () => calculateRowTotal(tr));
 
         if (tbody) tbody.appendChild(tr);
+        calculateOverallTotals();
     };
 
     // Initialize with one starter row
