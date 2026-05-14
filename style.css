@@ -7088,3 +7088,20 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     font-weight: 700;
     color: var(--primary-color) !important;
 }
+
+/* PO Delivery & Payment Section */
+.po-delivery-payment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    width: 100%;
+    padding: 0 24px;
+    margin-bottom: 32px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .po-delivery-payment-grid {
+        grid-template-columns: 1fr;
+    }
+}

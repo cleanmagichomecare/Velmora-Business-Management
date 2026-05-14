@@ -1393,9 +1393,23 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-section payment-terms-section">
-                                                <div class="section-heading">Payment Terms</div>
-                                                <div class="payment-terms-grid">
+                                            <div class="po-delivery-payment-grid">
+                                                <!-- LEFT SIDE: Delivery Details -->
+                                                <div class="po-delivery-section form-section" style="margin:0;">
+                                                    <div class="section-heading">Delivery Details</div>
+                                                    <div class="form-group">
+                                                        <label>Delivery Address</label>
+                                                        <textarea id="po-delivery-address" class="form-control" rows="3" placeholder="Enter delivery address"></textarea>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Expected Delivery Date</label>
+                                                        <input type="date" id="po-delivery-date" class="form-control">
+                                                    </div>
+                                                </div>
+
+                                                <!-- RIGHT SIDE: Payment Terms -->
+                                                <div class="po-payment-section form-section" style="margin:0;">
+                                                    <div class="section-heading">Payment Terms</div>
                                                     <div class="form-group">
                                                         <label>Payment Mode</label>
                                                         <select id="po-payment-mode" class="form-control">
@@ -1408,11 +1422,21 @@
                                                     </div>
                                                     <div class="form-group">
                                                         <label>Initiated By</label>
-                                                        <input type="text" id="po-initiated-by" class="form-control" placeholder="Enter name">
+                                                        <select id="po-initiated-by" class="form-control">
+                                                            <option value="">Select Initiator</option>
+                                                            <option value="Arjun Kumar">Arjun Kumar</option>
+                                                            <option value="Priya Sharma">Priya Sharma</option>
+                                                            <option value="Vignesh R">Vignesh R</option>
+                                                        </select>
                                                     </div>
                                                     <div class="form-group">
                                                         <label>Approved By</label>
-                                                        <input type="text" id="po-approved-by" class="form-control" placeholder="Enter name">
+                                                        <select id="po-approved-by" class="form-control">
+                                                            <option value="">Select Approver</option>
+                                                            <option value="CEO">CEO</option>
+                                                            <option value="Finance Manager">Finance Manager</option>
+                                                            <option value="Operations Head">Operations Head</option>
+                                                        </select>
                                                     </div>
                                                 </div>
                                             </div>
