@@ -2111,7 +2111,7 @@ window.SharedCategoryService = {
         try {
             const { data, error } = await supabase
                 .from('vendors')
-                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, sub_sub_category, sub_sub_sub_category, products, gst_applicable, phone, created_at')
+                .select('*')
                 .eq('status', 'active')
                 .order('created_at', { ascending: false });
 
