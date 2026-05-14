@@ -6938,7 +6938,8 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     width: 100%;
     gap: 24px;
     margin-top: 32px;
-    padding-bottom: 12px;
+    padding: 0 32px 12px 32px;
+    box-sizing: border-box;
 }
 
 .sig-field {
