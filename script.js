@@ -2036,7 +2036,7 @@ window.SharedCategoryService = {
                 tr.setAttribute('data-product-name', prodName);
                 tr.innerHTML = `
                     <td><input type="text" class="table-input" value="${prodName}" readonly></td>
-                    <td><input type="number" class="table-input row-moq" placeholder="0" value="${preload.moq || ''}"></td>
+                    <td><input type="text" class="table-input row-moq" placeholder="e.g. 5 KG" value="${preload.moq || ''}"></td>
                     <td><input type="text" class="table-input row-batch" placeholder="Size" value="${preload.batch_size || ''}"></td>
                     <td><input type="number" class="table-input row-price" step="0.01" placeholder="0.00" value="${preload.price_per_unit || ''}"></td>
                     <td><input type="number" class="table-input row-gst" readonly value="${preload.gst_amount || ''}"></td>
