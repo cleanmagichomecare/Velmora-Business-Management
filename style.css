@@ -6621,22 +6621,16 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 /* PO Product Table */
 .po-product-table-wrapper {
-    margin-top: 40px;
-    background: var(--bg-secondary, rgba(0,0,0,0.2));
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 24px;
-    overflow-x: auto;
     width: 100%;
-    padding-right: 8px;
+    padding: 0 12px 0 0;
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
 .po-product-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 16px;
-    min-width: 600px;
+    table-layout: fixed;
 }
 
 .po-product-table th {
@@ -6678,12 +6672,12 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .product-details-section {
-    padding: 28px 32px;
     margin-top: 28px;
-}
-
-.po-product-table {
-    width: 100%;
+    padding: 28px 32px 24px 32px;
+    box-sizing: border-box;
+    background: var(--bg-secondary, rgba(0,0,0,0.2));
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
 }
 
 .payment-terms-section {
