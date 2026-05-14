@@ -1906,8 +1906,13 @@ window.SharedCategoryService = {
     }
 
     function loadVendorIntoForm(vendor) {
-        document.getElementById('vendorType1').value = vendor.vendorType1 || '';
-        document.getElementById('vendorType2').value = vendor.vendorType2 || '';
+        document.getElementById('vendorType1').value = vendor.vendor_type1 || vendor.vendorType1 || '';
+        
+        let vt2 = vendor.vendor_type2 || vendor.vendorType2 || '';
+        if (vt2 === 'Vendor 1') vt2 = 'primary_vendor';
+        else if (vt2 === 'Vendor 2') vt2 = 'secondary_vendor';
+        else if (vt2 === 'Vendor 3') vt2 = 'tertiary_vendor';
+        document.getElementById('vendorType2').value = vt2;
         document.getElementById('vendorCategory').value = vendor.vendorCategory || '';
 
         // Trigger category change to populate sub-category options
@@ -2126,12 +2131,17 @@ window.SharedCategoryService = {
 
             const gstFormatted = vendor.gst_applicable ? "Yes" : "No";
 
+            let displayVt2 = vendor.vendor_type2 || '-';
+            if (displayVt2 === 'primary_vendor' || displayVt2 === 'Vendor 1') displayVt2 = 'Primary Vendor';
+            else if (displayVt2 === 'secondary_vendor' || displayVt2 === 'Vendor 2') displayVt2 = 'Secondary Vendor';
+            else if (displayVt2 === 'tertiary_vendor' || displayVt2 === 'Vendor 3') displayVt2 = 'Tertiary Vendor';
+
             const row = document.createElement('tr');
             row.setAttribute('data-vendor-id', vendor.id);
             row.innerHTML = `
                 <td><strong>${vendor.vendor_name || '-'}</strong></td>
                 <td>${vendor.vendor_type1 || '-'}</td>
-                <td>${vendor.vendor_type2 || '-'}</td>
+                <td>${displayVt2}</td>
                 <td>${vendor.vendor_category || '-'}</td>
                 <td>${vendor.sub_category || '-'}</td>
                 <td>${vendor.price_per_unit != null ? vendor.price_per_unit : '-'}</td>
