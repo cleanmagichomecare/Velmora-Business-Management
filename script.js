@@ -1853,7 +1853,7 @@ window.SharedCategoryService = {
             
             moq: document.getElementById('moq').value ? Number(document.getElementById('moq').value) : null,
             price_per_unit: document.getElementById('pricePerUnit').value ? Number(document.getElementById('pricePerUnit').value) : null,
-            gst_available: document.getElementById('gstAvailable').checked,
+            gst_applicable: document.getElementById('gstAvailable').checked,
             batch_size: document.getElementById('batchSize').value || null,
             
             used_in: usedInArray,
@@ -2018,7 +2018,7 @@ window.SharedCategoryService = {
         try {
             const { data, error } = await supabase
                 .from('vendors')
-                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, price_per_unit, moq, gst_applicable, gst_available, phone, used_in, created_at')
+                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, price_per_unit, moq, gst_applicable, phone, used_in, created_at')
                 .eq('status', 'active')
                 .order('created_at', { ascending: false });
 
