@@ -1838,6 +1838,23 @@ window.SharedCategoryService = {
             saveBtn.textContent = 'Saving...';
         }
 
+        // Collect dynamic product rows
+        const products = [];
+        const tbody = document.getElementById('dynamic-product-tbody');
+        if (tbody) {
+            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                products.push({
+                    product_name: tr.getAttribute('data-product-name'),
+                    moq: tr.querySelector('.row-moq').value || null,
+                    batch_size: tr.querySelector('.row-batch').value || null,
+                    price_per_unit: tr.querySelector('.row-price').value ? parseFloat(tr.querySelector('.row-price').value) : null,
+                    gst_amount: tr.querySelector('.row-gst').value ? parseFloat(tr.querySelector('.row-gst').value) : null,
+                    total_amount: tr.querySelector('.row-total').value ? parseFloat(tr.querySelector('.row-total').value) : null,
+                    used_in: tr.querySelector('.row-used-in').value || null
+                });
+            });
+        }
+
         // Collect all values & convert types
         const vendorData = {
             vendor_type1: document.getElementById('vendorType1').value || null,
@@ -1848,6 +1865,8 @@ window.SharedCategoryService = {
             sub_sub_sub_category: document.getElementById('vendorSubCategory3') ? document.getElementById('vendorSubCategory3').value : null,
             
             gst_applicable: document.getElementById('gstAvailable').checked,
+            
+            products: products,
             
             vendor_name: document.getElementById('vendorName').value || null,
             company_name: document.getElementById('companyName').value || null,
@@ -1904,7 +1923,7 @@ window.SharedCategoryService = {
         else if (vt2 === 'Vendor 2') vt2 = 'secondary_vendor';
         else if (vt2 === 'Vendor 3') vt2 = 'tertiary_vendor';
         document.getElementById('vendorType2').value = vt2;
-        document.getElementById('vendorCategory').value = vendor.vendorCategory || '';
+        document.getElementById('vendorCategory').value = vendor.vendor_category || vendor.vendorCategory || '';
 
         // Trigger category change to populate sub-category options
         const catEvent = new Event('change', { bubbles: true });
@@ -1912,22 +1931,33 @@ window.SharedCategoryService = {
 
         // Set sub-category after options are populated
         setTimeout(() => {
-            document.getElementById('subCategory').value = vendor.subCategory || '';
+            document.getElementById('subCategory').value = vendor.sub_category || vendor.subCategory || '';
             // Trigger sub-category change for sub-sub-category
             const subEvent = new Event('change', { bubbles: true });
             document.getElementById('subCategory').dispatchEvent(subEvent);
 
             setTimeout(() => {
                 document.getElementById('subSubCategory').value = vendor.sub_sub_category || vendor.subSubCategory || '';
-                if (document.getElementById('vendorSubCategory3')) document.getElementById('vendorSubCategory3').value = vendor.sub_sub_sub_category || '';
+                
+                const subCat3Input = document.getElementById('vendorSubCategory3');
+                if (subCat3Input) {
+                    const sub3Val = vendor.sub_sub_sub_category || '';
+                    subCat3Input.value = sub3Val;
+                    // Dispatch change so multi-select UI updates
+                    subCat3Input.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    // Forcefully populate the dynamic table immediately with preloaded data
+                    const selectedItems = sub3Val ? sub3Val.split(',').map(v => v.trim()).filter(Boolean) : [];
+                    updateDynamicProductTable(selectedItems, vendor.products || []);
+                }
             }, 50);
         }, 50);
 
         const isGst = vendor.gst_available === true || vendor.gst_applicable === true || vendor.gstApplicable === true;
         document.getElementById('gstAvailable').checked = isGst;
 
-        document.getElementById('vendorName').value = vendor.vendorName || '';
-        document.getElementById('companyName').value = vendor.companyName || '';
+        document.getElementById('vendorName').value = vendor.vendor_name || vendor.vendorName || '';
+        document.getElementById('companyName').value = vendor.company_name || vendor.companyName || '';
         document.getElementById('phone').value = vendor.phone || '';
         document.getElementById('email').value = vendor.email || '';
         document.getElementById('address').value = vendor.address || '';
@@ -1941,9 +1971,8 @@ window.SharedCategoryService = {
         document.getElementById('upiId').value = vendor.upiId || '';
     }
 
-    function editVendor(id) {
-        // Will need migrating to Supabase GET in the future
-        const vendor = vendors.find(v => v.id === id);
+    window.editVendor = function(id) {
+        const vendor = fetchedVendorsCache.find(v => v.id === id);
         if (!vendor) return;
 
         currentEditVendorId = id;
@@ -1971,6 +2000,82 @@ window.SharedCategoryService = {
         vendor.status = 'archived';
         renderVendorList();
         showToast('Vendor archived successfully');
+    }
+
+    function updateDynamicProductTable(selectedItems, preloadedData = []) {
+        const section = document.getElementById('dynamic-product-section');
+        const tbody = document.getElementById('dynamic-product-tbody');
+        if (!section || !tbody) return;
+
+        if (!selectedItems || selectedItems.length === 0) {
+            tbody.innerHTML = '';
+            section.classList.add('hidden');
+            return;
+        }
+
+        section.classList.remove('hidden');
+
+        // Track existing rows by product name to avoid losing user input when other selections change
+        const existingRows = {};
+        Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+            const prodName = tr.getAttribute('data-product-name');
+            if (prodName) existingRows[prodName] = tr;
+        });
+
+        // We will append rows in the order of selectedItems
+        tbody.innerHTML = '';
+
+        selectedItems.forEach(prodName => {
+            if (existingRows[prodName]) {
+                tbody.appendChild(existingRows[prodName]);
+            } else {
+                // Check if we have preloaded data for this product
+                const preload = preloadedData.find(p => p.product_name === prodName) || {};
+                
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-product-name', prodName);
+                tr.innerHTML = `
+                    <td><input type="text" class="table-input" value="${prodName}" readonly></td>
+                    <td><input type="number" class="table-input row-moq" placeholder="0" value="${preload.moq || ''}"></td>
+                    <td><input type="text" class="table-input row-batch" placeholder="Size" value="${preload.batch_size || ''}"></td>
+                    <td><input type="number" class="table-input row-price" step="0.01" placeholder="0.00" value="${preload.price_per_unit || ''}"></td>
+                    <td><input type="number" class="table-input row-gst" readonly value="${preload.gst_amount || ''}"></td>
+                    <td><input type="number" class="table-input row-total" readonly value="${preload.total_amount || ''}"></td>
+                    <td><input type="text" class="table-input row-used-in" placeholder="Combo" value="${preload.used_in || ''}"></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        });
+    }
+
+    const dynamicProductTbody = document.getElementById('dynamic-product-tbody');
+    if (dynamicProductTbody) {
+        dynamicProductTbody.addEventListener('input', (e) => {
+            if (e.target.classList.contains('row-price')) {
+                const tr = e.target.closest('tr');
+                if (!tr) return;
+                
+                const priceVal = e.target.value;
+                const price = parseFloat(priceVal) || 0;
+                
+                const gst = +(price * 0.18).toFixed(2);
+                const total = +(price + gst).toFixed(2);
+                
+                const gstInput = tr.querySelector('.row-gst');
+                const totalInput = tr.querySelector('.row-total');
+                
+                if (gstInput) gstInput.value = priceVal ? gst : '';
+                if (totalInput) totalInput.value = priceVal ? total : '';
+            }
+        });
+    }
+
+    const vendorSubCategory3Input = document.getElementById('vendorSubCategory3');
+    if (vendorSubCategory3Input) {
+        vendorSubCategory3Input.addEventListener('change', (e) => {
+            const selectedItems = e.target.value ? e.target.value.split(',').map(v => v.trim()).filter(Boolean) : [];
+            updateDynamicProductTable(selectedItems);
+        });
     }
 
     function resetVendorFormMode() {
@@ -2006,7 +2111,7 @@ window.SharedCategoryService = {
         try {
             const { data, error } = await supabase
                 .from('vendors')
-                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, gst_applicable, phone, created_at')
+                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, sub_sub_category, sub_sub_sub_category, products, gst_applicable, phone, created_at')
                 .eq('status', 'active')
                 .order('created_at', { ascending: false });
 
