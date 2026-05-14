@@ -1838,10 +1838,6 @@ window.SharedCategoryService = {
             saveBtn.textContent = 'Saving...';
         }
 
-        // Collect Used In checkboxes
-        const usedInCheckboxes = document.querySelectorAll('input[name="usedIn"]:checked');
-        const usedInArray = Array.from(usedInCheckboxes).map(cb => cb.value);
-
         // Collect all values & convert types
         const vendorData = {
             vendor_type1: document.getElementById('vendorType1').value || null,
@@ -1851,12 +1847,7 @@ window.SharedCategoryService = {
             sub_sub_category: document.getElementById('subSubCategory').value || null,
             sub_sub_sub_category: document.getElementById('vendorSubCategory3') ? document.getElementById('vendorSubCategory3').value : null,
             
-            moq: document.getElementById('moq').value ? Number(document.getElementById('moq').value) : null,
-            price_per_unit: document.getElementById('pricePerUnit').value ? Number(document.getElementById('pricePerUnit').value) : null,
             gst_applicable: document.getElementById('gstAvailable').checked,
-            batch_size: document.getElementById('batchSize').value || null,
-            
-            used_in: usedInArray,
             
             vendor_name: document.getElementById('vendorName').value || null,
             company_name: document.getElementById('companyName').value || null,
@@ -1932,11 +1923,8 @@ window.SharedCategoryService = {
             }, 50);
         }, 50);
 
-        document.getElementById('moq').value = vendor.moq || '';
-        document.getElementById('pricePerUnit').value = vendor.pricePerUnit || '';
         const isGst = vendor.gst_available === true || vendor.gst_applicable === true || vendor.gstApplicable === true;
         document.getElementById('gstAvailable').checked = isGst;
-        document.getElementById('batchSize').value = vendor.batchSize || '';
 
         document.getElementById('vendorName').value = vendor.vendorName || '';
         document.getElementById('companyName').value = vendor.companyName || '';
@@ -2018,7 +2006,7 @@ window.SharedCategoryService = {
         try {
             const { data, error } = await supabase
                 .from('vendors')
-                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, price_per_unit, moq, gst_applicable, phone, used_in, created_at')
+                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, gst_applicable, phone, created_at')
                 .eq('status', 'active')
                 .order('created_at', { ascending: false });
 
@@ -2118,18 +2106,6 @@ window.SharedCategoryService = {
         vendorTableBody.innerHTML = '';
 
         activeVendors.forEach(vendor => {
-            // Safe Data Handling
-            console.log("used_in value:", vendor.used_in, typeof vendor.used_in);
-            
-            let usedInFormatted = "-";
-            if (Array.isArray(vendor.used_in)) {
-                usedInFormatted = vendor.used_in.length > 0 ? vendor.used_in.join(", ") : "-";
-            } else if (typeof vendor.used_in === 'string') {
-                usedInFormatted = vendor.used_in;
-            } else if (vendor.used_in != null) {
-                usedInFormatted = String(vendor.used_in);
-            }
-
             const isGst = vendor.gst_available === true || vendor.gst_applicable === true;
             const gstFormatted = isGst ? "Yes" : "No";
 
@@ -2146,8 +2122,6 @@ window.SharedCategoryService = {
                 <td>${displayVt2}</td>
                 <td>${vendor.vendor_category || '-'}</td>
                 <td>${vendor.sub_category || '-'}</td>
-                <td>${vendor.price_per_unit != null ? vendor.price_per_unit : '-'}</td>
-                <td>${vendor.moq != null ? vendor.moq : '-'}</td>
                 <td>${gstFormatted}</td>
                 <td>${vendor.phone || '-'}</td>
                 <td>
