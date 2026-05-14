@@ -6599,6 +6599,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 /* Purchase Order Split Layout */
 .purchase-order-form-container {
     padding: 32px;
+    box-sizing: border-box;
 }
 
 .purchase-order-split-layout {
@@ -6626,6 +6627,9 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     border-radius: 12px;
     padding: 24px;
     overflow-x: auto;
+    width: 100%;
+    padding-right: 8px;
+    box-sizing: border-box;
 }
 
 .po-product-table {
@@ -6674,17 +6678,35 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .product-details-section {
-    padding: 24px 32px;
+    padding: 28px 32px;
+    margin-top: 28px;
 }
 
 .po-product-table {
-    margin-right: 24px;
-    width: calc(100% - 24px);
+    width: 100%;
+}
+
+.payment-terms-section {
+    padding: 28px 32px 12px 32px;
+    margin-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.payment-terms-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .purchase-order-actions {
-    padding-right: 32px;
-    padding-bottom: 24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 12px 32px 28px 32px;
+    box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
