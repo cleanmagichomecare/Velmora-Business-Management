@@ -1853,7 +1853,7 @@ window.SharedCategoryService = {
             
             moq: document.getElementById('moq').value ? Number(document.getElementById('moq').value) : null,
             price_per_unit: document.getElementById('pricePerUnit').value ? Number(document.getElementById('pricePerUnit').value) : null,
-            gst_applicable: document.getElementById('gstApplicable').checked,
+            gst_available: document.getElementById('gstAvailable').checked,
             batch_size: document.getElementById('batchSize').value || null,
             
             used_in: usedInArray,
@@ -1934,7 +1934,8 @@ window.SharedCategoryService = {
 
         document.getElementById('moq').value = vendor.moq || '';
         document.getElementById('pricePerUnit').value = vendor.pricePerUnit || '';
-        document.getElementById('gstApplicable').checked = vendor.gstApplicable || false;
+        const isGst = vendor.gst_available === true || vendor.gst_applicable === true || vendor.gstApplicable === true;
+        document.getElementById('gstAvailable').checked = isGst;
         document.getElementById('batchSize').value = vendor.batchSize || '';
 
         document.getElementById('vendorName').value = vendor.vendorName || '';
@@ -2017,7 +2018,7 @@ window.SharedCategoryService = {
         try {
             const { data, error } = await supabase
                 .from('vendors')
-                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, price_per_unit, moq, gst_applicable, phone, used_in, created_at')
+                .select('id, vendor_name, company_name, vendor_type1, vendor_type2, vendor_category, sub_category, price_per_unit, moq, gst_applicable, gst_available, phone, used_in, created_at')
                 .eq('status', 'active')
                 .order('created_at', { ascending: false });
 
@@ -2129,7 +2130,8 @@ window.SharedCategoryService = {
                 usedInFormatted = String(vendor.used_in);
             }
 
-            const gstFormatted = vendor.gst_applicable ? "Yes" : "No";
+            const isGst = vendor.gst_available === true || vendor.gst_applicable === true;
+            const gstFormatted = isGst ? "Yes" : "No";
 
             let displayVt2 = vendor.vendor_type2 || '-';
             if (displayVt2 === 'primary_vendor' || displayVt2 === 'Vendor 1') displayVt2 = 'Primary Vendor';
