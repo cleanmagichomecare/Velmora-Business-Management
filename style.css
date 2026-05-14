@@ -6868,8 +6868,9 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 /* Purchase Order Signature Section */
 .po-signature-section {
-    margin-top: 32px;
-    width: 100%;
+    margin: 32px 24px 32px 24px;
+    width: calc(100% - 48px);
+    box-sizing: border-box;
 }
 
 .po-signature-outer-card {
