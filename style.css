@@ -6807,3 +6807,55 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     border-color: transparent;
     outline: none;
 }
+
+/* Premium Checkbox Row */
+.premium-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.premium-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.premium-checkbox:hover {
+    border-color: var(--primary-color);
+}
+
+.premium-checkbox:checked {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.premium-checkbox:checked::after {
+    content: '';
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    position: absolute;
+    top: 2px;
+}
+
+.premium-checkbox-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+    user-select: none;
+}

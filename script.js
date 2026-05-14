@@ -1869,7 +1869,7 @@ window.SharedCategoryService = {
             products: products,
             
             vendor_name: document.getElementById('vendorName').value || null,
-            company_name: document.getElementById('companyName').value || null,
+            representative_name: document.getElementById('representativeName').value || null,
             phone: document.getElementById('phone').value || null,
             email: document.getElementById('email').value || null,
             address: document.getElementById('address').value || null,
@@ -1957,7 +1957,7 @@ window.SharedCategoryService = {
         document.getElementById('gstAvailable').checked = isGst;
 
         document.getElementById('vendorName').value = vendor.vendor_name || vendor.vendorName || '';
-        document.getElementById('companyName').value = vendor.company_name || vendor.companyName || '';
+        document.getElementById('representativeName').value = vendor.representative_name || vendor.representativeName || vendor.company_name || vendor.companyName || '';
         document.getElementById('phone').value = vendor.phone || '';
         document.getElementById('email').value = vendor.email || '';
         document.getElementById('address').value = vendor.address || '';
@@ -2169,8 +2169,8 @@ window.SharedCategoryService = {
             
             if (searchTerm) {
                 const name = (v.vendor_name || '').toLowerCase();
-                const company = (v.company_name || '').toLowerCase();
-                if (!name.includes(searchTerm) && !company.includes(searchTerm)) {
+                const rep = (v.representative_name || v.company_name || '').toLowerCase();
+                if (!name.includes(searchTerm) && !rep.includes(searchTerm)) {
                     return false;
                 }
             }
