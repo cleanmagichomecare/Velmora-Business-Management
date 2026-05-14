@@ -6972,7 +6972,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 24px;
+    padding: 28px;
     box-shadow: var(--shadow);
     width: 100%;
     box-sizing: border-box;
@@ -6982,8 +6982,6 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
     box-sizing: border-box;
 }
 
