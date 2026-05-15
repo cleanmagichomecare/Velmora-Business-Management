@@ -11,9 +11,7 @@ window.initPurchaseOrderForm = async function() {
     const poNumber = `PO-${year}-${month}-${increment}`;
     
     const poNumberHeader = document.getElementById('po-number-header');
-    const poNumberInput = document.getElementById('po-number-input');
     if (poNumberHeader) poNumberHeader.textContent = poNumber;
-    if (poNumberInput) poNumberInput.value = poNumber;
 
     // 2. Set current date dynamically
     const day = String(today.getDate()).padStart(2, '0');
@@ -152,7 +150,6 @@ window.initPurchaseOrderForm = async function() {
                 window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
             }
             // Re-populate readonly fields
-            if (poNumberInput) poNumberInput.value = poNumber;
             if (poDateInput) poDateInput.value = formattedDate;
         };
     }
