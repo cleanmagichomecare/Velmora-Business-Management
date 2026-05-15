@@ -11193,3 +11193,152 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 });
+
+/* =====================================================================
+   PURCHASE ORDER DYNAMIC VENDOR LOADING & AUTO-FILL
+   ===================================================================== */
+window.fetchedPOVendorsList = [];
+
+window.loadVendorsForPO = async function(vendorDropdown) {
+    if (!vendorDropdown) return;
+    vendorDropdown.innerHTML = '<option value="">Loading Vendors...</option>';
+    try {
+        const { data, error } = await window.supabase
+            .from('vendors')
+            .select('*')
+            .eq('status', 'active')
+            .order('vendor_name', { ascending: true });
+            
+        if (error) throw error;
+
+        window.fetchedPOVendorsList = data || [];
+        vendorDropdown.innerHTML = '<option value="">Select Vendor</option>';
+        if (window.fetchedPOVendorsList.length > 0) {
+            window.fetchedPOVendorsList.forEach(vendor => {
+                const opt = document.createElement('option');
+                opt.value = vendor.vendor_name; // Store the vendor name directly for PO
+                opt.textContent = vendor.vendor_name;
+                vendorDropdown.appendChild(opt);
+            });
+        } else {
+            vendorDropdown.innerHTML = '<option value="">No vendors found</option>';
+        }
+
+        vendorDropdown.removeEventListener('change', window.handleVendorSelectionForPO);
+        vendorDropdown.addEventListener('change', window.handleVendorSelectionForPO);
+    } catch (err) {
+        console.error("Error loading vendors for PO:", err);
+        vendorDropdown.innerHTML = '<option value="">Error loading vendors</option>';
+    }
+};
+
+window.handleVendorSelectionForPO = function(e) {
+    const selectedVendorName = e.target.value;
+    const vendor = window.fetchedPOVendorsList.find(v => v.vendor_name === selectedVendorName);
+    
+    const poMainCat = document.getElementById('po-main-category');
+    const poSub1 = document.getElementById('po-sub-category1');
+    const poSub2 = document.getElementById('po-sub-category2');
+    const poSub3Id = 'po-sub-category3';
+
+    if (vendor) {
+        // Auto-fill Categories
+        if (poMainCat) {
+            poMainCat.innerHTML = `<option value="${vendor.vendor_category || ''}">${vendor.vendor_category || 'N/A'}</option>`;
+            poMainCat.value = vendor.vendor_category || '';
+            poMainCat.disabled = true;
+        }
+        if (poSub1) {
+            poSub1.innerHTML = `<option value="${vendor.sub_category || ''}">${vendor.sub_category || 'N/A'}</option>`;
+            poSub1.value = vendor.sub_category || '';
+            poSub1.disabled = true;
+        }
+        if (poSub2) {
+            poSub2.innerHTML = `<option value="${vendor.sub_sub_category || ''}">${vendor.sub_sub_category || 'N/A'}</option>`;
+            poSub2.value = vendor.sub_sub_category || '';
+            poSub2.disabled = true;
+        }
+        if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+            const sub3Values = vendor.sub_sub_sub_category ? vendor.sub_sub_sub_category.split(',').map(s => s.trim()).filter(Boolean) : [];
+            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, sub3Values, 'Select Sub Category 3', 'No Sub Categories');
+            
+            const poSub3Container = document.getElementById(`container-${poSub3Id}`);
+            if (poSub3Container) {
+                const display = poSub3Container.querySelector('.multi-select-display');
+                if (display) display.style.pointerEvents = 'none';
+                if (display) display.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
+            }
+        }
+
+        // Auto-load Product Details Table
+        const tbody = document.getElementById('po-product-tbody');
+        if (tbody) {
+            tbody.innerHTML = '';
+            let rowCount = 0;
+            
+            if (vendor.products && Array.isArray(vendor.products) && vendor.products.length > 0) {
+                vendor.products.forEach(prod => {
+                    rowCount++;
+                    const tr = document.createElement('tr');
+                    
+                    const pName = prod.product_name || '';
+                    const pMoq = prod.moq || '';
+                    const pBatch = prod.batch_size || '';
+                    const pPrice = prod.price_per_unit || prod.price || 0;
+                    const pGst = prod.gst || '';
+                    const pUsedIn = prod.used_in || '';
+                    
+                    tr.innerHTML = \`
+                        <td style="color: var(--text-muted); font-weight: 600;">\${rowCount}</td>
+                        <td><input type="text" class="form-control po-desc" value="\${pName}" readonly required></td>
+                        <td><input type="text" class="form-control po-moq" value="\${pMoq}" readonly></td>
+                        <td><input type="text" class="form-control po-batch" value="\${pBatch}" readonly></td>
+                        <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
+                        <td><input type="number" class="form-control po-price" value="\${pPrice}" step="0.01" readonly required></td>
+                        <td><input type="text" class="form-control po-gst" value="\${pGst}" readonly></td>
+                        <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
+                        <td><input type="text" class="form-control po-used" value="\${pUsedIn}" readonly></td>
+                    \`;
+
+                    const qtyInput = tr.querySelector('.po-qty');
+                    const priceInput = tr.querySelector('.po-price');
+
+                    if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+                    if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+
+                    tbody.appendChild(tr);
+                });
+                if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
+            } else {
+                // fallback to one empty row
+                if (typeof window.poAddProductRow === 'function') {
+                    if (typeof window.rowCount !== 'undefined') window.rowCount = 0;
+                    window.poAddProductRow();
+                }
+            }
+        }
+
+    } else {
+        // Reset to standard behavior
+        if (poMainCat) { poMainCat.disabled = false; poMainCat.innerHTML = '<option value="">Select Main Category</option>'; }
+        if (poSub1) { poSub1.disabled = true; poSub1.innerHTML = '<option value="">Select Category First</option>'; }
+        if (poSub2) { poSub2.disabled = true; poSub2.innerHTML = '<option value="">Select Category First</option>'; }
+        
+        if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
+            const poSub3Container = document.getElementById(`container-${poSub3Id}`);
+            if (poSub3Container) {
+                const display = poSub3Container.querySelector('.multi-select-display');
+                if (display) display.style.pointerEvents = 'auto';
+                if (display) display.style.backgroundColor = '';
+            }
+        }
+        
+        const tbody = document.getElementById('po-product-tbody');
+        if (tbody) {
+            tbody.innerHTML = '';
+            if (typeof window.rowCount !== 'undefined') window.rowCount = 0;
+            if (typeof window.poAddProductRow === 'function') window.poAddProductRow();
+        }
+    }
+};
