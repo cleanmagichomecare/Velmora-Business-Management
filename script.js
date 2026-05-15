@@ -1805,9 +1805,8 @@ window.SharedCategoryService = {
     // --- Vendor CRUD Logic ---
     const btnSaveVendor = document.getElementById('btn-save-vendor');
     // vendorForm and vendorListContainer already declared at the top of DOMContentLoaded
-    const vendorTableBody = document.getElementById('vendor-table-body');
+    const vendorCardGrid = document.getElementById('vendor-card-grid');
     const vendorEmptyState = document.getElementById('vendor-empty-state');
-    const vendorTable = document.getElementById('vendor-table');
     const vendorSearchInput = document.getElementById('vendor-search');
     const vendorFilterCategory = document.getElementById('vendor-filter-category');
     const vendorFormHeader = vendorFormContainer ? vendorFormContainer.querySelector('.form-header') : null;
@@ -2101,12 +2100,12 @@ window.SharedCategoryService = {
 
     // --- 1. Fetch Vendors from Supabase ---
     window.fetchVendors = async function() {
-        if (!vendorTableBody) return;
+        if (!vendorCardGrid) return;
         
         isFetchingVendors = true;
-        vendorTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #888;">Loading vendors...</td></tr>';
+        vendorCardGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: #888; grid-column: 1 / -1;">Loading vendors...</div>';
         if (vendorEmptyState) vendorEmptyState.style.display = 'none';
-        if (vendorTable) vendorTable.style.display = 'table';
+        vendorCardGrid.style.display = 'grid';
 
         try {
             const { data, error } = await supabase
@@ -2128,7 +2127,7 @@ window.SharedCategoryService = {
         } catch (error) {
             console.error("Error fetching vendors:", error);
             showToast("Failed to load vendors: " + error.message);
-            vendorTableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #ff6b6b;">Error loading vendors.</td></tr>';
+            vendorCardGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: #ff6b6b; grid-column: 1 / -1;">Error loading vendors.</div>';
         } finally {
             isFetchingVendors = false;
         }
@@ -2158,7 +2157,7 @@ window.SharedCategoryService = {
 
     // --- 2. Render & 5. Filter Vendor List ---
     window.renderVendorList = function() {
-        if (!vendorTableBody) return;
+        if (!vendorCardGrid) return;
 
         const searchTerm = vendorSearchInput ? vendorSearchInput.value.toLowerCase().trim() : '';
         const filterCat = vendorFilterCategory ? vendorFilterCategory.value : '';
@@ -2179,7 +2178,7 @@ window.SharedCategoryService = {
 
         // 7. Empty States
         if (fetchedVendorsCache.length === 0) {
-            if (vendorTable) vendorTable.style.display = 'none';
+            if (vendorCardGrid) vendorCardGrid.style.display = 'none';
             if (vendorEmptyState) {
                 vendorEmptyState.style.display = 'block';
                 vendorEmptyState.innerHTML = `
@@ -2192,7 +2191,7 @@ window.SharedCategoryService = {
         }
 
         if (activeVendors.length === 0) {
-            if (vendorTable) vendorTable.style.display = 'none';
+            if (vendorCardGrid) vendorCardGrid.style.display = 'none';
             if (vendorEmptyState) {
                 vendorEmptyState.style.display = 'block';
                 vendorEmptyState.innerHTML = `
@@ -2204,11 +2203,11 @@ window.SharedCategoryService = {
             return;
         }
 
-        // Render Table
-        if (vendorTable) vendorTable.style.display = 'table';
+        // Render Cards
+        if (vendorCardGrid) vendorCardGrid.style.display = 'grid';
         if (vendorEmptyState) vendorEmptyState.style.display = 'none';
         
-        vendorTableBody.innerHTML = '';
+        vendorCardGrid.innerHTML = '';
 
         activeVendors.forEach(vendor => {
             const isGst = vendor.gst_available === true || vendor.gst_applicable === true;
@@ -2219,26 +2218,73 @@ window.SharedCategoryService = {
             else if (displayVt2 === 'secondary_vendor' || displayVt2 === 'Vendor 2') displayVt2 = 'Secondary Vendor';
             else if (displayVt2 === 'tertiary_vendor' || displayVt2 === 'Vendor 3') displayVt2 = 'Tertiary Vendor';
 
-            const row = document.createElement('tr');
-            row.setAttribute('data-vendor-id', vendor.id);
-            row.innerHTML = `
-                <td><strong>${vendor.vendor_name || '-'}</strong></td>
-                <td>${vendor.vendor_type1 || '-'}</td>
-                <td>${displayVt2}</td>
-                <td>${vendor.vendor_category || '-'}</td>
-                <td>${vendor.sub_category || '-'}</td>
-                <td>${gstFormatted}</td>
-                <td>${vendor.phone || '-'}</td>
-                <td>
-                    <div class="vendor-actions">
-                        <button class="btn-vendor-archive" data-id="${vendor.id}">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                            Archive
-                        </button>
+            const card = document.createElement('div');
+            card.className = 'vendor-card';
+            card.setAttribute('data-vendor-id', vendor.id);
+            card.innerHTML = `
+                <div class="vendor-card-header">
+                    <span class="value-text">${vendor.vendor_name || '-'}</span>
+                    <input type="text" class="editable-field edit-name" value="${vendor.vendor_name || ''}">
+                </div>
+                <div class="vendor-card-meta">
+                    <div>
+                        <span class="label">Type</span>
+                        <span class="value">
+                            <span class="value-text">${vendor.vendor_type1 || '-'} &bull; ${displayVt2}</span>
+                            <div style="display: flex; gap: 4px; justify-content: flex-end; width: 60%; display: none;" class="editable-field">
+                                <input type="text" class="editable-field edit-type1" value="${vendor.vendor_type1 || ''}" placeholder="Type 1" style="width: 50%; display: block;">
+                                <input type="text" class="editable-field edit-type2" value="${displayVt2 || ''}" placeholder="Type 2" style="width: 50%; display: block;">
+                            </div>
+                        </span>
                     </div>
-                </td>
+                    <div>
+                        <span class="label">Category</span>
+                        <span class="value">
+                            <span class="value-text">${vendor.vendor_category || '-'}</span>
+                            <input type="text" class="editable-field edit-category" value="${vendor.vendor_category || ''}">
+                        </span>
+                    </div>
+                    <div>
+                        <span class="label">Sub Category</span>
+                        <span class="value">
+                            <span class="value-text">${vendor.sub_category || '-'}</span>
+                            <input type="text" class="editable-field edit-subcategory" value="${vendor.sub_category || ''}">
+                        </span>
+                    </div>
+                    <div>
+                        <span class="label">Phone</span>
+                        <span class="value">
+                            <span class="value-text">${vendor.phone || '-'}</span>
+                            <input type="text" class="editable-field edit-phone" value="${vendor.phone || ''}">
+                        </span>
+                    </div>
+                    <div>
+                        <span class="label">GST</span>
+                        <span class="value">
+                            <span class="value-text">${gstFormatted}</span>
+                            <select class="editable-field edit-gst" style="width: 60%; float: right;">
+                                <option value="Yes" ${isGst ? 'selected' : ''}>Yes</option>
+                                <option value="No" ${!isGst ? 'selected' : ''}>No</option>
+                            </select>
+                        </span>
+                    </div>
+                </div>
+                <div class="vendor-card-actions">
+                    <button class="btn-vendor-edit" data-id="${vendor.id}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Edit
+                    </button>
+                    <button class="btn-vendor-save" data-id="${vendor.id}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Save
+                    </button>
+                    <button class="btn-vendor-archive" data-id="${vendor.id}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                        Archive
+                    </button>
+                </div>
             `;
-            vendorTableBody.appendChild(row);
+            vendorCardGrid.appendChild(card);
         });
     };
 
@@ -2277,15 +2323,77 @@ window.SharedCategoryService = {
     }
 
     // --- Delegate Edit/Archive Clicks ---
-    if (vendorTableBody) {
-        vendorTableBody.addEventListener('click', (e) => {
+    if (vendorCardGrid) {
+        vendorCardGrid.addEventListener('click', (e) => {
             const archiveBtn = e.target.closest('.btn-vendor-archive');
             if (archiveBtn) {
                 const id = parseInt(archiveBtn.getAttribute('data-id'), 10);
                 window.archiveVendor(id);
+                return;
+            }
+
+            const editBtn = e.target.closest('.btn-vendor-edit');
+            if (editBtn) {
+                const card = editBtn.closest('.vendor-card');
+                card.classList.add('vendor-edit-mode');
+                return;
+            }
+
+            const saveBtn = e.target.closest('.btn-vendor-save');
+            if (saveBtn) {
+                const id = parseInt(saveBtn.getAttribute('data-id'), 10);
+                const card = saveBtn.closest('.vendor-card');
+                window.updateInlineVendor(id, card);
+                return;
             }
         });
     }
+
+    // --- Update Vendor Inline ---
+    window.updateInlineVendor = async function(id, card) {
+        const saveBtn = card.querySelector('.btn-vendor-save');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = 'Saving...';
+        saveBtn.disabled = true;
+
+        const name = card.querySelector('.edit-name').value;
+        const type1 = card.querySelector('.edit-type1').value;
+        let type2 = card.querySelector('.edit-type2').value;
+        if (type2 === 'Primary Vendor') type2 = 'primary_vendor';
+        else if (type2 === 'Secondary Vendor') type2 = 'secondary_vendor';
+        else if (type2 === 'Tertiary Vendor') type2 = 'tertiary_vendor';
+        const category = card.querySelector('.edit-category').value;
+        const subcategory = card.querySelector('.edit-subcategory').value;
+        const phone = card.querySelector('.edit-phone').value;
+        const gst = card.querySelector('.edit-gst').value === 'Yes';
+
+        try {
+            const { error } = await supabase
+                .from('vendors')
+                .update({ 
+                    vendor_name: name,
+                    vendor_type1: type1,
+                    vendor_type2: type2,
+                    vendor_category: category,
+                    sub_category: subcategory,
+                    phone: phone,
+                    gst_applicable: gst,
+                    gst_available: gst
+                })
+                .eq('id', id);
+
+            if (error) throw error;
+            
+            showToast('Vendor updated successfully');
+            card.classList.remove('vendor-edit-mode');
+            await window.fetchVendors(); // Auto refresh
+        } catch (error) {
+            console.error("Error updating vendor:", error);
+            alert("Failed to update vendor: " + error.message);
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    };
 
     // "Vendor List" sidebar button — show list, hide form
     const btnVendorList = document.getElementById('btn-vendor-list');

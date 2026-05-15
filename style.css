@@ -7105,3 +7105,137 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
         grid-template-columns: 1fr;
     }
 }
+/* --- Vendor Card Grid --- */
+.vendor-card-grid-wrapper {
+    margin-top: 20px;
+}
+.vendor-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+@media (max-width: 1024px) {
+    .vendor-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 768px) {
+    .vendor-card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.vendor-card {
+    background: rgba(30, 41, 59, 0.5); /* premium dark glassmorphism */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.vendor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+.vendor-card-header {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 10px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+}
+.vendor-card-header .editable-field {
+    font-size: 18px;
+    font-weight: 600;
+}
+.vendor-card-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.vendor-card-meta div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.vendor-card-meta span.label {
+    color: var(--text-muted);
+}
+.vendor-card-meta span.value {
+    color: var(--text-main);
+    font-weight: 500;
+    text-align: right;
+    max-width: 60%;
+}
+.vendor-card-actions {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.vendor-card-actions button {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-vendor-edit {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+.btn-vendor-edit:hover { background: rgba(59, 130, 246, 0.2); }
+
+.btn-vendor-save {
+    background: #10b981;
+    color: white;
+}
+.btn-vendor-save:hover { background: #059669; }
+
+.btn-vendor-archive {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+.btn-vendor-archive:hover { background: rgba(239, 68, 68, 0.2); }
+
+.vendor-card .editable-field {
+    display: none;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+}
+.vendor-card .editable-field:focus {
+    border-color: #3b82f6;
+}
+.vendor-card.vendor-edit-mode .editable-field {
+    display: inline-block;
+}
+.vendor-card.vendor-edit-mode span.value-text {
+    display: none;
+}
+.vendor-card.vendor-edit-mode .btn-vendor-edit {
+    display: none;
+}
+.vendor-card:not(.vendor-edit-mode) .btn-vendor-save {
+    display: none;
+}
