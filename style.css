@@ -6681,14 +6681,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     outline: none;
 }
 
-.product-details-section {
-    margin-top: 28px;
-    padding: 28px 32px 24px 32px;
-    box-sizing: border-box;
-    background: var(--bg-secondary, rgba(0,0,0,0.2));
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-}
+/* Removed redundant product-details-section */
 
 .payment-terms-section {
     padding: 28px 32px 12px 32px;
@@ -6961,20 +6954,14 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 
 /* PO Product Details Section Edge Spacing */
-.product-details-section {
-    width: 100%;
-    padding: 0 24px;
-    margin-bottom: 32px;
-    box-sizing: border-box;
-}
-
-.po-product-card {
+.po-product-section {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 28px;
     box-shadow: var(--shadow);
-    width: 100%;
+    width: calc(100% - 48px);
+    margin: 0 auto 32px auto;
     box-sizing: border-box;
 }
 
