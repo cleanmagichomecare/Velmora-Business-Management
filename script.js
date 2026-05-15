@@ -2327,7 +2327,7 @@ window.SharedCategoryService = {
         vendorCardGrid.addEventListener('click', (e) => {
             const archiveBtn = e.target.closest('.btn-vendor-archive');
             if (archiveBtn) {
-                const id = parseInt(archiveBtn.getAttribute('data-id'), 10);
+                const id = archiveBtn.getAttribute('data-id');
                 window.archiveVendor(id);
                 return;
             }
@@ -2341,8 +2341,9 @@ window.SharedCategoryService = {
 
             const saveBtn = e.target.closest('.btn-vendor-save');
             if (saveBtn) {
-                const id = parseInt(saveBtn.getAttribute('data-id'), 10);
+                const id = saveBtn.getAttribute('data-id');
                 const card = saveBtn.closest('.vendor-card');
+                console.log('Updating vendor:', id);
                 window.updateInlineVendor(id, card);
                 return;
             }
