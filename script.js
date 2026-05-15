@@ -1867,6 +1867,12 @@ window.SharedCategoryService = {
             
             products: products || [],
             
+            // Map the first product's details to top-level columns for schema compatibility
+            moq: products.length > 0 && products[0].moq ? parseInt(products[0].moq) || null : null,
+            batch_size: products.length > 0 ? products[0].batch_size : null,
+            price_per_unit: products.length > 0 ? products[0].price_per_unit : null,
+            used_in: products.length > 0 ? products[0].used_in : null,
+            
             vendor_name: document.getElementById('vendorName').value || null,
             representative_name: document.getElementById('representativeName').value || null,
             phone: document.getElementById('phone').value || null,
