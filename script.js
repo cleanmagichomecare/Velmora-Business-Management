@@ -11288,17 +11288,17 @@ window.handleVendorSelectionForPO = function(e) {
                     const pGst = prod.gst || '';
                     const pUsedIn = prod.used_in || '';
                     
-                    tr.innerHTML = \`
-                        <td style="color: var(--text-muted); font-weight: 600;">\${rowCount}</td>
-                        <td><input type="text" class="form-control po-desc" value="\${pName}" readonly required></td>
-                        <td><input type="text" class="form-control po-moq" value="\${pMoq}" readonly></td>
-                        <td><input type="text" class="form-control po-batch" value="\${pBatch}" readonly></td>
+                    tr.innerHTML = `
+                        <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
+                        <td><input type="text" class="form-control po-desc" value="${pName}" readonly required></td>
+                        <td><input type="text" class="form-control po-moq" value="${pMoq}" readonly></td>
+                        <td><input type="text" class="form-control po-batch" value="${pBatch}" readonly></td>
                         <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
-                        <td><input type="number" class="form-control po-price" value="\${pPrice}" step="0.01" readonly required></td>
-                        <td><input type="text" class="form-control po-gst" value="\${pGst}" readonly></td>
+                        <td><input type="number" class="form-control po-price" value="${pPrice}" step="0.01" readonly required></td>
+                        <td><input type="text" class="form-control po-gst" value="${pGst}" readonly></td>
                         <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
-                        <td><input type="text" class="form-control po-used" value="\${pUsedIn}" readonly></td>
-                    \`;
+                        <td><input type="text" class="form-control po-used" value="${pUsedIn}" readonly></td>
+                    `;
 
                     const qtyInput = tr.querySelector('.po-qty');
                     const priceInput = tr.querySelector('.po-price');
