@@ -6958,16 +6958,15 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 28px;
+    padding: 32px;
     box-shadow: var(--shadow);
-    width: calc(100% - 48px);
-    margin: 0 auto 32px auto;
+    width: 100%;
+    margin-bottom: 32px;
     box-sizing: border-box;
 }
 
 .po-product-table-wrapper {
     width: 100%;
-    max-width: 100%;
     overflow-x: auto;
     box-sizing: border-box;
 }
@@ -7005,10 +7004,9 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 
 /* PO Total Summary */
 .po-total-summary-container {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 24px;
     width: 100%;
+    margin-top: 24px;
+    display: block;
 }
 
 .po-total-summary {
@@ -7020,6 +7018,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    margin-left: auto;
 }
 
 .po-total-row {
