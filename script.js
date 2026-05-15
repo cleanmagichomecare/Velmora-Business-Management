@@ -2377,8 +2377,7 @@ window.SharedCategoryService = {
                     vendor_category: category,
                     sub_category: subcategory,
                     phone: phone,
-                    gst_applicable: gst,
-                    gst_available: gst
+                    gst_applicable: gst
                 })
                 .eq('id', id);
 
