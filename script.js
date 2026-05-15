@@ -1865,7 +1865,7 @@ window.SharedCategoryService = {
             
             gst_applicable: document.getElementById('gstAvailable').checked,
             
-            products: products,
+            products: products || [],
             
             vendor_name: document.getElementById('vendorName').value || null,
             representative_name: document.getElementById('representativeName').value || null,
