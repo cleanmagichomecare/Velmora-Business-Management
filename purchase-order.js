@@ -22,10 +22,10 @@ window.initPurchaseOrderForm = async function() {
     if (poDateHeader) poDateHeader.textContent = formattedDate;
     if (poDateInput) poDateInput.value = formattedDate;
 
-    // 3. Load active vendors dynamically from Supabase (Delegated to script.js loadVendorsForPO)
+    // 3. Load active vendors dynamically from Supabase (Delegated to script.js loadVendors)
     const vendorDropdown = document.getElementById('po-vendor-name');
-    if (vendorDropdown && typeof window.loadVendorsForPO === 'function') {
-        window.loadVendorsForPO(vendorDropdown);
+    if (vendorDropdown && typeof window.loadVendors === 'function') {
+        window.loadVendors(vendorDropdown);
     }
 
     // 4. Initialize Category Cascading System

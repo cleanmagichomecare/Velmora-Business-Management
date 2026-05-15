@@ -11199,7 +11199,7 @@ document.addEventListener('DOMContentLoaded', () => {
    ===================================================================== */
 window.fetchedPOVendorsList = [];
 
-window.loadVendorsForPO = async function(vendorDropdown) {
+window.loadVendors = async function(vendorDropdown) {
     if (!vendorDropdown) return;
     vendorDropdown.innerHTML = '<option value="">Loading Vendors...</option>';
     try {
@@ -11216,7 +11216,7 @@ window.loadVendorsForPO = async function(vendorDropdown) {
         if (window.fetchedPOVendorsList.length > 0) {
             window.fetchedPOVendorsList.forEach(vendor => {
                 const opt = document.createElement('option');
-                opt.value = vendor.vendor_name; // Store the vendor name directly for PO
+                opt.value = vendor.id; // Store vendor ID
                 opt.textContent = vendor.vendor_name;
                 vendorDropdown.appendChild(opt);
             });
@@ -11224,17 +11224,17 @@ window.loadVendorsForPO = async function(vendorDropdown) {
             vendorDropdown.innerHTML = '<option value="">No vendors found</option>';
         }
 
-        vendorDropdown.removeEventListener('change', window.handleVendorSelectionForPO);
-        vendorDropdown.addEventListener('change', window.handleVendorSelectionForPO);
+        vendorDropdown.removeEventListener('change', window.handleVendorSelection);
+        vendorDropdown.addEventListener('change', window.handleVendorSelection);
     } catch (err) {
         console.error("Error loading vendors for PO:", err);
         vendorDropdown.innerHTML = '<option value="">Error loading vendors</option>';
     }
 };
 
-window.handleVendorSelectionForPO = function(e) {
-    const selectedVendorName = e.target.value;
-    const vendor = window.fetchedPOVendorsList.find(v => v.vendor_name === selectedVendorName);
+window.handleVendorSelection = function(e) {
+    const selectedVendorId = e.target.value;
+    const vendor = window.fetchedPOVendorsList.find(v => v.id == selectedVendorId);
     
     const poMainCat = document.getElementById('po-main-category');
     const poSub1 = document.getElementById('po-sub-category1');
@@ -11324,6 +11324,7 @@ window.handleVendorSelectionForPO = function(e) {
         if (poSub1) { poSub1.disabled = true; poSub1.innerHTML = '<option value="">Select Category First</option>'; }
         if (poSub2) { poSub2.disabled = true; poSub2.innerHTML = '<option value="">Select Category First</option>'; }
         
+        const poSub3Id = 'po-sub-category3';
         if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
             window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
             const poSub3Container = document.getElementById(`container-${poSub3Id}`);
@@ -11342,3 +11343,10 @@ window.handleVendorSelectionForPO = function(e) {
         }
     }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    const poVendorDropdown = document.getElementById('po-vendor-name');
+    if (poVendorDropdown && typeof window.loadVendors === 'function') {
+        window.loadVendors(poVendorDropdown);
+    }
+});
