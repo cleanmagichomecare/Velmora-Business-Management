@@ -24,20 +24,23 @@ window.initPurchaseOrderForm = async function() {
 
     // 3. Load active vendors dynamically from Supabase
     const vendorDropdown = document.getElementById('po-vendor-name');
+    let fetchedPOVendors = [];
+
     if (vendorDropdown) {
         vendorDropdown.innerHTML = '<option value="">Loading Vendors...</option>';
         try {
             const { data, error } = await window.supabase
                 .from('vendors')
-                .select('id, vendor_name')
+                .select('*')
                 .eq('status', 'active')
                 .order('vendor_name', { ascending: true });
                 
             if (error) throw error;
 
+            fetchedPOVendors = data || [];
             vendorDropdown.innerHTML = '<option value="">Select Vendor</option>';
-            if (data && data.length > 0) {
-                data.forEach(vendor => {
+            if (fetchedPOVendors.length > 0) {
+                fetchedPOVendors.forEach(vendor => {
                     const opt = document.createElement('option');
                     opt.value = vendor.vendor_name; // Store the vendor name directly for PO as per normal UI behavior
                     opt.textContent = vendor.vendor_name;
@@ -50,6 +53,104 @@ window.initPurchaseOrderForm = async function() {
             console.error("Error loading vendors for PO:", err);
             vendorDropdown.innerHTML = '<option value="">Error loading vendors</option>';
         }
+
+        // Auto-fill listener
+        vendorDropdown.addEventListener('change', (e) => {
+            const selectedVendorName = e.target.value;
+            const vendor = fetchedPOVendors.find(v => v.vendor_name === selectedVendorName);
+            
+            const poMainCat = document.getElementById('po-main-category');
+            const poSub1 = document.getElementById('po-sub-category1');
+            const poSub2 = document.getElementById('po-sub-category2');
+            const poSub3Id = 'po-sub-category3';
+
+            if (vendor) {
+                // Auto-fill Categories
+                if (poMainCat) {
+                    poMainCat.innerHTML = `<option value="${vendor.vendor_category || ''}">${vendor.vendor_category || 'N/A'}</option>`;
+                    poMainCat.value = vendor.vendor_category || '';
+                    poMainCat.disabled = true;
+                }
+                if (poSub1) {
+                    poSub1.innerHTML = `<option value="${vendor.sub_category || ''}">${vendor.sub_category || 'N/A'}</option>`;
+                    poSub1.value = vendor.sub_category || '';
+                    poSub1.disabled = true;
+                }
+                if (poSub2) {
+                    poSub2.innerHTML = `<option value="${vendor.sub_sub_category || ''}">${vendor.sub_sub_category || 'N/A'}</option>`;
+                    poSub2.value = vendor.sub_sub_category || '';
+                    poSub2.disabled = true;
+                }
+                if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+                    const sub3Values = vendor.sub_sub_sub_category ? vendor.sub_sub_sub_category.split(',').map(s => s.trim()).filter(Boolean) : [];
+                    window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, sub3Values, 'Select Sub Category 3', 'No Sub Categories');
+                    
+                    const poSub3Container = document.getElementById(`container-${poSub3Id}`);
+                    if (poSub3Container) {
+                        const display = poSub3Container.querySelector('.multi-select-display');
+                        if (display) display.style.pointerEvents = 'none';
+                        if (display) display.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
+                    }
+                }
+
+                // Auto-load Product Details Table
+                const tbody = document.getElementById('po-product-tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    if (typeof rowCount !== 'undefined') rowCount = 0; // Reset outer rowCount
+                    
+                    if (vendor.products && Array.isArray(vendor.products) && vendor.products.length > 0) {
+                        vendor.products.forEach(prod => {
+                            if (typeof rowCount !== 'undefined') rowCount++;
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td style="color: var(--text-muted); font-weight: 600;">${typeof rowCount !== 'undefined' ? rowCount : 1}</td>
+                                <td><input type="text" class="form-control po-desc" value="${prod.product_name || ''}" readonly required></td>
+                                <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
+                                <td><input type="number" class="form-control po-price" value="${prod.price_per_unit || prod.price || 0}" step="0.01" readonly required></td>
+                                <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
+                            `;
+
+                            const qtyInput = tr.querySelector('.po-qty');
+                            const priceInput = tr.querySelector('.po-price');
+
+                            if (qtyInput && typeof calculateRowTotal === 'function') qtyInput.addEventListener('input', () => calculateRowTotal(tr));
+                            if (priceInput && typeof calculateRowTotal === 'function') priceInput.addEventListener('input', () => calculateRowTotal(tr));
+
+                            tbody.appendChild(tr);
+                        });
+                        if (typeof calculateOverallTotals === 'function') calculateOverallTotals();
+                    } else {
+                        // fallback to one empty row
+                        if (typeof addProductRow === 'function') addProductRow();
+                    }
+                }
+
+            } else {
+                // Reset to standard behavior
+                if (poMainCat) { poMainCat.disabled = false; poMainCat.innerHTML = '<option value="">Select Main Category</option>'; }
+                if (poSub1) { poSub1.disabled = true; poSub1.innerHTML = '<option value="">Select Category First</option>'; }
+                if (poSub2) { poSub2.disabled = true; poSub2.innerHTML = '<option value="">Select Category First</option>'; }
+                
+                if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+                    window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
+                    const poSub3Container = document.getElementById(`container-${poSub3Id}`);
+                    if (poSub3Container) {
+                        const display = poSub3Container.querySelector('.multi-select-display');
+                        if (display) display.style.pointerEvents = 'auto';
+                        if (display) display.style.backgroundColor = '';
+                    }
+                }
+                
+                // Clear and add one blank row
+                const tbody = document.getElementById('po-product-tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    if (typeof rowCount !== 'undefined') rowCount = 0;
+                    if (typeof addProductRow === 'function') addProductRow();
+                }
+            }
+        });
     }
 
     // 4. Initialize Category Cascading System
