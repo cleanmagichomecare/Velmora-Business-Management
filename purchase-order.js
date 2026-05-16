@@ -162,190 +162,7 @@ window.initPurchaseOrderForm = async function() {
         };
     }
     
-    const saveBtn = document.getElementById('btn-save-po');
-    if (saveBtn) {
-        // Step 1: Verify Button Event
-        console.log("Save PO button found in DOM. Attaching event listener.");
-        
-        // Remove existing listeners if any by cloning
-        const newSaveBtn = saveBtn.cloneNode(true);
-        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-
-        newSaveBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            console.log("Save PO button clicked");
-            console.log("Step 1... Event listener successfully executed.");
-            
-            // Step 2: Wrap entire logic in try/catch
-            try {
-                console.log("Step 2... Initializing save process");
-
-                // Step 3: Validate Required Data
-                const vendorDropdown = document.getElementById('po-vendor-name');
-                if (!vendorDropdown || !vendorDropdown.value) {
-                    const msg = 'Please select a vendor before saving.';
-                    console.warn('Validation error:', msg);
-                    alert(msg);
-                    return;
-                }
-                
-                const tbody = document.getElementById('po-product-tbody');
-                if (!tbody || tbody.querySelectorAll('tr').length === 0) {
-                    const msg = 'Please add at least one product row.';
-                    console.warn('Validation error:', msg);
-                    alert(msg);
-                    return;
-                }
-                
-                let allValid = true;
-                tbody.querySelectorAll('tr').forEach(tr => {
-                    const qtyInput = tr.querySelector('.po-qty');
-                    const priceInput = tr.querySelector('.po-price');
-                    const qty = parseFloat(qtyInput ? qtyInput.value : 0);
-                    const price = parseFloat(priceInput ? priceInput.value : 0);
-                    
-                    if (isNaN(qty) || qty <= 0 || isNaN(price)) {
-                        allValid = false;
-                    }
-                });
-                
-                if (!allValid) {
-                    const msg = 'Quantity must be > 0 and Unit Price must exist for all products.';
-                    console.warn('Validation error:', msg);
-                    alert(msg);
-                    return;
-                }
-                
-                console.log("Step 3... Validation passed");
-                
-                const originalBtnText = newSaveBtn.textContent;
-                newSaveBtn.textContent = 'Saving...';
-                newSaveBtn.disabled = true;
-                
-                // Collect Header Payload
-                const poNumberHeader = document.getElementById('po-number-header');
-                const poNumber = poNumberHeader ? poNumberHeader.textContent.trim() : '';
-                
-                const parseCurrency = (id) => {
-                    const el = document.getElementById(id);
-                    if (!el) return 0;
-                    const text = el.tagName === 'INPUT' ? el.value : el.textContent;
-                    return parseFloat(text.replace(/[₹,]/g, '')) || 0;
-                };
-
-                const poPayload = {
-                    po_number: poNumber,
-                    vendor_id: vendorDropdown.value,
-                    vendor_name: vendorDropdown.options[vendorDropdown.selectedIndex].text,
-                    main_category: document.getElementById('po-main-category')?.value || null,
-                    sub_category_1: document.getElementById('po-sub-category1')?.value || null,
-                    sub_category_2: document.getElementById('po-sub-category2')?.value || null,
-                    sub_category_3: document.getElementById('po-sub-category3')?.value || null,
-                    payment_mode: document.getElementById('po-payment-mode')?.value || null,
-                    initiated_by: document.getElementById('po-initiated-by')?.value || null,
-                    approved_by: document.getElementById('po-approved-by')?.value || null,
-                    delivery_address: document.getElementById('po-delivery-address')?.value || null,
-                    expected_delivery_date: document.getElementById('po-delivery-date')?.value || null,
-                    shipping_charges: parseCurrency('po-shipping-charge'),
-                    subtotal: parseCurrency('po-sub-total'),
-                    gst_total: parseCurrency('po-gst-total'),
-                    grand_total: parseCurrency('po-grand-total'),
-                    terms_conditions: "1. Products supplied must match approved samples and agreed specifications.\n2. Any damaged or defective goods may be rejected.\n3. Delivery delays must be informed in advance.\n4. GST invoice must be provided along with goods.\n5. Packaging should be secure and suitable for transportation."
-                };
-                
-                // Collect Products Payload
-                const productRows = [];
-                tbody.querySelectorAll('tr').forEach(row => {
-                    const getVal = (selector) => {
-                        const el = row.querySelector(selector);
-                        return el ? el.value || '' : '';
-                    };
-                    const rowTotalSpan = row.querySelector('.po-row-total');
-                    const totalAmt = rowTotalSpan ? (parseFloat(rowTotalSpan.textContent.replace(/[₹,]/g, '')) || 0) : 0;
-                    
-                    productRows.push({
-                        // purchase_order_id to be added later
-                        product_name: getVal('.po-desc'),
-                        moq: getVal('.po-moq'),
-                        batch_size: getVal('.po-batch'),
-                        quantity: parseFloat(getVal('.po-qty')) || 0,
-                        unit_price: parseFloat(getVal('.po-price')) || 0,
-                        gst: getVal('.po-gst'),
-                        total_amount: totalAmt,
-                        used_in: getVal('.po-used')
-                    });
-                });
-
-                // Step 4: Verify Supabase Insert and Payload
-                console.log("Step 4... Payloads prepared");
-                console.log("PO Payload:", poPayload);
-                console.log("Products Payload:", productRows);
-                
-                // Step 5: Execute Header Insert
-                console.log("Step 5... Executing Supabase Insert for Header");
-                
-                const { data: insertedPO, error: headerErr } = await window.supabase
-                    .from('purchase_orders')
-                    .insert([poPayload])
-                    .select('id')
-                    .single();
-                    
-                if (headerErr) {
-                    console.error("Supabase Header Insert Failed:", headerErr);
-                    throw headerErr;
-                }
-                
-                console.log("Header Insert Success! Inserted PO ID:", insertedPO.id);
-                
-                // Step 6: Verify Product Table Insert
-                console.log("Step 6... Linking foreign key and inserting product rows");
-                
-                const purchaseOrderId = insertedPO.id;
-                
-                // Add FK to each product row
-                productRows.forEach(row => {
-                    row.purchase_order_id = purchaseOrderId;
-                });
-                
-                const { error: productsErr } = await window.supabase
-                    .from('purchase_order_products')
-                    .insert(productRows);
-                    
-                if (productsErr) {
-                    console.error("Supabase Products Insert Failed:", productsErr);
-                    throw productsErr;
-                }
-                
-                console.log("Product Insert Success!");
-                
-                // Step 7: Add Success Feedback
-                console.log("Step 7... Resetting form and UI");
-                
-                if (window.showToast) window.showToast('Purchase Order saved successfully!', 'success');
-                else alert('Purchase Order saved successfully!');
-                
-                const form = document.getElementById('purchase-order-form');
-                if (form) form.reset();
-                if (vendorDropdown) vendorDropdown.dispatchEvent(new Event('change'));
-                
-                // Regenerate PO Number
-                if (typeof window.generatePONumber === 'function') {
-                    await window.generatePONumber();
-                }
-
-                console.log("Step 8... Flow complete!");
-
-            } catch (error) {
-                console.error("PO Save Error:", error);
-                alert("Failed to save Purchase Order: " + (error.message || JSON.stringify(error)));
-            } finally {
-                newSaveBtn.textContent = 'Save Purchase Order';
-                newSaveBtn.disabled = false;
-            }
-        });
-    } else {
-        console.error("CRITICAL ERROR: '#btn-save-po' not found in DOM.");
-    }
+    // Event delegation is used globally at the bottom of the file to ensure the Save PO button ALWAYS works.
 
     // 6. Product Table Logic
     const tbody = document.getElementById('po-product-tbody');
@@ -430,3 +247,178 @@ window.initPurchaseOrderForm = async function() {
     }
 
 };
+
+// Global Event Delegation for Save PO Button to guarantee it always works
+document.addEventListener('click', async (e) => {
+    const saveBtn = e.target.closest('#btn-save-po');
+    if (!saveBtn) return;
+    
+    e.preventDefault();
+    console.log("Save PO button clicked");
+    console.log("Step 1... Event listener successfully executed globally via delegation.");
+    
+    try {
+        console.log("Step 2... Initializing save process");
+
+        // Step 3: Validate Required Data
+        const vendorDropdown = document.getElementById('po-vendor-name');
+        if (!vendorDropdown || !vendorDropdown.value) {
+            const msg = 'Please select a vendor before saving.';
+            console.warn('Validation error:', msg);
+            alert(msg);
+            return;
+        }
+        
+        const tbody = document.getElementById('po-product-tbody');
+        if (!tbody || tbody.querySelectorAll('tr').length === 0) {
+            const msg = 'Please add at least one product row.';
+            console.warn('Validation error:', msg);
+            alert(msg);
+            return;
+        }
+        
+        let allValid = true;
+        tbody.querySelectorAll('tr').forEach(tr => {
+            const qtyInput = tr.querySelector('.po-qty');
+            const priceInput = tr.querySelector('.po-price');
+            const qty = parseFloat(qtyInput ? qtyInput.value : 0);
+            const price = parseFloat(priceInput ? priceInput.value : 0);
+            
+            if (isNaN(qty) || qty <= 0 || isNaN(price)) {
+                allValid = false;
+            }
+        });
+        
+        if (!allValid) {
+            const msg = 'Quantity must be > 0 and Unit Price must exist for all products.';
+            console.warn('Validation error:', msg);
+            alert(msg);
+            return;
+        }
+        
+        console.log("Step 3... Validation passed");
+        
+        const originalBtnText = saveBtn.textContent;
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+        
+        // Collect Header Payload
+        const poNumberHeader = document.getElementById('po-number-header');
+        const poNumber = poNumberHeader ? poNumberHeader.textContent.trim() : '';
+        
+        const parseCurrency = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const text = el.tagName === 'INPUT' ? el.value : el.textContent;
+            return parseFloat(text.replace(/[₹,]/g, '')) || 0;
+        };
+
+        const poPayload = {
+            po_number: poNumber,
+            vendor_id: vendorDropdown.value,
+            vendor_name: vendorDropdown.options[vendorDropdown.selectedIndex].text,
+            main_category: document.getElementById('po-main-category')?.value || null,
+            sub_category_1: document.getElementById('po-sub-category1')?.value || null,
+            sub_category_2: document.getElementById('po-sub-category2')?.value || null,
+            sub_category_3: document.getElementById('po-sub-category3')?.value || null,
+            payment_mode: document.getElementById('po-payment-mode')?.value || null,
+            initiated_by: document.getElementById('po-initiated-by')?.value || null,
+            approved_by: document.getElementById('po-approved-by')?.value || null,
+            delivery_address: document.getElementById('po-delivery-address')?.value || null,
+            expected_delivery_date: document.getElementById('po-delivery-date')?.value || null,
+            shipping_charges: parseCurrency('po-shipping-charge'),
+            subtotal: parseCurrency('po-sub-total'),
+            gst_total: parseCurrency('po-gst-total'),
+            grand_total: parseCurrency('po-grand-total'),
+            terms_conditions: "1. Products supplied must match approved samples and agreed specifications.\n2. Any damaged or defective goods may be rejected.\n3. Delivery delays must be informed in advance.\n4. GST invoice must be provided along with goods.\n5. Packaging should be secure and suitable for transportation."
+        };
+        
+        // Collect Products Payload
+        const productRows = [];
+        tbody.querySelectorAll('tr').forEach(row => {
+            const getVal = (selector) => {
+                const el = row.querySelector(selector);
+                return el ? el.value || '' : '';
+            };
+            const rowTotalSpan = row.querySelector('.po-row-total');
+            const totalAmt = rowTotalSpan ? (parseFloat(rowTotalSpan.textContent.replace(/[₹,]/g, '')) || 0) : 0;
+            
+            productRows.push({
+                product_name: getVal('.po-desc'),
+                moq: getVal('.po-moq'),
+                batch_size: getVal('.po-batch'),
+                quantity: parseFloat(getVal('.po-qty')) || 0,
+                unit_price: parseFloat(getVal('.po-price')) || 0,
+                gst: getVal('.po-gst'),
+                total_amount: totalAmt,
+                used_in: getVal('.po-used')
+            });
+        });
+
+        // Step 4: Verify Supabase Insert and Payload
+        console.log("Step 4... Payloads prepared");
+        console.log("PO Payload:", poPayload);
+        console.log("Products Payload:", productRows);
+        
+        // Step 5: Execute Header Insert
+        console.log("Step 5... Executing Supabase Insert for Header");
+        
+        const { data: insertedPO, error: headerErr } = await window.supabase
+            .from('purchase_orders')
+            .insert([poPayload])
+            .select('id')
+            .single();
+            
+        if (headerErr) {
+            console.error("Supabase Header Insert Failed:", headerErr);
+            throw headerErr;
+        }
+        
+        console.log("Header Insert Success! Inserted PO ID:", insertedPO.id);
+        
+        // Step 6: Verify Product Table Insert
+        console.log("Step 6... Linking foreign key and inserting product rows");
+        
+        const purchaseOrderId = insertedPO.id;
+        
+        // Add FK to each product row
+        productRows.forEach(row => {
+            row.purchase_order_id = purchaseOrderId;
+        });
+        
+        const { error: productsErr } = await window.supabase
+            .from('purchase_order_products')
+            .insert(productRows);
+            
+        if (productsErr) {
+            console.error("Supabase Products Insert Failed:", productsErr);
+            throw productsErr;
+        }
+        
+        console.log("Product Insert Success!");
+        
+        // Step 7: Add Success Feedback
+        console.log("Step 7... Resetting form and UI");
+        
+        if (window.showToast) window.showToast('Purchase Order saved successfully!', 'success');
+        else alert('Purchase Order saved successfully!');
+        
+        const form = document.getElementById('purchase-order-form');
+        if (form) form.reset();
+        if (vendorDropdown) vendorDropdown.dispatchEvent(new Event('change'));
+        
+        // Trigger generic re-initialization
+        if (typeof window.initPurchaseOrderForm === 'function') {
+            await window.initPurchaseOrderForm();
+        }
+
+        console.log("Step 8... Flow complete!");
+
+    } catch (error) {
+        console.error("PO Save Error:", error);
+        alert("Failed to save Purchase Order: " + (error.message || JSON.stringify(error)));
+    } finally {
+        saveBtn.textContent = 'Save Purchase Order';
+        saveBtn.disabled = false;
+    }
+});
