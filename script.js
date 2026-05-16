@@ -11404,12 +11404,13 @@ window.loadVendors = async function(vendorDropdown) {
 
 window.handleVendorSelection = function(e) {
     const selectedVendorId = e.target.value;
-    const vendor = window.fetchedPOVendorsList.find(v => v.id == selectedVendorId);
+    const vendor = window.fetchedPOVendorsList ? window.fetchedPOVendorsList.find(v => v.id == selectedVendorId) : null;
     
     const poMainCat = document.getElementById('po-main-category');
     const poSub1 = document.getElementById('po-sub-category1');
     const poSub2 = document.getElementById('po-sub-category2');
-    const poSub3Id = 'po-sub-category3';
+    const poSub3 = document.getElementById('po-sub-category3');
+    const tbody = document.getElementById('po-product-tbody');
 
     if (vendor) {
         // Auto-fill Categories
@@ -11428,64 +11429,27 @@ window.handleVendorSelection = function(e) {
             poSub2.value = vendor.sub_sub_category || '';
             poSub2.disabled = true;
         }
-        if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-            const sub3Values = vendor.sub_sub_sub_category ? vendor.sub_sub_sub_category.split(',').map(s => s.trim()).filter(Boolean) : [];
-            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, sub3Values, 'Select Sub Category 3', 'No Sub Categories');
-            
-            const poSub3Container = document.getElementById(`container-${poSub3Id}`);
-            if (poSub3Container) {
-                const display = poSub3Container.querySelector('.multi-select-display');
-                if (display) display.style.pointerEvents = 'none';
-                if (display) display.style.backgroundColor = 'rgba(15, 23, 42, 0.4)';
+        
+        // Dynamically load product names into Sub Category 3 dropdown
+        if (poSub3) {
+            poSub3.innerHTML = '<option value="">Select Product Name</option>';
+            if (vendor.products && Array.isArray(vendor.products)) {
+                // Extract unique product names
+                const productNames = [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))];
+                productNames.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    poSub3.appendChild(opt);
+                });
             }
+            poSub3.disabled = false;
         }
 
-        // Auto-load Product Details Table
-        const tbody = document.getElementById('po-product-tbody');
+        // Leave Product Table entirely empty on vendor selection
         if (tbody) {
             tbody.innerHTML = '';
-            let rowCount = 0;
-            
-            if (vendor.products && Array.isArray(vendor.products) && vendor.products.length > 0) {
-                vendor.products.forEach(prod => {
-                    rowCount++;
-                    const tr = document.createElement('tr');
-                    
-                    const pName = prod.product_name || '';
-                    const pMoq = prod.moq || '';
-                    const pBatch = prod.batch_size || '';
-                    const pPrice = prod.price_per_unit || prod.price || 0;
-                    const pGst = prod.gst || '';
-                    const pUsedIn = prod.used_in || '';
-                    
-                    tr.innerHTML = `
-                        <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
-                        <td><input type="text" class="form-control po-desc" value="${pName}" readonly required></td>
-                        <td><input type="text" class="form-control po-moq" value="${pMoq}" readonly></td>
-                        <td><input type="text" class="form-control po-batch" value="${pBatch}" readonly></td>
-                        <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
-                        <td><input type="number" class="form-control po-price" value="${pPrice}" step="0.01" readonly required></td>
-                        <td><input type="text" class="form-control po-gst" value="${pGst}" readonly></td>
-                        <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
-                        <td><input type="text" class="form-control po-used" value="${pUsedIn}" readonly></td>
-                    `;
-
-                    const qtyInput = tr.querySelector('.po-qty');
-                    const priceInput = tr.querySelector('.po-price');
-
-                    if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
-                    if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
-
-                    tbody.appendChild(tr);
-                });
-                if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
-            } else {
-                // fallback to one empty row
-                if (typeof window.poAddProductRow === 'function') {
-                    if (typeof window.rowCount !== 'undefined') window.rowCount = 0;
-                    window.poAddProductRow();
-                }
-            }
+            if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
         }
 
     } else {
@@ -11493,25 +11457,72 @@ window.handleVendorSelection = function(e) {
         if (poMainCat) { poMainCat.disabled = false; poMainCat.innerHTML = '<option value="">Select Main Category</option>'; }
         if (poSub1) { poSub1.disabled = true; poSub1.innerHTML = '<option value="">Select Category First</option>'; }
         if (poSub2) { poSub2.disabled = true; poSub2.innerHTML = '<option value="">Select Category First</option>'; }
+        if (poSub3) { poSub3.disabled = false; poSub3.innerHTML = '<option value="">Select Vendor First</option>'; }
         
-        const poSub3Id = 'po-sub-category3';
-        if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
-            const poSub3Container = document.getElementById(`container-${poSub3Id}`);
-            if (poSub3Container) {
-                const display = poSub3Container.querySelector('.multi-select-display');
-                if (display) display.style.pointerEvents = 'auto';
-                if (display) display.style.backgroundColor = '';
-            }
-        }
-        
-        const tbody = document.getElementById('po-product-tbody');
         if (tbody) {
             tbody.innerHTML = '';
             if (typeof window.rowCount !== 'undefined') window.rowCount = 0;
             if (typeof window.poAddProductRow === 'function') window.poAddProductRow();
+            if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
         }
     }
+};
+
+window.handleSubCategory3Selection = function(e) {
+    const selectedProductName = e.target.value;
+    const vendorDropdown = document.getElementById('po-vendor-name');
+    if (!vendorDropdown) return;
+    
+    const selectedVendorId = vendorDropdown.value;
+    const vendor = window.fetchedPOVendorsList ? window.fetchedPOVendorsList.find(v => v.id == selectedVendorId) : null;
+    
+    const tbody = document.getElementById('po-product-tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (vendor && selectedProductName && vendor.products && Array.isArray(vendor.products)) {
+        // Filter matching product
+        const matchingProduct = vendor.products.find(p => p.product_name === selectedProductName);
+        
+        if (matchingProduct) {
+            let rowCount = 1;
+            const tr = document.createElement('tr');
+            
+            const pName = matchingProduct.product_name || '';
+            const pMoq = matchingProduct.moq || '';
+            const pBatch = matchingProduct.batch_size || '';
+            const pPrice = matchingProduct.price_per_unit || matchingProduct.price || 0;
+            const pGst = matchingProduct.gst || '';
+            const pUsedIn = matchingProduct.used_in || '';
+            
+            tr.innerHTML = `
+                <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
+                <td><input type="text" class="form-control po-desc" value="${pName}" readonly required></td>
+                <td><input type="text" class="form-control po-moq" value="${pMoq}" readonly></td>
+                <td><input type="text" class="form-control po-batch" value="${pBatch}" readonly></td>
+                <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
+                <td><input type="number" class="form-control po-price" value="${pPrice}" step="0.01" readonly required></td>
+                <td><input type="text" class="form-control po-gst" value="${pGst}" readonly></td>
+                <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
+                <td><input type="text" class="form-control po-used" value="${pUsedIn}" readonly></td>
+            `;
+
+            const qtyInput = tr.querySelector('.po-qty');
+            const priceInput = tr.querySelector('.po-price');
+
+            if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+            if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+
+            tbody.appendChild(tr);
+        }
+    } else {
+        // If they deselect or change to empty, we can just leave it empty.
+        // Or if you want a blank row when nothing is selected:
+        // if (typeof window.poAddProductRow === 'function') window.poAddProductRow();
+    }
+    
+    if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
 };
 
 document.addEventListener('DOMContentLoaded', () => {

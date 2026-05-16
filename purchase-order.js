@@ -60,7 +60,7 @@ window.initPurchaseOrderForm = async function() {
     const poMainCat = document.getElementById('po-main-category');
     const poSub1 = document.getElementById('po-sub-category1');
     const poSub2 = document.getElementById('po-sub-category2');
-    const poSub3Id = 'po-sub-category3';
+    const poSub3 = document.getElementById('po-sub-category3');
 
     const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
     
@@ -74,16 +74,14 @@ window.initPurchaseOrderForm = async function() {
         });
     }
 
-    // Handlers for Category Cascading
+    // Handlers for Category Cascading (Standard Behavior before Vendor selection)
     if (poMainCat) {
         poMainCat.onchange = () => {
             const mainVal = poMainCat.value;
             if (poSub1) poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
             if (poSub2) poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
             
-            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
-            }
+            if (poSub3) poSub3.innerHTML = '<option value="">Select Vendor First</option>';
 
             if (poSub2) poSub2.disabled = true;
 
@@ -106,9 +104,7 @@ window.initPurchaseOrderForm = async function() {
             const sub1Val = poSub1.value;
             if (poSub2) poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
             
-            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
-            }
+            if (poSub3) poSub3.innerHTML = '<option value="">Select Vendor First</option>';
 
             if (sub1Val && _globals.sub2 && _globals.sub2[sub1Val]) {
                 if (poSub2) poSub2.disabled = false;
@@ -126,18 +122,17 @@ window.initPurchaseOrderForm = async function() {
 
     if (poSub2) {
         poSub2.onchange = () => {
-            const sub2Val = poSub2.value;
-            
-            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-                const sub3Data = (sub2Val && _globals.sub3 && _globals.sub3[sub2Val]) ? _globals.sub3[sub2Val] : [];
-                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, sub3Data, 'Select Sub Category 3', 'No Sub Categories');
-            }
+            if (poSub3) poSub3.innerHTML = '<option value="">Select Vendor First</option>';
         };
     }
     
-    // Initial clear of Multi-Select Sub Category 3
-    if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
+    // Attach Sub Category 3 Listener for Auto-Filling the Product Table
+    if (poSub3) {
+        poSub3.addEventListener('change', (e) => {
+            if (typeof window.handleSubCategory3Selection === 'function') {
+                window.handleSubCategory3Selection(e);
+            }
+        });
     }
 
     // 5. Button Listeners
