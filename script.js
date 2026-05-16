@@ -2258,16 +2258,35 @@ window.SharedCategoryService = {
                 `;
             }
 
+            
             const bankHtml = `
-                <div class="vendor-details-section">
+                <div class="form-section vendor-details-section" style="margin-bottom: 0;">
                     <details>
                         <summary>Bank Details</summary>
                         <div class="vendor-details-content">
-                            <div class="vendor-section">
-                                <div class="vendor-detail-row"><span class="label">Holder</span><span class="value">${vendor.account_holder || '-'}</span></div>
-                                <div class="vendor-detail-row"><span class="label">Acc No.</span><span class="value">${vendor.account_number || '-'}</span></div>
-                                <div class="vendor-detail-row"><span class="label">IFSC</span><span class="value">${vendor.ifsc_code || '-'}</span></div>
-                                <div class="vendor-detail-row"><span class="label">UPI ID</span><span class="value">${vendor.upi_id || '-'}</span></div>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Account Holder Name</label>
+                                    <div class="vendor-display-value" data-display="account_holder">${vendor.account_holder || '-'}</div>
+                                    <input type="text" class="form-control vendor-edit-input" data-field="account_holder" value="${vendor.account_holder || ''}" placeholder="Enter name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Account Number</label>
+                                    <div class="vendor-display-value" data-display="account_number">${vendor.account_number || '-'}</div>
+                                    <input type="text" class="form-control vendor-edit-input" data-field="account_number" value="${vendor.account_number || ''}" placeholder="Enter account number">
+                                </div>
+                            </div>
+                            <div class="grid-2 mt-15" style="margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>IFSC Code</label>
+                                    <div class="vendor-display-value" data-display="ifsc_code">${vendor.ifsc_code || '-'}</div>
+                                    <input type="text" class="form-control vendor-edit-input" data-field="ifsc_code" value="${vendor.ifsc_code || ''}" placeholder="Enter IFSC">
+                                </div>
+                                <div class="form-group">
+                                    <label>UPI ID</label>
+                                    <div class="vendor-display-value" data-display="upi_id">${vendor.upi_id || '-'}</div>
+                                    <input type="text" class="form-control vendor-edit-input" data-field="upi_id" value="${vendor.upi_id || ''}" placeholder="Enter UPI ID">
+                                </div>
                             </div>
                         </div>
                     </details>
@@ -2275,83 +2294,127 @@ window.SharedCategoryService = {
             `;
 
             card.innerHTML = `
-                <div class="vendor-card-header">
-                    <span class="value-text">${vendor.vendor_name || '-'}</span>
-                    <input type="text" class="editable-field edit-name" value="${vendor.vendor_name || ''}">
-                </div>
-                
-                <div class="vendor-card-meta">
-                    <div class="vendor-section">
-                        <div class="vendor-section-title">Vendor Information</div>
-                        <div class="vendor-detail-row">
-                            <span class="label">Representative</span>
-                            <span class="value">${vendor.representative_name || '-'}</span>
+                <div class="form-section" style="margin-bottom: 24px;">
+                    <div class="section-heading" style="margin-bottom: 16px;">Vendor Classification</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Vendor Type 1</label>
+                            <div class="vendor-display-value" data-display="vendor_type1">${vendor.vendor_type1 || '-'}</div>
+                            <select class="form-control vendor-edit-input" data-field="vendor_type1">
+                                <option value="">Select Type</option>
+                                <option value="Trader" ${vendor.vendor_type1 === 'Trader' ? 'selected' : ''}>Trader</option>
+                                <option value="Manufacturer" ${vendor.vendor_type1 === 'Manufacturer' ? 'selected' : ''}>Manufacturer</option>
+                                <option value="Service Provider" ${vendor.vendor_type1 === 'Service Provider' ? 'selected' : ''}>Service Provider</option>
+                            </select>
                         </div>
-                        <div class="vendor-detail-row">
-                            <span class="label">Type</span>
-                            <span class="value">
-                                <span class="value-text">${vendor.vendor_type1 || '-'} &bull; ${displayVt2}</span>
-                                <div style="display: flex; gap: 4px; justify-content: flex-end; width: 100%; display: none;" class="editable-field">
-                                    <input type="text" class="editable-field edit-type1" value="${vendor.vendor_type1 || ''}" placeholder="Type 1" style="width: 50%; display: block;">
-                                    <input type="text" class="editable-field edit-type2" value="${displayVt2 || ''}" placeholder="Type 2" style="width: 50%; display: block;">
-                                </div>
-                            </span>
-                        </div>
-                        <div class="vendor-detail-row">
-                            <span class="label">Category</span>
-                            <span class="value">
-                                <span class="value-text">${vendor.vendor_category || '-'}</span>
-                                <input type="text" class="editable-field edit-category" value="${vendor.vendor_category || ''}">
-                            </span>
-                        </div>
-                        <div class="vendor-detail-row">
-                            <span class="label">Sub Category</span>
-                            <span class="value">
-                                <span class="value-text">${vendor.sub_category || '-'}</span>
-                                <input type="text" class="editable-field edit-subcategory" value="${vendor.sub_category || ''}">
-                            </span>
-                        </div>
-                        <div class="vendor-detail-row">
-                            <span class="label">Sub Sub Cat.</span>
-                            <span class="value">${vendor.sub_sub_category || '-'}</span>
-                        </div>
-                        <div class="vendor-detail-row">
-                            <span class="label">Sub Cat. 3</span>
-                            <span class="value">${vendor.sub_category_3 || '-'}</span>
+                        <div class="form-group">
+                            <label>Vendor Type 2</label>
+                            <div class="vendor-display-value" data-display="vendor_type2">${displayVt2 || '-'}</div>
+                            <select class="form-control vendor-edit-input" data-field="vendor_type2">
+                                <option value="">Select Type</option>
+                                <option value="primary_vendor" ${vendor.vendor_type2 === 'primary_vendor' ? 'selected' : ''}>Primary Vendor</option>
+                                <option value="secondary_vendor" ${vendor.vendor_type2 === 'secondary_vendor' ? 'selected' : ''}>Secondary Vendor</option>
+                                <option value="tertiary_vendor" ${vendor.vendor_type2 === 'tertiary_vendor' ? 'selected' : ''}>Tertiary Vendor</option>
+                            </select>
                         </div>
                     </div>
                     
-                    <div class="vendor-section" style="margin-top: 8px;">
-                        <div class="vendor-section-title">Contact Details</div>
-                        <div class="vendor-detail-row">
-                            <span class="label">Phone</span>
-                            <span class="value">
-                                <span class="value-text">${vendor.phone || '-'}</span>
-                                <input type="text" class="editable-field edit-phone" value="${vendor.phone || ''}">
-                            </span>
+                    <div class="grid-2 mt-15" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>Main Category</label>
+                            <div class="vendor-display-value" data-display="vendor_category">${vendor.vendor_category || '-'}</div>
+                            <select class="form-control vendor-edit-input vendor-edit-cat" data-field="vendor_category" onclick="if(window.loadVendorMainCategories && this.options.length <= 1) window.loadVendorMainCategories(this)">
+                                <option value="${vendor.vendor_category || ''}" selected>${vendor.vendor_category || 'Select Category'}</option>
+                            </select>
                         </div>
-                        <div class="vendor-detail-row"><span class="label">Email</span><span class="value">${vendor.email || '-'}</span></div>
-                        <div class="vendor-detail-row"><span class="label">Address</span><span class="value">${vendor.address || '-'}</span></div>
-                        <div class="vendor-detail-row"><span class="label">City</span><span class="value">${vendor.city || '-'}</span></div>
-                        <div class="vendor-detail-row"><span class="label">Del. Time</span><span class="value">${vendor.delivery_time || '-'}</span></div>
-                        <div class="vendor-detail-row">
-                            <span class="label">GST Reg.</span>
-                            <span class="value">
-                                <span class="value-text">${gstFormatted}</span>
-                                <select class="editable-field edit-gst" style="width: 100%; float: right;">
-                                    <option value="Yes" ${isGst ? 'selected' : ''}>Yes</option>
-                                    <option value="No" ${!isGst ? 'selected' : ''}>No</option>
-                                </select>
-                            </span>
+                        <div class="form-group">
+                            <label>Sub Category 1</label>
+                            <div class="vendor-display-value" data-display="sub_category">${vendor.sub_category || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="sub_category" value="${vendor.sub_category || ''}">
                         </div>
-                        <div class="vendor-detail-row"><span class="label">GST No.</span><span class="value">${vendor.gst_number || '-'}</span></div>
+                    </div>
+                    
+                    <div class="grid-2 mt-15" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>Sub Category 2</label>
+                            <div class="vendor-display-value" data-display="sub_sub_category">${vendor.sub_sub_category || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="sub_sub_category" value="${vendor.sub_sub_category || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Sub Category 3</label>
+                            <div class="vendor-display-value" data-display="sub_category_3">${vendor.sub_category_3 || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="sub_category_3" value="${vendor.sub_category_3 || ''}">
+                        </div>
+                    </div>
+                    
+                    <div class="premium-checkbox-row mt-15" style="margin-top: 20px;">
+                        <div class="vendor-display-value" data-display="gst_applicable" style="padding:0;">${isGst ? 'GST Applicable' : 'GST Not Applicable'}</div>
+                        <div class="vendor-edit-input" style="display: none;">
+                            <label class="premium-checkbox-row" style="cursor:pointer; display:flex; align-items:center; gap:10px;">
+                                <input type="checkbox" class="premium-checkbox" data-field="gst_applicable" ${isGst ? 'checked' : ''}>
+                                <span class="premium-checkbox-label">GST Applicable</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 
+                <div class="form-section" style="margin-bottom: 24px;">
+                    <div class="section-heading" style="margin-bottom: 16px;">Vendor Details</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Vendor / Company Name</label>
+                            <div class="vendor-display-value" data-display="vendor_name">${vendor.vendor_name || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="vendor_name" value="${vendor.vendor_name || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Representative Name</label>
+                            <div class="vendor-display-value" data-display="representative_name">${vendor.representative_name || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="representative_name" value="${vendor.representative_name || ''}">
+                        </div>
+                    </div>
+                    <div class="grid-2 mt-15" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <div class="vendor-display-value" data-display="phone">${vendor.phone || '-'}</div>
+                            <input type="tel" class="form-control vendor-edit-input" data-field="phone" value="${vendor.phone || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <div class="vendor-display-value" data-display="email">${vendor.email || '-'}</div>
+                            <input type="email" class="form-control vendor-edit-input" data-field="email" value="${vendor.email || ''}">
+                        </div>
+                    </div>
+                    <div class="form-group mt-15" style="margin-top: 15px;">
+                        <label>Registered Address</label>
+                        <div class="vendor-display-value" data-display="address">${vendor.address || '-'}</div>
+                        <input type="text" class="form-control vendor-edit-input" data-field="address" value="${vendor.address || ''}">
+                    </div>
+                    <div class="grid-3 mt-15" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-top: 15px;">
+                        <div class="form-group">
+                            <label>City</label>
+                            <div class="vendor-display-value" data-display="city">${vendor.city || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="city" value="${vendor.city || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Delivery Time (Days)</label>
+                            <div class="vendor-display-value" data-display="delivery_time">${vendor.delivery_time || '-'}</div>
+                            <input type="number" class="form-control vendor-edit-input" data-field="delivery_time" value="${vendor.delivery_time || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>GST Number</label>
+                            <div class="vendor-display-value" data-display="gst_number">${vendor.gst_number || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="gst_number" value="${vendor.gst_number || ''}">
+                        </div>
+                    </div>
+                </div>
+
                 ${bankHtml}
                 ${productsHtml}
 
                 <div class="vendor-card-actions">
+                    <button class="btn-vendor-cancel" style="background: rgba(255,255,255,0.1); color: white;" data-id="${vendor.id}">
+                        Cancel
+                    </button>
                     <button class="btn-vendor-edit" data-id="${vendor.id}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         Edit
@@ -2414,10 +2477,22 @@ window.SharedCategoryService = {
                 return;
             }
 
+            const cancelBtn = e.target.closest('.btn-vendor-cancel');
+            if (cancelBtn) {
+                window.renderVendorList();
+                return;
+            }
+
             const editBtn = e.target.closest('.btn-vendor-edit');
             if (editBtn) {
                 const card = editBtn.closest('.vendor-card');
-                card.classList.add('vendor-edit-mode');
+                card.classList.add('editing');
+                
+                // Fetch full category list if editing category field
+                const catSelect = card.querySelector('.vendor-edit-cat');
+                if (catSelect && window.loadVendorMainCategories && catSelect.options.length <= 1) {
+                    window.loadVendorMainCategories(catSelect);
+                }
                 return;
             }
 
@@ -2439,39 +2514,64 @@ window.SharedCategoryService = {
         saveBtn.innerHTML = 'Saving...';
         saveBtn.disabled = true;
 
-        const name = card.querySelector('.edit-name').value;
-        const type1 = card.querySelector('.edit-type1').value;
-        let type2 = card.querySelector('.edit-type2').value;
-        if (type2 === 'Primary Vendor') type2 = 'primary_vendor';
-        else if (type2 === 'Secondary Vendor') type2 = 'secondary_vendor';
-        else if (type2 === 'Tertiary Vendor') type2 = 'tertiary_vendor';
-        const category = card.querySelector('.edit-category').value;
-        const subcategory = card.querySelector('.edit-subcategory').value;
-        const phone = card.querySelector('.edit-phone').value;
-        const gst = card.querySelector('.edit-gst').value === 'Yes';
+        const payload = {};
+        const inputs = card.querySelectorAll('[data-field]');
+        
+        inputs.forEach(input => {
+            const field = input.getAttribute('data-field');
+            if (input.type === 'checkbox') {
+                payload[field] = input.checked;
+            } else if (input.tagName === 'SELECT' && input.value === '') {
+                // If select is left on placeholder, ignore or save as null based on schema. 
+                // We'll leave it as is if untouched.
+                if (input.options.length > 1) {
+                     payload[field] = input.value;
+                }
+            } else {
+                payload[field] = input.value;
+            }
+        });
 
         try {
-            const { error } = await supabase
+            const { error } = await window.supabase
                 .from('vendors')
-                .update({ 
-                    vendor_name: name,
-                    vendor_type1: type1,
-                    vendor_type2: type2,
-                    vendor_category: category,
-                    sub_category: subcategory,
-                    phone: phone,
-                    gst_applicable: gst
-                })
+                .update(payload)
                 .eq('id', id);
 
             if (error) throw error;
             
-            showToast('Vendor updated successfully');
-            card.classList.remove('vendor-edit-mode');
-            await window.fetchVendors(); // Auto refresh
+            if (window.showToast) window.showToast('Vendor updated successfully');
+            
+            // Sync UI instantly without hard refresh
+            inputs.forEach(input => {
+                const field = input.getAttribute('data-field');
+                const displayEl = card.querySelector(`.vendor-display-value[data-display="${field}"]`);
+                if (displayEl) {
+                    if (input.type === 'checkbox') {
+                        displayEl.textContent = input.checked ? 'GST Applicable' : 'GST Not Applicable';
+                    } else if (input.tagName === 'SELECT') {
+                        if (input.selectedIndex >= 0 && input.options[input.selectedIndex].value !== '') {
+                            displayEl.textContent = input.options[input.selectedIndex].text;
+                        } else if (input.value) {
+                            displayEl.textContent = input.value;
+                        }
+                    } else {
+                        displayEl.textContent = input.value || '-';
+                    }
+                }
+            });
+
+            card.classList.remove('editing');
+            
+            // Background fetch to ensure cache is correct
+            if (typeof window.fetchVendors === 'function') {
+                window.fetchVendors();
+            }
+            
         } catch (error) {
             console.error("Error updating vendor:", error);
             alert("Failed to update vendor: " + error.message);
+        } finally {
             saveBtn.innerHTML = originalText;
             saveBtn.disabled = false;
         }

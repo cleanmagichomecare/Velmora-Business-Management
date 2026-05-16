@@ -7216,31 +7216,31 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 .btn-vendor-archive:hover { background: rgba(239, 68, 68, 0.2); }
 
-.vendor-card .editable-field {
+.vendor-card .vendor-edit-input {
     display: none;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 13px;
     width: 100%;
-    outline: none;
 }
-.vendor-card .editable-field:focus {
-    border-color: #3b82f6;
+.vendor-card.editing .vendor-edit-input {
+    display: block;
 }
-.vendor-card.vendor-edit-mode .editable-field {
-    display: inline-block;
-}
-.vendor-card.vendor-edit-mode span.value-text {
+.vendor-card.editing .vendor-display-value {
     display: none;
 }
-.vendor-card.vendor-edit-mode .btn-vendor-edit {
+.vendor-card.editing .btn-vendor-edit {
     display: none;
 }
-.vendor-card:not(.vendor-edit-mode) .btn-vendor-save {
+.vendor-card:not(.editing) .btn-vendor-save,
+.vendor-card:not(.editing) .btn-vendor-cancel {
     display: none;
+}
+
+.vendor-display-value {
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 0;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 /* Expandable Details */
