@@ -2227,54 +2227,130 @@ window.SharedCategoryService = {
             const card = document.createElement('div');
             card.className = 'vendor-card';
             card.setAttribute('data-vendor-id', vendor.id);
+            // Generate Products HTML if available
+            let productsHtml = '';
+            if (vendor.products && Array.isArray(vendor.products) && vendor.products.length > 0) {
+                const chipsHtml = vendor.products.map(p => `
+                    <div class="vendor-product-chip">
+                        <div class="product-chip-header">
+                            <span class="product-chip-name">${p.product_name || '-'}</span>
+                            <span class="product-chip-price">₹${p.price_per_unit || p.price || 0}</span>
+                        </div>
+                        <div class="product-chip-details">
+                            <div class="product-chip-item">MOQ: <strong>${p.moq || '-'}</strong></div>
+                            <div class="product-chip-item">Batch: <strong>${p.batch_size || '-'}</strong></div>
+                            <div class="product-chip-item">GST: <strong>${p.gst || '-'}</strong></div>
+                            <div class="product-chip-item">Total: <strong>₹${p.total_amount || 0}</strong></div>
+                        </div>
+                        <div class="product-chip-item" style="margin-top: 4px; font-size: 11px;">Used In: <strong>${p.used_in || '-'}</strong></div>
+                    </div>
+                `).join('');
+                
+                productsHtml = `
+                    <div class="vendor-details-section">
+                        <details>
+                            <summary>Product Details (${vendor.products.length})</summary>
+                            <div class="vendor-details-content vendor-product-grid">
+                                ${chipsHtml}
+                            </div>
+                        </details>
+                    </div>
+                `;
+            }
+
+            const bankHtml = `
+                <div class="vendor-details-section">
+                    <details>
+                        <summary>Bank Details</summary>
+                        <div class="vendor-details-content">
+                            <div class="vendor-section">
+                                <div class="vendor-detail-row"><span class="label">Holder</span><span class="value">${vendor.account_holder || '-'}</span></div>
+                                <div class="vendor-detail-row"><span class="label">Acc No.</span><span class="value">${vendor.account_number || '-'}</span></div>
+                                <div class="vendor-detail-row"><span class="label">IFSC</span><span class="value">${vendor.ifsc_code || '-'}</span></div>
+                                <div class="vendor-detail-row"><span class="label">UPI ID</span><span class="value">${vendor.upi_id || '-'}</span></div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            `;
+
             card.innerHTML = `
                 <div class="vendor-card-header">
                     <span class="value-text">${vendor.vendor_name || '-'}</span>
                     <input type="text" class="editable-field edit-name" value="${vendor.vendor_name || ''}">
                 </div>
+                
                 <div class="vendor-card-meta">
-                    <div>
-                        <span class="label">Type</span>
-                        <span class="value">
-                            <span class="value-text">${vendor.vendor_type1 || '-'} &bull; ${displayVt2}</span>
-                            <div style="display: flex; gap: 4px; justify-content: flex-end; width: 60%; display: none;" class="editable-field">
-                                <input type="text" class="editable-field edit-type1" value="${vendor.vendor_type1 || ''}" placeholder="Type 1" style="width: 50%; display: block;">
-                                <input type="text" class="editable-field edit-type2" value="${displayVt2 || ''}" placeholder="Type 2" style="width: 50%; display: block;">
-                            </div>
-                        </span>
+                    <div class="vendor-section">
+                        <div class="vendor-section-title">Vendor Information</div>
+                        <div class="vendor-detail-row">
+                            <span class="label">Representative</span>
+                            <span class="value">${vendor.representative_name || '-'}</span>
+                        </div>
+                        <div class="vendor-detail-row">
+                            <span class="label">Type</span>
+                            <span class="value">
+                                <span class="value-text">${vendor.vendor_type1 || '-'} &bull; ${displayVt2}</span>
+                                <div style="display: flex; gap: 4px; justify-content: flex-end; width: 100%; display: none;" class="editable-field">
+                                    <input type="text" class="editable-field edit-type1" value="${vendor.vendor_type1 || ''}" placeholder="Type 1" style="width: 50%; display: block;">
+                                    <input type="text" class="editable-field edit-type2" value="${displayVt2 || ''}" placeholder="Type 2" style="width: 50%; display: block;">
+                                </div>
+                            </span>
+                        </div>
+                        <div class="vendor-detail-row">
+                            <span class="label">Category</span>
+                            <span class="value">
+                                <span class="value-text">${vendor.vendor_category || '-'}</span>
+                                <input type="text" class="editable-field edit-category" value="${vendor.vendor_category || ''}">
+                            </span>
+                        </div>
+                        <div class="vendor-detail-row">
+                            <span class="label">Sub Category</span>
+                            <span class="value">
+                                <span class="value-text">${vendor.sub_category || '-'}</span>
+                                <input type="text" class="editable-field edit-subcategory" value="${vendor.sub_category || ''}">
+                            </span>
+                        </div>
+                        <div class="vendor-detail-row">
+                            <span class="label">Sub Sub Cat.</span>
+                            <span class="value">${vendor.sub_sub_category || '-'}</span>
+                        </div>
+                        <div class="vendor-detail-row">
+                            <span class="label">Sub Cat. 3</span>
+                            <span class="value">${vendor.sub_category_3 || '-'}</span>
+                        </div>
                     </div>
-                    <div>
-                        <span class="label">Category</span>
-                        <span class="value">
-                            <span class="value-text">${vendor.vendor_category || '-'}</span>
-                            <input type="text" class="editable-field edit-category" value="${vendor.vendor_category || ''}">
-                        </span>
-                    </div>
-                    <div>
-                        <span class="label">Sub Category</span>
-                        <span class="value">
-                            <span class="value-text">${vendor.sub_category || '-'}</span>
-                            <input type="text" class="editable-field edit-subcategory" value="${vendor.sub_category || ''}">
-                        </span>
-                    </div>
-                    <div>
-                        <span class="label">Phone</span>
-                        <span class="value">
-                            <span class="value-text">${vendor.phone || '-'}</span>
-                            <input type="text" class="editable-field edit-phone" value="${vendor.phone || ''}">
-                        </span>
-                    </div>
-                    <div>
-                        <span class="label">GST</span>
-                        <span class="value">
-                            <span class="value-text">${gstFormatted}</span>
-                            <select class="editable-field edit-gst" style="width: 60%; float: right;">
-                                <option value="Yes" ${isGst ? 'selected' : ''}>Yes</option>
-                                <option value="No" ${!isGst ? 'selected' : ''}>No</option>
-                            </select>
-                        </span>
+                    
+                    <div class="vendor-section" style="margin-top: 8px;">
+                        <div class="vendor-section-title">Contact Details</div>
+                        <div class="vendor-detail-row">
+                            <span class="label">Phone</span>
+                            <span class="value">
+                                <span class="value-text">${vendor.phone || '-'}</span>
+                                <input type="text" class="editable-field edit-phone" value="${vendor.phone || ''}">
+                            </span>
+                        </div>
+                        <div class="vendor-detail-row"><span class="label">Email</span><span class="value">${vendor.email || '-'}</span></div>
+                        <div class="vendor-detail-row"><span class="label">Address</span><span class="value">${vendor.address || '-'}</span></div>
+                        <div class="vendor-detail-row"><span class="label">City</span><span class="value">${vendor.city || '-'}</span></div>
+                        <div class="vendor-detail-row"><span class="label">Del. Time</span><span class="value">${vendor.delivery_time || '-'}</span></div>
+                        <div class="vendor-detail-row">
+                            <span class="label">GST Reg.</span>
+                            <span class="value">
+                                <span class="value-text">${gstFormatted}</span>
+                                <select class="editable-field edit-gst" style="width: 100%; float: right;">
+                                    <option value="Yes" ${isGst ? 'selected' : ''}>Yes</option>
+                                    <option value="No" ${!isGst ? 'selected' : ''}>No</option>
+                                </select>
+                            </span>
+                        </div>
+                        <div class="vendor-detail-row"><span class="label">GST No.</span><span class="value">${vendor.gst_number || '-'}</span></div>
                     </div>
                 </div>
+                
+                ${bankHtml}
+                ${productsHtml}
+
                 <div class="vendor-card-actions">
                     <button class="btn-vendor-edit" data-id="${vendor.id}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
