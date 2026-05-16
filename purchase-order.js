@@ -164,54 +164,72 @@ window.initPurchaseOrderForm = async function() {
     
     const saveBtn = document.getElementById('btn-save-po');
     if (saveBtn) {
-        saveBtn.onclick = async () => {
-            const form = document.getElementById('purchase-order-form');
-            if (form && !form.checkValidity()) {
-                const invalidFields = Array.from(form.querySelectorAll(':invalid'));
-                if (invalidFields.length > 0) {
-                    const firstInvalid = invalidFields[0];
-                    let fieldName = firstInvalid.getAttribute('placeholder') || firstInvalid.name || firstInvalid.id || 'a required field';
-                    if (firstInvalid.classList.contains('po-qty')) fieldName = 'Quantity';
-                    if (firstInvalid.classList.contains('po-price')) fieldName = 'Unit Price';
-                    if (firstInvalid.id === 'po-vendor-name') fieldName = 'Vendor Name';
-                    if (firstInvalid.id === 'po-main-category') fieldName = 'Main Category';
-                    
-                    if (window.showToast) window.showToast(`Please fill out: ${fieldName}`, 'error');
-                }
-                form.reportValidity();
-                return;
-            }
-            
-            const vendorDropdown = document.getElementById('po-vendor-name');
-            if (!vendorDropdown || !vendorDropdown.value) {
-                if (window.showToast) window.showToast('Please select a vendor', 'error');
-                return;
-            }
-            
-            // Check product rows
-            const tbody = document.getElementById('po-product-tbody');
-            if (!tbody || tbody.querySelectorAll('tr').length === 0) {
-                if (window.showToast) window.showToast('Please add at least one product row', 'error');
-                return;
-            }
-            
-            let allValid = true;
-            tbody.querySelectorAll('tr').forEach(tr => {
-                const qtyInput = tr.querySelector('.po-qty');
-                if (qtyInput && (qtyInput.value === '' || parseFloat(qtyInput.value) <= 0)) {
-                    allValid = false;
-                }
-            });
-            if (!allValid) {
-                if (window.showToast) window.showToast('Please enter a valid quantity for all products', 'error');
-                return;
-            }
-            
-            const originalBtnText = saveBtn.textContent;
-            saveBtn.textContent = 'Saving...';
-            saveBtn.disabled = true;
+        saveBtn.onclick = async (e) => {
+            e.preventDefault();
+            console.log('Save PO clicked - executing handler');
             
             try {
+                const form = document.getElementById('purchase-order-form');
+                if (form && !form.checkValidity()) {
+                    console.warn('PO Form validation failed!');
+                    const invalidFields = Array.from(form.querySelectorAll(':invalid'));
+                    if (invalidFields.length > 0) {
+                        const firstInvalid = invalidFields[0];
+                        let fieldName = firstInvalid.getAttribute('placeholder') || firstInvalid.name || firstInvalid.id || 'a required field';
+                        if (firstInvalid.classList.contains('po-qty')) fieldName = 'Quantity';
+                        if (firstInvalid.classList.contains('po-price')) fieldName = 'Unit Price';
+                        if (firstInvalid.id === 'po-vendor-name') fieldName = 'Vendor Name';
+                        if (firstInvalid.id === 'po-main-category') fieldName = 'Main Category';
+                        
+                        const msg = `Please fill out: ${fieldName}`;
+                        console.error('Validation error:', msg);
+                        if (window.showToast) window.showToast(msg, 'error');
+                        else alert(msg);
+                    }
+                    form.reportValidity();
+                    return;
+                }
+                
+                const vendorDropdown = document.getElementById('po-vendor-name');
+                if (!vendorDropdown || !vendorDropdown.value) {
+                    const msg = 'Please select a vendor';
+                    console.error('Validation error:', msg);
+                    if (window.showToast) window.showToast(msg, 'error');
+                    else alert(msg);
+                    return;
+                }
+                
+                // Check product rows
+                const tbody = document.getElementById('po-product-tbody');
+                if (!tbody || tbody.querySelectorAll('tr').length === 0) {
+                    const msg = 'Please add at least one product row';
+                    console.error('Validation error:', msg);
+                    if (window.showToast) window.showToast(msg, 'error');
+                    else alert(msg);
+                    return;
+                }
+                
+                let allValid = true;
+                tbody.querySelectorAll('tr').forEach(tr => {
+                    const qtyInput = tr.querySelector('.po-qty');
+                    if (qtyInput && (qtyInput.value === '' || parseFloat(qtyInput.value) <= 0)) {
+                        allValid = false;
+                    }
+                });
+                if (!allValid) {
+                    const msg = 'Please enter a valid quantity for all products';
+                    console.error('Validation error:', msg);
+                    if (window.showToast) window.showToast(msg, 'error');
+                    else alert(msg);
+                    return;
+                }
+                
+                const originalBtnText = saveBtn.textContent;
+                saveBtn.textContent = 'Saving...';
+                saveBtn.disabled = true;
+                
+                console.log('Validation passed, starting save sequence...');
+                
                 // 1. Collect Header Data
                 const poNumberHeader = document.getElementById('po-number-header');
                 const poNumber = poNumberHeader ? poNumberHeader.textContent.trim() : '';
@@ -272,8 +290,12 @@ window.initPurchaseOrderForm = async function() {
                     .select('id')
                     .single();
                     
-                if (headerErr) throw headerErr;
+                if (headerErr) {
+                    console.error('Header insert error:', headerErr);
+                    throw headerErr;
+                }
                 
+                console.log('Header saved, ID:', insertedPO.id);
                 const purchaseOrderId = insertedPO.id;
                 
                 // 2. Collect Product Rows Data
@@ -310,15 +332,21 @@ window.initPurchaseOrderForm = async function() {
                     });
                 });
                 
+                console.log('Products payload prepared:', productsPayload);
                 if (productsPayload.length > 0) {
                     const { error: productsErr } = await window.supabase
                         .from('purchase_order_products')
                         .insert(productsPayload);
                         
-                    if (productsErr) throw productsErr;
+                    if (productsErr) {
+                        console.error('Products insert error:', productsErr);
+                        throw productsErr;
+                    }
                 }
                 
+                console.log('Save sequence successful!');
                 if (window.showToast) window.showToast('Purchase Order saved successfully!', 'success');
+                else alert('Purchase Order saved successfully!');
                 
                 // 3. Reset form
                 if (form) form.reset();
@@ -332,18 +360,26 @@ window.initPurchaseOrderForm = async function() {
                 // Regenerate PO Number
                 await generatePONumber();
                 
+                console.log('Form reset complete.');
+                
             } catch (err) {
-                console.error("Failed to save Purchase Order", err);
+                console.error("CRITICAL: Failed to save Purchase Order", err);
                 if (window.showToast) {
                     window.showToast('Failed to save Purchase Order', 'error');
                 } else {
                     alert('Failed to save Purchase Order');
                 }
             } finally {
-                saveBtn.textContent = originalBtnText;
+                if (typeof originalBtnText !== 'undefined') {
+                    saveBtn.textContent = originalBtnText;
+                } else {
+                    saveBtn.textContent = 'Save Purchase Order';
+                }
                 saveBtn.disabled = false;
             }
         };
+    } else {
+        console.error("CRITICAL ERROR: 'btn-save-po' not found in DOM when initPurchaseOrderForm was called.");
     }
 
     // 6. Product Table Logic
