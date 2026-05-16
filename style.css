@@ -7094,10 +7094,13 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 /* --- Vendor Card Grid --- */
 .vendor-card-grid-wrapper {
     margin-top: 20px;
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 .vendor-card-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(420px, 1fr));
+    grid-template-columns: repeat(2, minmax(520px, 1fr));
     gap: 24px;
 }
 @media (max-width: 1024px) {
@@ -7110,7 +7113,7 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     background: rgba(30, 41, 59, 0.5); /* premium dark glassmorphism */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 20px 18px;
+    padding: 20px 16px;
     backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
@@ -7119,6 +7122,9 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     height: auto;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     overflow: hidden;
+}
+.vendor-card .grid-2 {
+    gap: 24px;
 }
 .vendor-card:hover {
     transform: translateY(-2px);
