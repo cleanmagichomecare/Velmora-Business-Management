@@ -7097,15 +7097,10 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
 }
 .vendor-card-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(2, minmax(420px, 1fr));
+    gap: 24px;
 }
 @media (max-width: 1024px) {
-    .vendor-card-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-@media (max-width: 768px) {
     .vendor-card-grid {
         grid-template-columns: 1fr;
     }
@@ -7115,11 +7110,12 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     background: rgba(30, 41, 59, 0.5); /* premium dark glassmorphism */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 24px;
+    padding: 28px;
     backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    justify-content: space-between;
+    gap: 24px;
     height: auto;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     overflow: hidden;
@@ -7129,12 +7125,12 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 .vendor-card-header {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
     color: var(--text-main);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding-bottom: 10px;
-    margin-bottom: 5px;
+    padding-bottom: 12px;
+    margin-bottom: 0px;
     display: flex;
     align-items: center;
 }
@@ -7171,22 +7167,24 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     gap: 12px;
 }
 .vendor-detail-row span.label {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
     flex-shrink: 0;
 }
 .vendor-detail-row span.value {
-    color: var(--text-main);
+    color: #ffffff;
     font-weight: 500;
     text-align: right;
     word-break: break-word;
+    overflow-wrap: anywhere;
 }
 .vendor-card-actions {
-    margin-top: auto;
-    padding-top: 15px;
+    margin-top: 24px;
+    padding-top: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 12px;
 }
 .vendor-card-actions button {
     padding: 6px 12px;
@@ -7251,10 +7249,10 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     margin-top: 4px;
 }
 .vendor-details-section details {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    padding: 2px;
+    padding: 4px;
 }
 .vendor-details-section summary {
     padding: 10px 14px;
