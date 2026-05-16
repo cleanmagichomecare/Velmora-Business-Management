@@ -2247,55 +2247,49 @@ window.SharedCategoryService = {
                 `).join('');
                 
                 productsHtml = `
-                    <div class="vendor-details-section">
-                        <details>
-                            <summary>Product Details (${vendor.products.length})</summary>
-                            <div class="vendor-details-content vendor-product-grid">
-                                ${chipsHtml}
-                            </div>
-                        </details>
+                    <div class="form-section vendor-details-section" style="margin-bottom: 20px;">
+                        <div class="section-heading" style="margin-bottom: 12px;">Product Details (${vendor.products.length})</div>
+                        <div class="vendor-product-grid">
+                            ${chipsHtml}
+                        </div>
                     </div>
                 `;
             }
 
             
             const bankHtml = `
-                <div class="form-section vendor-details-section" style="margin-bottom: 0;">
-                    <details>
-                        <summary>Bank Details</summary>
-                        <div class="vendor-details-content">
-                            <div class="grid-2">
-                                <div class="form-group">
-                                    <label>Account Holder Name</label>
-                                    <div class="vendor-display-value" data-display="account_holder">${vendor.account_holder || '-'}</div>
-                                    <input type="text" class="form-control vendor-edit-input" data-field="account_holder" value="${vendor.account_holder || ''}" placeholder="Enter name">
-                                </div>
-                                <div class="form-group">
-                                    <label>Account Number</label>
-                                    <div class="vendor-display-value" data-display="account_number">${vendor.account_number || '-'}</div>
-                                    <input type="text" class="form-control vendor-edit-input" data-field="account_number" value="${vendor.account_number || ''}" placeholder="Enter account number">
-                                </div>
-                            </div>
-                            <div class="grid-2 mt-15" style="margin-top: 15px;">
-                                <div class="form-group">
-                                    <label>IFSC Code</label>
-                                    <div class="vendor-display-value" data-display="ifsc_code">${vendor.ifsc_code || '-'}</div>
-                                    <input type="text" class="form-control vendor-edit-input" data-field="ifsc_code" value="${vendor.ifsc_code || ''}" placeholder="Enter IFSC">
-                                </div>
-                                <div class="form-group">
-                                    <label>UPI ID</label>
-                                    <div class="vendor-display-value" data-display="upi_id">${vendor.upi_id || '-'}</div>
-                                    <input type="text" class="form-control vendor-edit-input" data-field="upi_id" value="${vendor.upi_id || ''}" placeholder="Enter UPI ID">
-                                </div>
-                            </div>
+                <div class="form-section vendor-details-section" style="margin-bottom: 20px;">
+                    <div class="section-heading" style="margin-bottom: 12px;">Bank Details</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Account Holder Name</label>
+                            <div class="vendor-display-value" data-display="account_holder">${vendor.account_holder || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="account_holder" value="${vendor.account_holder || ''}" placeholder="Enter name">
                         </div>
-                    </details>
+                        <div class="form-group">
+                            <label>Account Number</label>
+                            <div class="vendor-display-value" data-display="account_number">${vendor.account_number || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="account_number" value="${vendor.account_number || ''}" placeholder="Enter account number">
+                        </div>
+                    </div>
+                    <div class="grid-2 mt-10" style="margin-top: 10px;">
+                        <div class="form-group">
+                            <label>IFSC Code</label>
+                            <div class="vendor-display-value" data-display="ifsc_code">${vendor.ifsc_code || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="ifsc_code" value="${vendor.ifsc_code || ''}" placeholder="Enter IFSC">
+                        </div>
+                        <div class="form-group">
+                            <label>UPI ID</label>
+                            <div class="vendor-display-value" data-display="upi_id">${vendor.upi_id || '-'}</div>
+                            <input type="text" class="form-control vendor-edit-input" data-field="upi_id" value="${vendor.upi_id || ''}" placeholder="Enter UPI ID">
+                        </div>
+                    </div>
                 </div>
             `;
 
             card.innerHTML = `
-                <div class="form-section" style="margin-bottom: 24px;">
-                    <div class="section-heading" style="margin-bottom: 16px;">Vendor Classification</div>
+                <div class="form-section" style="margin-bottom: 20px;">
+                    <div class="section-heading" style="margin-bottom: 12px;">Vendor Classification</div>
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Vendor Type 1</label>
@@ -2319,7 +2313,7 @@ window.SharedCategoryService = {
                         </div>
                     </div>
                     
-                    <div class="grid-2 mt-15" style="margin-top: 15px;">
+                    <div class="grid-2 mt-10" style="margin-top: 10px;">
                         <div class="form-group">
                             <label>Main Category</label>
                             <div class="vendor-display-value" data-display="vendor_category">${vendor.vendor_category || '-'}</div>
@@ -2334,7 +2328,7 @@ window.SharedCategoryService = {
                         </div>
                     </div>
                     
-                    <div class="grid-2 mt-15" style="margin-top: 15px;">
+                    <div class="grid-2 mt-10" style="margin-top: 10px;">
                         <div class="form-group">
                             <label>Sub Category 2</label>
                             <div class="vendor-display-value" data-display="sub_sub_category">${vendor.sub_sub_category || '-'}</div>
@@ -2347,7 +2341,7 @@ window.SharedCategoryService = {
                         </div>
                     </div>
                     
-                    <div class="premium-checkbox-row mt-15" style="margin-top: 20px;">
+                    <div class="premium-checkbox-row mt-10" style="margin-top: 10px;">
                         <div class="vendor-display-value" data-display="gst_applicable" style="padding:0;">${isGst ? 'GST Applicable' : 'GST Not Applicable'}</div>
                         <div class="vendor-edit-input" style="display: none;">
                             <label class="premium-checkbox-row" style="cursor:pointer; display:flex; align-items:center; gap:10px;">
@@ -2358,8 +2352,8 @@ window.SharedCategoryService = {
                     </div>
                 </div>
                 
-                <div class="form-section" style="margin-bottom: 24px;">
-                    <div class="section-heading" style="margin-bottom: 16px;">Vendor Details</div>
+                <div class="form-section" style="margin-bottom: 20px;">
+                    <div class="section-heading" style="margin-bottom: 12px;">Vendor Details</div>
                     <div class="grid-2">
                         <div class="form-group">
                             <label>Vendor / Company Name</label>
@@ -2372,7 +2366,7 @@ window.SharedCategoryService = {
                             <input type="text" class="form-control vendor-edit-input" data-field="representative_name" value="${vendor.representative_name || ''}">
                         </div>
                     </div>
-                    <div class="grid-2 mt-15" style="margin-top: 15px;">
+                    <div class="grid-2 mt-10" style="margin-top: 10px;">
                         <div class="form-group">
                             <label>Phone Number</label>
                             <div class="vendor-display-value" data-display="phone">${vendor.phone || '-'}</div>
@@ -2384,12 +2378,12 @@ window.SharedCategoryService = {
                             <input type="email" class="form-control vendor-edit-input" data-field="email" value="${vendor.email || ''}">
                         </div>
                     </div>
-                    <div class="form-group mt-15" style="margin-top: 15px;">
+                    <div class="form-group mt-10" style="margin-top: 10px;">
                         <label>Registered Address</label>
                         <div class="vendor-display-value" data-display="address">${vendor.address || '-'}</div>
                         <input type="text" class="form-control vendor-edit-input" data-field="address" value="${vendor.address || ''}">
                     </div>
-                    <div class="grid-3 mt-15" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-top: 15px;">
+                    <div class="grid-3 mt-10" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top: 10px;">
                         <div class="form-group">
                             <label>City</label>
                             <div class="vendor-display-value" data-display="city">${vendor.city || '-'}</div>
@@ -2411,7 +2405,7 @@ window.SharedCategoryService = {
                 ${bankHtml}
                 ${productsHtml}
 
-                <div class="vendor-card-actions">
+                <div class="vendor-card-actions" style="margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: flex-end; gap: 12px;">
                     <button class="btn-vendor-cancel" style="background: rgba(255,255,255,0.1); color: white;" data-id="${vendor.id}">
                         Cancel
                     </button>

@@ -7110,12 +7110,12 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     background: rgba(30, 41, 59, 0.5); /* premium dark glassmorphism */
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    padding: 28px;
+    padding: 20px 18px;
     backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 24px;
+    gap: 16px;
     height: auto;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     overflow: hidden;
