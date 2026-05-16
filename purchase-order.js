@@ -167,6 +167,17 @@ window.initPurchaseOrderForm = async function() {
         saveBtn.onclick = async () => {
             const form = document.getElementById('purchase-order-form');
             if (form && !form.checkValidity()) {
+                const invalidFields = Array.from(form.querySelectorAll(':invalid'));
+                if (invalidFields.length > 0) {
+                    const firstInvalid = invalidFields[0];
+                    let fieldName = firstInvalid.getAttribute('placeholder') || firstInvalid.name || firstInvalid.id || 'a required field';
+                    if (firstInvalid.classList.contains('po-qty')) fieldName = 'Quantity';
+                    if (firstInvalid.classList.contains('po-price')) fieldName = 'Unit Price';
+                    if (firstInvalid.id === 'po-vendor-name') fieldName = 'Vendor Name';
+                    if (firstInvalid.id === 'po-main-category') fieldName = 'Main Category';
+                    
+                    if (window.showToast) window.showToast(`Please fill out: ${fieldName}`, 'error');
+                }
                 form.reportValidity();
                 return;
             }
@@ -181,6 +192,18 @@ window.initPurchaseOrderForm = async function() {
             const tbody = document.getElementById('po-product-tbody');
             if (!tbody || tbody.querySelectorAll('tr').length === 0) {
                 if (window.showToast) window.showToast('Please add at least one product row', 'error');
+                return;
+            }
+            
+            let allValid = true;
+            tbody.querySelectorAll('tr').forEach(tr => {
+                const qtyInput = tr.querySelector('.po-qty');
+                if (qtyInput && (qtyInput.value === '' || parseFloat(qtyInput.value) <= 0)) {
+                    allValid = false;
+                }
+            });
+            if (!allValid) {
+                if (window.showToast) window.showToast('Please enter a valid quantity for all products', 'error');
                 return;
             }
             
