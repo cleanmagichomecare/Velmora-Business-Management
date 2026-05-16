@@ -60,7 +60,7 @@ window.initPurchaseOrderForm = async function() {
     const poMainCat = document.getElementById('po-main-category');
     const poSub1 = document.getElementById('po-sub-category1');
     const poSub2 = document.getElementById('po-sub-category2');
-    const poSub3 = document.getElementById('po-sub-category3');
+    const poSub3Id = 'po-sub-category3';
 
     const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
     
@@ -81,7 +81,12 @@ window.initPurchaseOrderForm = async function() {
             if (poSub1) poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
             if (poSub2) poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
             
-            if (poSub3) poSub3.innerHTML = '<option value="">Select Vendor First</option>';
+            // Reset multi-select Sub Category 3
+            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+                const hiddenInput = document.getElementById(poSub3Id);
+                if (hiddenInput) hiddenInput.value = '';
+                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+            }
 
             if (poSub2) poSub2.disabled = true;
 
@@ -104,7 +109,12 @@ window.initPurchaseOrderForm = async function() {
             const sub1Val = poSub1.value;
             if (poSub2) poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
             
-            if (poSub3) poSub3.innerHTML = '<option value="">Select Vendor First</option>';
+            // Reset multi-select Sub Category 3
+            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+                const hiddenInput = document.getElementById(poSub3Id);
+                if (hiddenInput) hiddenInput.value = '';
+                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+            }
 
             if (sub1Val && _globals.sub2 && _globals.sub2[sub1Val]) {
                 if (poSub2) poSub2.disabled = false;
@@ -122,17 +132,28 @@ window.initPurchaseOrderForm = async function() {
 
     if (poSub2) {
         poSub2.onchange = () => {
-            if (poSub3) poSub3.innerHTML = '<option value="">Select Vendor First</option>';
+            // Reset multi-select Sub Category 3
+            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+                const hiddenInput = document.getElementById(poSub3Id);
+                if (hiddenInput) hiddenInput.value = '';
+                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+            }
         };
     }
     
-    // Attach Sub Category 3 Listener for Auto-Filling the Product Table
-    if (poSub3) {
-        poSub3.addEventListener('change', (e) => {
+    // Attach Sub Category 3 hidden input change listener for Auto-Filling the Product Table
+    const poSub3Input = document.getElementById(poSub3Id);
+    if (poSub3Input) {
+        poSub3Input.addEventListener('change', () => {
             if (typeof window.handleSubCategory3Selection === 'function') {
-                window.handleSubCategory3Selection(e);
+                window.handleSubCategory3Selection();
             }
         });
+    }
+    
+    // Initial clear of Multi-Select Sub Category 3
+    if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
     }
 
     // 5. Button Listeners

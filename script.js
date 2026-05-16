@@ -11409,7 +11409,7 @@ window.handleVendorSelection = function(e) {
     const poMainCat = document.getElementById('po-main-category');
     const poSub1 = document.getElementById('po-sub-category1');
     const poSub2 = document.getElementById('po-sub-category2');
-    const poSub3 = document.getElementById('po-sub-category3');
+    const poSub3Id = 'po-sub-category3';
     const tbody = document.getElementById('po-product-tbody');
 
     if (vendor) {
@@ -11430,20 +11430,17 @@ window.handleVendorSelection = function(e) {
             poSub2.disabled = true;
         }
         
-        // Dynamically load product names into Sub Category 3 dropdown
-        if (poSub3) {
-            poSub3.innerHTML = '<option value="">Select Product Name</option>';
-            if (vendor.products && Array.isArray(vendor.products)) {
-                // Extract unique product names
-                const productNames = [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))];
-                productNames.forEach(name => {
-                    const opt = document.createElement('option');
-                    opt.value = name;
-                    opt.textContent = name;
-                    poSub3.appendChild(opt);
-                });
-            }
-            poSub3.disabled = false;
+        // Dynamically load UNIQUE product names into Sub Category 3 multi-select
+        if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+            const productNames = (vendor.products && Array.isArray(vendor.products))
+                ? [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))]
+                : [];
+            
+            // Clear the hidden input value first so nothing is pre-selected
+            const hiddenInput = document.getElementById(poSub3Id);
+            if (hiddenInput) hiddenInput.value = '';
+            
+            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, productNames, 'Select Products', 'No Products Available');
         }
 
         // Leave Product Table entirely empty on vendor selection
@@ -11457,7 +11454,13 @@ window.handleVendorSelection = function(e) {
         if (poMainCat) { poMainCat.disabled = false; poMainCat.innerHTML = '<option value="">Select Main Category</option>'; }
         if (poSub1) { poSub1.disabled = true; poSub1.innerHTML = '<option value="">Select Category First</option>'; }
         if (poSub2) { poSub2.disabled = true; poSub2.innerHTML = '<option value="">Select Category First</option>'; }
-        if (poSub3) { poSub3.disabled = false; poSub3.innerHTML = '<option value="">Select Vendor First</option>'; }
+        
+        // Reset multi-select to disabled/empty state
+        if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
+            const hiddenInput = document.getElementById(poSub3Id);
+            if (hiddenInput) hiddenInput.value = '';
+            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+        }
         
         if (tbody) {
             tbody.innerHTML = '';
@@ -11468,8 +11471,13 @@ window.handleVendorSelection = function(e) {
     }
 };
 
-window.handleSubCategory3Selection = function(e) {
-    const selectedProductName = e.target.value;
+window.handleSubCategory3Selection = function() {
+    const hiddenInput = document.getElementById('po-sub-category3');
+    if (!hiddenInput) return;
+    
+    // Read comma-separated selected product names from the hidden input
+    const selectedNames = hiddenInput.value ? hiddenInput.value.split(',').map(s => s.trim()).filter(Boolean) : [];
+    
     const vendorDropdown = document.getElementById('po-vendor-name');
     if (!vendorDropdown) return;
     
@@ -11481,45 +11489,45 @@ window.handleSubCategory3Selection = function(e) {
     
     tbody.innerHTML = '';
     
-    if (vendor && selectedProductName && vendor.products && Array.isArray(vendor.products)) {
-        // Filter matching product
-        const matchingProduct = vendor.products.find(p => p.product_name === selectedProductName);
+    if (vendor && selectedNames.length > 0 && vendor.products && Array.isArray(vendor.products)) {
+        let rowCount = 0;
         
-        if (matchingProduct) {
-            let rowCount = 1;
-            const tr = document.createElement('tr');
+        selectedNames.forEach(name => {
+            // Find matching product (use first match for each name to avoid duplicates)
+            const matchingProduct = vendor.products.find(p => p.product_name === name);
             
-            const pName = matchingProduct.product_name || '';
-            const pMoq = matchingProduct.moq || '';
-            const pBatch = matchingProduct.batch_size || '';
-            const pPrice = matchingProduct.price_per_unit || matchingProduct.price || 0;
-            const pGst = matchingProduct.gst || '';
-            const pUsedIn = matchingProduct.used_in || '';
-            
-            tr.innerHTML = `
-                <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
-                <td><input type="text" class="form-control po-desc" value="${pName}" readonly required></td>
-                <td><input type="text" class="form-control po-moq" value="${pMoq}" readonly></td>
-                <td><input type="text" class="form-control po-batch" value="${pBatch}" readonly></td>
-                <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
-                <td><input type="number" class="form-control po-price" value="${pPrice}" step="0.01" readonly required></td>
-                <td><input type="text" class="form-control po-gst" value="${pGst}" readonly></td>
-                <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
-                <td><input type="text" class="form-control po-used" value="${pUsedIn}" readonly></td>
-            `;
+            if (matchingProduct) {
+                rowCount++;
+                const tr = document.createElement('tr');
+                
+                const pName = matchingProduct.product_name || '';
+                const pMoq = matchingProduct.moq || '';
+                const pBatch = matchingProduct.batch_size || '';
+                const pPrice = matchingProduct.price_per_unit || matchingProduct.price || 0;
+                const pGst = matchingProduct.gst || '';
+                const pUsedIn = matchingProduct.used_in || '';
+                
+                tr.innerHTML = `
+                    <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
+                    <td><input type="text" class="form-control po-desc" value="${pName}" readonly required></td>
+                    <td><input type="text" class="form-control po-moq" value="${pMoq}" readonly></td>
+                    <td><input type="text" class="form-control po-batch" value="${pBatch}" readonly></td>
+                    <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
+                    <td><input type="number" class="form-control po-price" value="${pPrice}" step="0.01" readonly required></td>
+                    <td><input type="text" class="form-control po-gst" value="${pGst}" readonly></td>
+                    <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
+                    <td><input type="text" class="form-control po-used" value="${pUsedIn}" readonly></td>
+                `;
 
-            const qtyInput = tr.querySelector('.po-qty');
-            const priceInput = tr.querySelector('.po-price');
+                const qtyInput = tr.querySelector('.po-qty');
+                const priceInput = tr.querySelector('.po-price');
 
-            if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
-            if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+                if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+                if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
 
-            tbody.appendChild(tr);
-        }
-    } else {
-        // If they deselect or change to empty, we can just leave it empty.
-        // Or if you want a blank row when nothing is selected:
-        // if (typeof window.poAddProductRow === 'function') window.poAddProductRow();
+                tbody.appendChild(tr);
+            }
+        });
     }
     
     if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
