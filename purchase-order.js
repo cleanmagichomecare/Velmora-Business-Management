@@ -3,18 +3,46 @@
 window.initPurchaseOrderForm = async function() {
     console.log("Initializing Purchase Order Form...");
 
-    // 1. Generate PO Number dynamically
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
-    const increment = "001"; // Default for now
-    const poNumber = `PO-${year}-${month}-${increment}`;
+    const day = String(today.getDate()).padStart(2, '0');
     
-    const poNumberHeader = document.getElementById('po-number-header');
-    if (poNumberHeader) poNumberHeader.textContent = poNumber;
+    // 1. Generate PO Number dynamically with DB check
+    const generatePONumber = async () => {
+        let increment = "001";
+        
+        try {
+            const { data, error } = await window.supabase
+                .from('purchase_orders')
+                .select('po_number')
+                .order('created_at', { ascending: false })
+                .limit(1);
+                
+            if (!error && data && data.length > 0 && data[0].po_number) {
+                const lastPO = data[0].po_number;
+                // Expected format: PO-YYYY-MM-XXX
+                const parts = lastPO.split('-');
+                if (parts.length === 4 && parts[1] == year && parts[2] == month) {
+                    const lastInc = parseInt(parts[3], 10);
+                    if (!isNaN(lastInc)) {
+                        increment = String(lastInc + 1).padStart(3, '0');
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Error fetching latest PO number", e);
+        }
+        
+        const poNumber = `PO-${year}-${month}-${increment}`;
+        const poNumberHeader = document.getElementById('po-number-header');
+        if (poNumberHeader) poNumberHeader.textContent = poNumber;
+        return poNumber;
+    };
+    
+    generatePONumber();
 
     // 2. Set current date dynamically
-    const day = String(today.getDate()).padStart(2, '0');
     const formattedDate = `${day}/${month}/${year}`;
     
     const poDateHeader = document.getElementById('po-date-header');
@@ -119,31 +147,178 @@ window.initPurchaseOrderForm = async function() {
             // Reset form
             const form = document.getElementById('purchase-order-form');
             if (form) form.reset();
-            // Reset cascades
-            if (poSub1) { poSub1.innerHTML = '<option value="">Select Category First</option>'; poSub1.disabled = true; }
-            if (poSub2) { poSub2.innerHTML = '<option value="">Select Category First</option>'; poSub2.disabled = true; }
-            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 3', 'No Sub Categories');
+            
+            const vendorDropdown = document.getElementById('po-vendor-name');
+            if (vendorDropdown) {
+                vendorDropdown.dispatchEvent(new Event('change'));
             }
+            
             // Re-populate readonly fields
+            const poDateInput = document.getElementById('po-date-input');
             if (poDateInput) poDateInput.value = formattedDate;
+            
+            // Regenerate PO Number
+            generatePONumber();
         };
     }
     
     const saveBtn = document.getElementById('btn-save-po');
     if (saveBtn) {
-        saveBtn.onclick = () => {
+        saveBtn.onclick = async () => {
             const form = document.getElementById('purchase-order-form');
             if (form && !form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
             
-            // Just a console log or mock success notification for now as per instructions (UI + structure only)
-            if (window.showToast) {
-                window.showToast('Purchase Order Form validated. Backend save disabled.', 'success');
-            } else {
-                alert('Purchase Order Form validated. Backend save disabled.');
+            const vendorDropdown = document.getElementById('po-vendor-name');
+            if (!vendorDropdown || !vendorDropdown.value) {
+                if (window.showToast) window.showToast('Please select a vendor', 'error');
+                return;
+            }
+            
+            // Check product rows
+            const tbody = document.getElementById('po-product-tbody');
+            if (!tbody || tbody.querySelectorAll('tr').length === 0) {
+                if (window.showToast) window.showToast('Please add at least one product row', 'error');
+                return;
+            }
+            
+            const originalBtnText = saveBtn.textContent;
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+            
+            try {
+                // 1. Collect Header Data
+                const poNumberHeader = document.getElementById('po-number-header');
+                const poNumber = poNumberHeader ? poNumberHeader.textContent.trim() : '';
+                
+                const vendorId = vendorDropdown.value;
+                const vendorName = vendorDropdown.options[vendorDropdown.selectedIndex].text;
+                
+                const mainCategory = document.getElementById('po-main-category')?.value || null;
+                const subCategory1 = document.getElementById('po-sub-category1')?.value || null;
+                const subCategory2 = document.getElementById('po-sub-category2')?.value || null;
+                const subCategory3Input = document.getElementById('po-sub-category3');
+                const subCategory3 = subCategory3Input ? subCategory3Input.value : null;
+                
+                const paymentMode = document.getElementById('po-payment-mode')?.value || null;
+                const initiatedBy = document.getElementById('po-initiated-by')?.value || null;
+                const approvedBy = document.getElementById('po-approved-by')?.value || null;
+                
+                const deliveryAddress = document.getElementById('po-delivery-address')?.value || null;
+                const deliveryDate = document.getElementById('po-delivery-date')?.value || null;
+                
+                const parseCurrency = (id) => {
+                    const el = document.getElementById(id);
+                    if (!el) return 0;
+                    const text = el.tagName === 'INPUT' ? el.value : el.textContent;
+                    return parseFloat(text.replace(/[₹,]/g, '')) || 0;
+                };
+                
+                const shippingCharges = parseCurrency('po-shipping-charge');
+                const subTotal = parseCurrency('po-sub-total');
+                const gstTotal = parseCurrency('po-gst-total');
+                const grandTotal = parseCurrency('po-grand-total');
+                
+                const termsConditions = "1. Products supplied must match approved samples and agreed specifications.\n2. Any damaged or defective goods may be rejected.\n3. Delivery delays must be informed in advance.\n4. GST invoice must be provided along with goods.\n5. Packaging should be secure and suitable for transportation.";
+
+                const headerPayload = {
+                    po_number: poNumber,
+                    vendor_id: vendorId,
+                    vendor_name: vendorName,
+                    main_category: mainCategory,
+                    sub_category_1: subCategory1,
+                    sub_category_2: subCategory2,
+                    sub_category_3: subCategory3,
+                    payment_mode: paymentMode,
+                    initiated_by: initiatedBy,
+                    approved_by: approvedBy,
+                    delivery_address: deliveryAddress,
+                    expected_delivery_date: deliveryDate,
+                    shipping_charges: shippingCharges,
+                    subtotal: subTotal,
+                    gst_total: gstTotal,
+                    grand_total: grandTotal,
+                    terms_conditions: termsConditions
+                };
+                
+                const { data: insertedPO, error: headerErr } = await window.supabase
+                    .from('purchase_orders')
+                    .insert([headerPayload])
+                    .select('id')
+                    .single();
+                    
+                if (headerErr) throw headerErr;
+                
+                const purchaseOrderId = insertedPO.id;
+                
+                // 2. Collect Product Rows Data
+                const productsPayload = [];
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const getVal = (selector) => {
+                        const el = row.querySelector(selector);
+                        return el ? el.value || '' : '';
+                    };
+                    
+                    const pName = getVal('.po-desc');
+                    const moq = getVal('.po-moq');
+                    const batchSize = getVal('.po-batch');
+                    const qty = parseFloat(getVal('.po-qty')) || 0;
+                    const price = parseFloat(getVal('.po-price')) || 0;
+                    const gst = getVal('.po-gst');
+                    
+                    const rowTotalSpan = row.querySelector('.po-row-total');
+                    const totalAmt = rowTotalSpan ? (parseFloat(rowTotalSpan.textContent.replace(/[₹,]/g, '')) || 0) : 0;
+                    
+                    const usedIn = getVal('.po-used');
+                    
+                    productsPayload.push({
+                        purchase_order_id: purchaseOrderId,
+                        product_name: pName,
+                        moq: moq,
+                        batch_size: batchSize,
+                        quantity: qty,
+                        unit_price: price,
+                        gst: gst,
+                        total_amount: totalAmt,
+                        used_in: usedIn
+                    });
+                });
+                
+                if (productsPayload.length > 0) {
+                    const { error: productsErr } = await window.supabase
+                        .from('purchase_order_products')
+                        .insert(productsPayload);
+                        
+                    if (productsErr) throw productsErr;
+                }
+                
+                if (window.showToast) window.showToast('Purchase Order saved successfully!', 'success');
+                
+                // 3. Reset form
+                if (form) form.reset();
+                if (vendorDropdown) {
+                    vendorDropdown.dispatchEvent(new Event('change'));
+                }
+                
+                const poDateInput = document.getElementById('po-date-input');
+                if (poDateInput) poDateInput.value = formattedDate;
+                
+                // Regenerate PO Number
+                await generatePONumber();
+                
+            } catch (err) {
+                console.error("Failed to save Purchase Order", err);
+                if (window.showToast) {
+                    window.showToast('Failed to save Purchase Order', 'error');
+                } else {
+                    alert('Failed to save Purchase Order');
+                }
+            } finally {
+                saveBtn.textContent = originalBtnText;
+                saveBtn.disabled = false;
             }
         };
     }
