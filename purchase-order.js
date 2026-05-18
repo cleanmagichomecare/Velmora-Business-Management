@@ -115,7 +115,40 @@ window.initPurchaseOrderForm = async function() {
     };
     window.formatIndianCurrency = formatIndianCurrency;
 
-    const calculateOverallTotals = () => {
+    // Define calculatePurchaseOrderRow
+    const calculatePurchaseOrderRow = (row) => {
+        const qtyInput = row.querySelector('.po-qty');
+        const priceInput = row.querySelector('.po-price');
+        const gstInput = row.querySelector('.po-gst');
+        const totalSpan = row.querySelector('.po-row-total');
+
+        const quantity = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+        const unitPrice = parseFloat(priceInput ? priceInput.value : 0) || 0;
+        const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
+
+        const baseAmount = quantity * unitPrice;
+        const gstAmount = (baseAmount * gstPercent) / 100;
+        const totalAmount = baseAmount + gstAmount;
+
+        // VERY IMPORTANT DEBUG STEP
+        console.log('[PO Row Calc Debug]', {
+            quantity,
+            unitPrice,
+            gstPercent,
+            baseAmount,
+            gstAmount,
+            totalAmount
+        });
+
+        if (totalSpan) {
+            totalSpan.textContent = formatIndianCurrency(totalAmount);
+        }
+    };
+    window.calculatePurchaseOrderRow = calculatePurchaseOrderRow;
+    window.poCalculateRowTotal = calculatePurchaseOrderRow; // Alias for backward compatibility
+
+    // Define updatePurchaseOrderTotals
+    const updatePurchaseOrderTotals = () => {
         let subTotal = 0;
         let gstTotal = 0;
         let grandTotal = 0;
@@ -123,11 +156,15 @@ window.initPurchaseOrderForm = async function() {
         if (tbody) {
             const rows = tbody.querySelectorAll('tr');
             rows.forEach(row => {
-                const qty = parseFloat(row.querySelector('.po-qty')?.value || 0) || 0;
-                const price = parseFloat(row.querySelector('.po-price')?.value || 0) || 0;
-                const gstPercent = parseFloat(row.querySelector('.po-gst')?.value || 0) || 0;
+                const qtyInput = row.querySelector('.po-qty');
+                const priceInput = row.querySelector('.po-price');
+                const gstInput = row.querySelector('.po-gst');
 
-                const baseAmount = qty * price;
+                const quantity = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+                const unitPrice = parseFloat(priceInput ? priceInput.value : 0) || 0;
+                const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
+
+                const baseAmount = quantity * unitPrice;
                 const gstAmount = (baseAmount * gstPercent) / 100;
                 const totalAmount = baseAmount + gstAmount;
 
@@ -145,29 +182,23 @@ window.initPurchaseOrderForm = async function() {
         if (gstSpan) gstSpan.textContent = formatIndianCurrency(gstTotal);
         if (grandTotalSpan) grandTotalSpan.textContent = formatIndianCurrency(grandTotal);
     };
-    window.poCalculateOverallTotals = calculateOverallTotals;
-    window.updatePurchaseOrderTotals = calculateOverallTotals;
+    window.updatePurchaseOrderTotals = updatePurchaseOrderTotals;
+    window.poCalculateOverallTotals = updatePurchaseOrderTotals; // Alias for backward compatibility
 
-    const calculateRowTotal = (row) => {
-        const qtyInput = row.querySelector('.po-qty');
-        const priceInput = row.querySelector('.po-price');
-        const gstInput = row.querySelector('.po-gst');
-        const totalSpan = row.querySelector('.po-row-total');
-
-        const qty = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
-        const price = parseFloat(priceInput ? priceInput.value : 0) || 0;
-        const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
-
-        const baseAmount = qty * price;
-        const gstAmount = (baseAmount * gstPercent) / 100;
-        const totalAmount = baseAmount + gstAmount;
-
-        if (totalSpan) {
-            totalSpan.textContent = formatIndianCurrency(totalAmount);
-        }
-        calculateOverallTotals();
+    // Event Delegation: Attach exactly one input listener to #po-product-tbody
+    const poTbodyInputHandler = (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+        console.log('[PO Table Input Event Delegated]', e.target.className);
+        calculatePurchaseOrderRow(row);
+        updatePurchaseOrderTotals();
     };
-    window.poCalculateRowTotal = calculateRowTotal;
+
+    if (tbody) {
+        // Remove existing listener to prevent duplicate registration, then attach
+        tbody.removeEventListener('input', poTbodyInputHandler);
+        tbody.addEventListener('input', poTbodyInputHandler);
+    }
 
     const addProductRow = () => {
         rowCount++;
@@ -184,16 +215,8 @@ window.initPurchaseOrderForm = async function() {
             <td><input type="text" class="form-control po-used" placeholder="Used In"></td>
         `;
 
-        const qtyInput = tr.querySelector('.po-qty');
-        const priceInput = tr.querySelector('.po-price');
-        const gstInput = tr.querySelector('.po-gst');
-
-        if (qtyInput) qtyInput.addEventListener('input', () => calculateRowTotal(tr));
-        if (priceInput) priceInput.addEventListener('input', () => calculateRowTotal(tr));
-        if (gstInput) gstInput.addEventListener('input', () => calculateRowTotal(tr));
-
         if (tbody) tbody.appendChild(tr);
-        calculateOverallTotals();
+        updatePurchaseOrderTotals();
     };
     window.poAddProductRow = addProductRow;
 
@@ -487,5 +510,22 @@ document.addEventListener('click', async (e) => {
     } finally {
         saveBtn.textContent = 'Save Purchase Order';
         saveBtn.disabled = false;
+    }
+});
+
+// Global Event Delegation for PO Product Table Input changes (Invincible Fail-safe)
+document.addEventListener('input', (e) => {
+    const target = e.target;
+    if (target.classList.contains('po-qty') || target.classList.contains('po-price') || target.classList.contains('po-gst')) {
+        const row = target.closest('tr');
+        if (row && row.closest('#po-product-tbody')) {
+            console.log('[PO Global Input Delegated]', target.className);
+            if (typeof window.calculatePurchaseOrderRow === 'function') {
+                window.calculatePurchaseOrderRow(row);
+            }
+            if (typeof window.updatePurchaseOrderTotals === 'function') {
+                window.updatePurchaseOrderTotals();
+            }
+        }
     }
 });
