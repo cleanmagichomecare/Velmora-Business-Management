@@ -11402,6 +11402,62 @@ window.loadVendors = async function(vendorDropdown) {
     }
 };
 
+/**
+ * Shared helper: Refresh Sub Category 3 product multi-select
+ * Filters vendor.products by matching the currently selected Sub Category 2.
+ * If Sub Category 2 matches vendor's sub_sub_category → show vendor's products.
+ * Otherwise → show "No matching products available".
+ */
+window.refreshPOProductMultiSelect = function() {
+    const poSub3Id = 'po-sub-category3';
+    const vendorDropdown = document.getElementById('po-vendor-name');
+    const poSub2 = document.getElementById('po-sub-category2');
+    const tbody = document.getElementById('po-product-tbody');
+
+    const selectedVendorId = vendorDropdown ? vendorDropdown.value : '';
+    const vendor = (selectedVendorId && window.fetchedPOVendorsList)
+        ? window.fetchedPOVendorsList.find(v => v.id == selectedVendorId)
+        : null;
+
+    if (!window.SharedCategoryService || !window.SharedCategoryService.populateMultiSelectDropdown) return;
+
+    // Clear hidden input so nothing is pre-selected
+    const hiddenInput = document.getElementById(poSub3Id);
+    if (hiddenInput) hiddenInput.value = '';
+
+    if (!vendor) {
+        // No vendor selected
+        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+        return;
+    }
+
+    // Determine if selected Sub Category 2 matches the vendor's sub_sub_category
+    const selectedSub2 = poSub2 ? poSub2.value : '';
+    const vendorSub2 = vendor.sub_sub_category || '';
+
+    let productNames = [];
+
+    if (selectedSub2 && vendorSub2 && selectedSub2 === vendorSub2) {
+        // Match → show all vendor products
+        productNames = (vendor.products && Array.isArray(vendor.products))
+            ? [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))]
+            : [];
+    }
+    // else: no match → productNames stays empty
+
+    if (productNames.length > 0) {
+        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, productNames, 'Select Products', 'No Products Available');
+    } else {
+        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'No matching products available', 'No matching products available');
+    }
+
+    // Clear product table when products refresh
+    if (tbody) {
+        tbody.innerHTML = '';
+        if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
+    }
+};
+
 window.handleVendorSelection = function(e) {
     const selectedVendorId = e.target.value;
     const vendor = window.fetchedPOVendorsList ? window.fetchedPOVendorsList.find(v => v.id == selectedVendorId) : null;
@@ -11412,50 +11468,78 @@ window.handleVendorSelection = function(e) {
     const poSub3Id = 'po-sub-category3';
     const tbody = document.getElementById('po-product-tbody');
 
+    const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
+
     if (vendor) {
-        // Auto-fill Categories
+        // ── STEP 1: Populate Main Category from master data ──
         if (poMainCat) {
-            poMainCat.innerHTML = `<option value="${vendor.vendor_category || ''}">${vendor.vendor_category || 'N/A'}</option>`;
-            poMainCat.value = vendor.vendor_category || '';
-            poMainCat.disabled = true;
-        }
-        if (poSub1) {
-            poSub1.innerHTML = `<option value="${vendor.sub_category || ''}">${vendor.sub_category || 'N/A'}</option>`;
-            poSub1.value = vendor.sub_category || '';
-            poSub1.disabled = true;
-        }
-        if (poSub2) {
-            poSub2.innerHTML = `<option value="${vendor.sub_sub_category || ''}">${vendor.sub_sub_category || 'N/A'}</option>`;
-            poSub2.value = vendor.sub_sub_category || '';
-            poSub2.disabled = true;
-        }
-        
-        // Dynamically load UNIQUE product names into Sub Category 3 multi-select
-        if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-            const productNames = (vendor.products && Array.isArray(vendor.products))
-                ? [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))]
-                : [];
-            
-            // Clear the hidden input value first so nothing is pre-selected
-            const hiddenInput = document.getElementById(poSub3Id);
-            if (hiddenInput) hiddenInput.value = '';
-            
-            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, productNames, 'Select Products', 'No Products Available');
+            poMainCat.innerHTML = '<option value="">Select Main Category</option>';
+            _globals.mains.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                poMainCat.appendChild(opt);
+            });
+            // Auto-select vendor's value (suggestion only)
+            if (vendor.vendor_category) poMainCat.value = vendor.vendor_category;
         }
 
-        // Leave Product Table entirely empty on vendor selection
+        // ── STEP 2: Populate Sub Category 1 from master data ──
+        if (poSub1) {
+            const mainVal = poMainCat ? poMainCat.value : '';
+            poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
+            if (mainVal && _globals.sub1 && _globals.sub1[mainVal]) {
+                _globals.sub1[mainVal].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.textContent = sub;
+                    poSub1.appendChild(opt);
+                });
+            }
+            // Auto-select vendor's value (suggestion only)
+            if (vendor.sub_category) poSub1.value = vendor.sub_category;
+        }
+
+        // ── STEP 3: Populate Sub Category 2 from master data ──
+        if (poSub2) {
+            const sub1Val = poSub1 ? poSub1.value : '';
+            poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+            if (sub1Val && _globals.sub2 && _globals.sub2[sub1Val]) {
+                _globals.sub2[sub1Val].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.textContent = sub;
+                    poSub2.appendChild(opt);
+                });
+            }
+            // Auto-select vendor's value (suggestion only)
+            if (vendor.sub_sub_category) poSub2.value = vendor.sub_sub_category;
+        }
+
+        // ── STEP 4: Populate Sub Category 3 products (filtered by Sub Cat 2 match) ──
+        window.refreshPOProductMultiSelect();
+
+        // ── STEP 5: Clear Product Table on vendor change ──
         if (tbody) {
             tbody.innerHTML = '';
             if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
         }
 
     } else {
-        // Reset to standard behavior
-        if (poMainCat) { poMainCat.disabled = false; poMainCat.innerHTML = '<option value="">Select Main Category</option>'; }
-        if (poSub1) { poSub1.disabled = true; poSub1.innerHTML = '<option value="">Select Category First</option>'; }
-        if (poSub2) { poSub2.disabled = true; poSub2.innerHTML = '<option value="">Select Category First</option>'; }
+        // ── RESET: No vendor selected — restore master data cascading ──
+        if (poMainCat) {
+            poMainCat.innerHTML = '<option value="">Select Main Category</option>';
+            _globals.mains.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                poMainCat.appendChild(opt);
+            });
+        }
+        if (poSub1) { poSub1.innerHTML = '<option value="">Select Sub Category 1</option>'; }
+        if (poSub2) { poSub2.innerHTML = '<option value="">Select Sub Category 2</option>'; }
         
-        // Reset multi-select to disabled/empty state
+        // Reset multi-select to empty state
         if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
             const hiddenInput = document.getElementById(poSub3Id);
             if (hiddenInput) hiddenInput.value = '';
@@ -11464,7 +11548,6 @@ window.handleVendorSelection = function(e) {
         
         if (tbody) {
             tbody.innerHTML = '';
-            if (typeof window.rowCount !== 'undefined') window.rowCount = 0;
             if (typeof window.poAddProductRow === 'function') window.poAddProductRow();
             if (typeof window.poCalculateOverallTotals === 'function') window.poCalculateOverallTotals();
         }

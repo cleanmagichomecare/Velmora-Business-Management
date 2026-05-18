@@ -74,32 +74,28 @@ window.initPurchaseOrderForm = async function() {
         });
     }
 
-    // Handlers for Category Cascading (Standard Behavior before Vendor selection)
+    // Handlers for Category Cascading (User manual changes — never overwritten by vendor auto-fill)
     if (poMainCat) {
         poMainCat.onchange = () => {
             const mainVal = poMainCat.value;
-            if (poSub1) poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
+            // Repopulate Sub Category 1 from master data based on new Main Category
+            if (poSub1) {
+                poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
+                if (mainVal && _globals.sub1 && _globals.sub1[mainVal]) {
+                    _globals.sub1[mainVal].forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub;
+                        opt.textContent = sub;
+                        poSub1.appendChild(opt);
+                    });
+                }
+            }
+            // Reset Sub Category 2
             if (poSub2) poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
             
-            // Reset multi-select Sub Category 3
-            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-                const hiddenInput = document.getElementById(poSub3Id);
-                if (hiddenInput) hiddenInput.value = '';
-                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
-            }
-
-            if (poSub2) poSub2.disabled = true;
-
-            if (mainVal && _globals.sub1 && _globals.sub1[mainVal]) {
-                if (poSub1) poSub1.disabled = false;
-                _globals.sub1[mainVal].forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub;
-                    opt.textContent = sub;
-                    if (poSub1) poSub1.appendChild(opt);
-                });
-            } else {
-                if (poSub1) poSub1.disabled = true;
+            // Refresh Sub Category 3 products (filtered by Sub Cat 2 match)
+            if (typeof window.refreshPOProductMultiSelect === 'function') {
+                window.refreshPOProductMultiSelect();
             }
         };
     }
@@ -107,36 +103,31 @@ window.initPurchaseOrderForm = async function() {
     if (poSub1) {
         poSub1.onchange = () => {
             const sub1Val = poSub1.value;
-            if (poSub2) poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
-            
-            // Reset multi-select Sub Category 3
-            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-                const hiddenInput = document.getElementById(poSub3Id);
-                if (hiddenInput) hiddenInput.value = '';
-                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+            // Repopulate Sub Category 2 from master data based on new Sub Category 1
+            if (poSub2) {
+                poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+                if (sub1Val && _globals.sub2 && _globals.sub2[sub1Val]) {
+                    _globals.sub2[sub1Val].forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub;
+                        opt.textContent = sub;
+                        poSub2.appendChild(opt);
+                    });
+                }
             }
-
-            if (sub1Val && _globals.sub2 && _globals.sub2[sub1Val]) {
-                if (poSub2) poSub2.disabled = false;
-                _globals.sub2[sub1Val].forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub;
-                    opt.textContent = sub;
-                    if (poSub2) poSub2.appendChild(opt);
-                });
-            } else {
-                if (poSub2) poSub2.disabled = true;
+            
+            // Refresh Sub Category 3 products (filtered by Sub Cat 2 match)
+            if (typeof window.refreshPOProductMultiSelect === 'function') {
+                window.refreshPOProductMultiSelect();
             }
         };
     }
 
     if (poSub2) {
         poSub2.onchange = () => {
-            // Reset multi-select Sub Category 3
-            if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-                const hiddenInput = document.getElementById(poSub3Id);
-                if (hiddenInput) hiddenInput.value = '';
-                window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+            // Sub Category 2 changed — refresh products filtered by category match
+            if (typeof window.refreshPOProductMultiSelect === 'function') {
+                window.refreshPOProductMultiSelect();
             }
         };
     }
@@ -151,7 +142,7 @@ window.initPurchaseOrderForm = async function() {
         });
     }
     
-    // Initial clear of Multi-Select Sub Category 3
+    // Initial state of Multi-Select Sub Category 3
     if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
         window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
     }
