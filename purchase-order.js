@@ -56,21 +56,13 @@ window.initPurchaseOrderForm = async function() {
         window.loadVendors(vendorDropdown);
     }
 
-    // 4. Initialize Category Cascading System
+    // 4. Initial population of Main Category dropdown from master data
     const poMainCat = document.getElementById('po-main-category');
-    const poSub1 = document.getElementById('po-sub-category1');
-    const poSub2 = document.getElementById('po-sub-category2');
-    const poSub3Id = 'po-sub-category3';
-
-    // Helper: always read _financeCatGlobals LIVE to avoid stale references
-    // (syncFinanceCategoryGlobals creates a NEW object each time it runs)
-    const getGlobals = () => window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
-
-    // Initial population of Main Category dropdown
-    const initGlobals = getGlobals();
-    if (poMainCat && initGlobals.mains && initGlobals.mains.length > 0) {
+    const g = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
+    
+    if (poMainCat && g.mains && g.mains.length > 0) {
         poMainCat.innerHTML = '<option value="">Select Main Category</option>';
-        initGlobals.mains.forEach(cat => {
+        g.mains.forEach(cat => {
             const opt = document.createElement('option');
             opt.value = cat;
             opt.textContent = cat;
@@ -78,93 +70,16 @@ window.initPurchaseOrderForm = async function() {
         });
     }
 
-    // ── MAIN CATEGORY CHANGE ──
-    // Cascades: reload Sub1 → reset Sub2 → refresh products → clear table
-    if (poMainCat) {
-        poMainCat.onchange = () => {
-            const g = getGlobals();
-            const mainVal = poMainCat.value;
-
-            // Repopulate Sub Category 1 from master data
-            if (poSub1) {
-                poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
-                if (mainVal && g.sub1 && g.sub1[mainVal]) {
-                    g.sub1[mainVal].forEach(sub => {
-                        const opt = document.createElement('option');
-                        opt.value = sub;
-                        opt.textContent = sub;
-                        poSub1.appendChild(opt);
-                    });
-                }
-            }
-
-            // Reset Sub Category 2
-            if (poSub2) {
-                poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
-            }
-
-            // Refresh Sub Category 3 products + clear product table
-            if (typeof window.refreshPOProductMultiSelect === 'function') {
-                window.refreshPOProductMultiSelect();
-            }
-        };
-    }
-
-    // ── SUB CATEGORY 1 CHANGE ──
-    // Cascades: reload Sub2 → refresh products → clear table
-    if (poSub1) {
-        poSub1.onchange = () => {
-            const g = getGlobals();
-            const sub1Val = poSub1.value;
-
-            // Repopulate Sub Category 2 from master data
-            if (poSub2) {
-                poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
-                if (sub1Val && g.sub2 && g.sub2[sub1Val]) {
-                    g.sub2[sub1Val].forEach(sub => {
-                        const opt = document.createElement('option');
-                        opt.value = sub;
-                        opt.textContent = sub;
-                        poSub2.appendChild(opt);
-                    });
-                }
-            }
-
-            // Refresh Sub Category 3 products + clear product table
-            if (typeof window.refreshPOProductMultiSelect === 'function') {
-                window.refreshPOProductMultiSelect();
-            }
-        };
-    }
-
-    // ── SUB CATEGORY 2 CHANGE ──
-    // Cascades: refresh products → clear table
-    if (poSub2) {
-        poSub2.onchange = () => {
-            // Refresh Sub Category 3 products filtered by category match
-            if (typeof window.refreshPOProductMultiSelect === 'function') {
-                window.refreshPOProductMultiSelect();
-            }
-        };
-    }
-    
-    // ── SUB CATEGORY 3 CHANGE (Product Multi-Select) ──
-    // Populates Product Details table from selected products
-    const poSub3Input = document.getElementById(poSub3Id);
-    if (poSub3Input) {
-        poSub3Input.addEventListener('change', () => {
-            if (typeof window.handleSubCategory3Selection === 'function') {
-                window.handleSubCategory3Selection();
-            }
-        });
-    }
-    
-    // Initial state of Multi-Select Sub Category 3
+    // 5. Initial state of Multi-Select Sub Category 3
     if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+        window.SharedCategoryService.populateMultiSelectDropdown('po-sub-category3', [], 'Select Vendor First', 'Select Vendor First');
     }
 
-    // 5. Button Listeners
+    // NOTE: Category cascading onchange handlers are NOT set here.
+    // They are handled via GLOBAL EVENT DELEGATION at the bottom of this file.
+    // This ensures they ALWAYS work, even after re-initialization.
+
+    // 6. Button Listeners
     const cancelBtn = document.getElementById('btn-cancel-po');
     if (cancelBtn) {
         cancelBtn.onclick = () => {
@@ -188,7 +103,7 @@ window.initPurchaseOrderForm = async function() {
     
     // Event delegation is used globally at the bottom of the file to ensure the Save PO button ALWAYS works.
 
-    // 6. Product Table Logic
+    // 7. Product Table Logic
     const tbody = document.getElementById('po-product-tbody');
     let rowCount = 0;
 
@@ -271,6 +186,115 @@ window.initPurchaseOrderForm = async function() {
     }
 
 };
+
+/* =====================================================================
+   GLOBAL EVENT DELEGATION: PO Category Cascading
+   
+   Uses the same bulletproof pattern as the Save PO button.
+   Guarantees cascading ALWAYS works regardless of:
+   - how many times initPurchaseOrderForm is called
+   - when vendor selection fires
+   - DOM re-renders or innerHTML replacements
+   
+   This listener runs ONCE at file load and is NEVER overwritten.
+   ===================================================================== */
+document.addEventListener('change', (e) => {
+    const targetId = e.target.id;
+    
+    // Only handle PO category dropdowns and product multi-select
+    if (targetId !== 'po-main-category' && 
+        targetId !== 'po-sub-category1' && 
+        targetId !== 'po-sub-category2' &&
+        targetId !== 'po-sub-category3') {
+        return;
+    }
+
+    // Read _financeCatGlobals LIVE every single time (never stale)
+    const g = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
+
+    const poMainCat = document.getElementById('po-main-category');
+    const poSub1 = document.getElementById('po-sub-category1');
+    const poSub2 = document.getElementById('po-sub-category2');
+
+    // ── MAIN CATEGORY CHANGED ──
+    if (targetId === 'po-main-category') {
+        const mainVal = poMainCat.value;
+        console.log('[PO Cascade] Main Category changed to:', mainVal);
+
+        // Rebuild Sub Category 1 from master data
+        if (poSub1) {
+            poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
+            if (mainVal && g.sub1 && g.sub1[mainVal]) {
+                g.sub1[mainVal].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.textContent = sub;
+                    poSub1.appendChild(opt);
+                });
+                console.log('[PO Cascade] Sub1 populated with', g.sub1[mainVal].length, 'options');
+            } else {
+                console.log('[PO Cascade] No Sub1 data found for:', mainVal);
+            }
+        }
+
+        // Reset Sub Category 2
+        if (poSub2) {
+            poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+        }
+
+        // Refresh Sub Category 3 products + clear product table
+        if (typeof window.refreshPOProductMultiSelect === 'function') {
+            window.refreshPOProductMultiSelect();
+        }
+    }
+
+    // ── SUB CATEGORY 1 CHANGED ──
+    if (targetId === 'po-sub-category1') {
+        const sub1Val = poSub1.value;
+        console.log('[PO Cascade] Sub Category 1 changed to:', sub1Val);
+
+        // Rebuild Sub Category 2 from master data
+        if (poSub2) {
+            poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+            if (sub1Val && g.sub2 && g.sub2[sub1Val]) {
+                g.sub2[sub1Val].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.textContent = sub;
+                    poSub2.appendChild(opt);
+                });
+                console.log('[PO Cascade] Sub2 populated with', g.sub2[sub1Val].length, 'options');
+            } else {
+                console.log('[PO Cascade] No Sub2 data found for:', sub1Val);
+            }
+        }
+
+        // Refresh Sub Category 3 products + clear product table
+        if (typeof window.refreshPOProductMultiSelect === 'function') {
+            window.refreshPOProductMultiSelect();
+        }
+    }
+
+    // ── SUB CATEGORY 2 CHANGED ──
+    if (targetId === 'po-sub-category2') {
+        console.log('[PO Cascade] Sub Category 2 changed to:', poSub2.value);
+
+        // Refresh Sub Category 3 products filtered by category match
+        if (typeof window.refreshPOProductMultiSelect === 'function') {
+            window.refreshPOProductMultiSelect();
+        }
+    }
+
+    // ── SUB CATEGORY 3 CHANGED (Product Multi-Select) ──
+    if (targetId === 'po-sub-category3') {
+        console.log('[PO Cascade] Sub Category 3 (products) changed');
+
+        // Populate Product Details table from selected products
+        if (typeof window.handleSubCategory3Selection === 'function') {
+            window.handleSubCategory3Selection();
+        }
+    }
+});
 
 // Global Event Delegation for Save PO Button to guarantee it always works
 document.addEventListener('click', async (e) => {

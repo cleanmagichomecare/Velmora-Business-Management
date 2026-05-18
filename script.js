@@ -114,7 +114,7 @@ window.SharedCategoryService = {
             displayValue.title = '';
             display.classList.add('disabled');
             input.value = '';
-            input.dispatchEvent(new Event('change'));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
             return;
         }
 
@@ -140,7 +140,7 @@ window.SharedCategoryService = {
                 }
             }
             input.value = selectedValues.join(', ');
-            input.dispatchEvent(new Event('change'));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
         };
 
         updateDisplay();
