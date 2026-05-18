@@ -62,11 +62,15 @@ window.initPurchaseOrderForm = async function() {
     const poSub2 = document.getElementById('po-sub-category2');
     const poSub3Id = 'po-sub-category3';
 
-    const _globals = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
-    
-    if (poMainCat && _globals.mains && _globals.mains.length > 0) {
+    // Helper: always read _financeCatGlobals LIVE to avoid stale references
+    // (syncFinanceCategoryGlobals creates a NEW object each time it runs)
+    const getGlobals = () => window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
+
+    // Initial population of Main Category dropdown
+    const initGlobals = getGlobals();
+    if (poMainCat && initGlobals.mains && initGlobals.mains.length > 0) {
         poMainCat.innerHTML = '<option value="">Select Main Category</option>';
-        _globals.mains.forEach(cat => {
+        initGlobals.mains.forEach(cat => {
             const opt = document.createElement('option');
             opt.value = cat;
             opt.textContent = cat;
@@ -74,15 +78,18 @@ window.initPurchaseOrderForm = async function() {
         });
     }
 
-    // Handlers for Category Cascading (User manual changes — never overwritten by vendor auto-fill)
+    // ── MAIN CATEGORY CHANGE ──
+    // Cascades: reload Sub1 → reset Sub2 → refresh products → clear table
     if (poMainCat) {
         poMainCat.onchange = () => {
+            const g = getGlobals();
             const mainVal = poMainCat.value;
-            // Repopulate Sub Category 1 from master data based on new Main Category
+
+            // Repopulate Sub Category 1 from master data
             if (poSub1) {
                 poSub1.innerHTML = '<option value="">Select Sub Category 1</option>';
-                if (mainVal && _globals.sub1 && _globals.sub1[mainVal]) {
-                    _globals.sub1[mainVal].forEach(sub => {
+                if (mainVal && g.sub1 && g.sub1[mainVal]) {
+                    g.sub1[mainVal].forEach(sub => {
                         const opt = document.createElement('option');
                         opt.value = sub;
                         opt.textContent = sub;
@@ -90,24 +97,31 @@ window.initPurchaseOrderForm = async function() {
                     });
                 }
             }
+
             // Reset Sub Category 2
-            if (poSub2) poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
-            
-            // Refresh Sub Category 3 products (filtered by Sub Cat 2 match)
+            if (poSub2) {
+                poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
+            }
+
+            // Refresh Sub Category 3 products + clear product table
             if (typeof window.refreshPOProductMultiSelect === 'function') {
                 window.refreshPOProductMultiSelect();
             }
         };
     }
 
+    // ── SUB CATEGORY 1 CHANGE ──
+    // Cascades: reload Sub2 → refresh products → clear table
     if (poSub1) {
         poSub1.onchange = () => {
+            const g = getGlobals();
             const sub1Val = poSub1.value;
-            // Repopulate Sub Category 2 from master data based on new Sub Category 1
+
+            // Repopulate Sub Category 2 from master data
             if (poSub2) {
                 poSub2.innerHTML = '<option value="">Select Sub Category 2</option>';
-                if (sub1Val && _globals.sub2 && _globals.sub2[sub1Val]) {
-                    _globals.sub2[sub1Val].forEach(sub => {
+                if (sub1Val && g.sub2 && g.sub2[sub1Val]) {
+                    g.sub2[sub1Val].forEach(sub => {
                         const opt = document.createElement('option');
                         opt.value = sub;
                         opt.textContent = sub;
@@ -115,24 +129,27 @@ window.initPurchaseOrderForm = async function() {
                     });
                 }
             }
-            
-            // Refresh Sub Category 3 products (filtered by Sub Cat 2 match)
+
+            // Refresh Sub Category 3 products + clear product table
             if (typeof window.refreshPOProductMultiSelect === 'function') {
                 window.refreshPOProductMultiSelect();
             }
         };
     }
 
+    // ── SUB CATEGORY 2 CHANGE ──
+    // Cascades: refresh products → clear table
     if (poSub2) {
         poSub2.onchange = () => {
-            // Sub Category 2 changed — refresh products filtered by category match
+            // Refresh Sub Category 3 products filtered by category match
             if (typeof window.refreshPOProductMultiSelect === 'function') {
                 window.refreshPOProductMultiSelect();
             }
         };
     }
     
-    // Attach Sub Category 3 hidden input change listener for Auto-Filling the Product Table
+    // ── SUB CATEGORY 3 CHANGE (Product Multi-Select) ──
+    // Populates Product Details table from selected products
     const poSub3Input = document.getElementById(poSub3Id);
     if (poSub3Input) {
         poSub3Input.addEventListener('change', () => {
