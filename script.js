@@ -11404,20 +11404,13 @@ window.loadVendors = async function(vendorDropdown) {
 
 /**
  * Shared helper: Refresh Sub Category 3 product multi-select
- * When a vendor is selected AND Sub Category 2 has a value,
- * loads ALL vendor product names into the multi-select.
- * Sub Category 3 options = vendor.products[].product_name
+ * Loads product names from MASTER CATEGORY DATA: _financeCatGlobals.sub3[selectedSub2]
+ * NOT from vendor.products — vendor is only for auto-selecting categories.
  */
 window.refreshPOProductMultiSelect = function() {
     const poSub3Id = 'po-sub-category3';
-    const vendorDropdown = document.getElementById('po-vendor-name');
     const poSub2 = document.getElementById('po-sub-category2');
     const tbody = document.getElementById('po-product-tbody');
-
-    const selectedVendorId = vendorDropdown ? vendorDropdown.value : '';
-    const vendor = (selectedVendorId && window.fetchedPOVendorsList)
-        ? window.fetchedPOVendorsList.find(v => v.id == selectedVendorId)
-        : null;
 
     if (!window.SharedCategoryService || !window.SharedCategoryService.populateMultiSelectDropdown) return;
 
@@ -11425,17 +11418,13 @@ window.refreshPOProductMultiSelect = function() {
     const hiddenInput = document.getElementById(poSub3Id);
     if (hiddenInput) hiddenInput.value = '';
 
-    // Debug logging
     const selectedSub2 = poSub2 ? poSub2.value : '';
-    console.log('[PO Products] Selected Vendor:', vendor ? vendor.vendor_name : 'None');
-    console.log('[PO Products] Vendor Products:', vendor ? vendor.products : 'N/A');
-    console.log('[PO Products] Selected Sub2:', selectedSub2);
 
-    if (!vendor) {
-        // No vendor selected
-        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
-        return;
-    }
+    // Read master category data LIVE
+    const g = window._financeCatGlobals || { mains: [], sub1: {}, sub2: {}, sub3: {} };
+
+    console.log('[PO Products] Selected Sub2:', selectedSub2);
+    console.log('[PO Products] Available sub3 keys:', Object.keys(g.sub3 || {}));
 
     if (!selectedSub2) {
         // Sub Category 2 not yet selected
@@ -11443,18 +11432,18 @@ window.refreshPOProductMultiSelect = function() {
         return;
     }
 
-    // Extract unique product names from vendor.products
+    // Load product names from master category data: _financeCatGlobals.sub3[selectedSub2]
     let productNames = [];
-    if (vendor.products && Array.isArray(vendor.products)) {
-        productNames = [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))];
+    if (g.sub3 && g.sub3[selectedSub2]) {
+        productNames = [...g.sub3[selectedSub2]];
     }
 
-    console.log('[PO Products] Product names to load:', productNames);
+    console.log('[PO Products] Product names from master data:', productNames);
 
     if (productNames.length > 0) {
         window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, productNames, 'Select Products', 'No Products Available');
     } else {
-        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'No matching products available', 'No matching products available');
+        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'No products available for this category', 'No products available');
     }
 
     // Clear product table when products refresh
@@ -11549,7 +11538,7 @@ window.handleVendorSelection = function(e) {
         if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
             const hiddenInput = document.getElementById(poSub3Id);
             if (hiddenInput) hiddenInput.value = '';
-            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
+            window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 2 First', 'Select Sub Category 2 First');
         }
         
         if (tbody) {
@@ -11560,6 +11549,11 @@ window.handleVendorSelection = function(e) {
     }
 };
 
+/**
+ * Handle Sub Category 3 product selection → populate Product Details table.
+ * Products come from master category data (Sub Category 3 multi-select).
+ * Vendor pricing/details are used if available, otherwise defaults are used.
+ */
 window.handleSubCategory3Selection = function() {
     const hiddenInput = document.getElementById('po-sub-category3');
     if (!hiddenInput) return;
@@ -11567,38 +11561,52 @@ window.handleSubCategory3Selection = function() {
     // Read comma-separated selected product names from the hidden input
     const selectedNames = hiddenInput.value ? hiddenInput.value.split(',').map(s => s.trim()).filter(Boolean) : [];
     
+    // Try to get vendor data for pricing (optional — NOT required for product selection)
     const vendorDropdown = document.getElementById('po-vendor-name');
-    if (!vendorDropdown) return;
-    
-    const selectedVendorId = vendorDropdown.value;
-    const vendor = window.fetchedPOVendorsList ? window.fetchedPOVendorsList.find(v => v.id == selectedVendorId) : null;
+    const selectedVendorId = vendorDropdown ? vendorDropdown.value : '';
+    const vendor = (selectedVendorId && window.fetchedPOVendorsList)
+        ? window.fetchedPOVendorsList.find(v => v.id == selectedVendorId)
+        : null;
     
     const tbody = document.getElementById('po-product-tbody');
     if (!tbody) return;
     
     tbody.innerHTML = '';
     
-    if (vendor && selectedNames.length > 0 && vendor.products && Array.isArray(vendor.products)) {
+    if (selectedNames.length > 0) {
         let rowCount = 0;
         
         selectedNames.forEach(name => {
-            // Find matching product (use first match for each name to avoid duplicates)
-            const matchingProduct = vendor.products.find(p => p.product_name === name);
+            rowCount++;
+            const tr = document.createElement('tr');
             
-            if (matchingProduct) {
-                rowCount++;
-                const tr = document.createElement('tr');
-                
-                const pName = matchingProduct.product_name || '';
-                const pMoq = matchingProduct.moq || '';
-                const pBatch = matchingProduct.batch_size || '';
-                const pPrice = matchingProduct.price_per_unit || matchingProduct.price || 0;
-                const pGst = matchingProduct.gst || '';
-                const pUsedIn = matchingProduct.used_in || '';
-                
+            // Check if vendor has pricing data for this product
+            let pMoq = '';
+            let pBatch = '';
+            let pPrice = 0;
+            let pGst = '';
+            let pUsedIn = '';
+            let hasVendorData = false;
+            
+            if (vendor && vendor.products && Array.isArray(vendor.products)) {
+                const matchingProduct = vendor.products.find(p => p.product_name === name);
+                if (matchingProduct) {
+                    hasVendorData = true;
+                    pMoq = matchingProduct.moq || '';
+                    pBatch = matchingProduct.batch_size || '';
+                    pPrice = matchingProduct.price_per_unit || matchingProduct.price || 0;
+                    pGst = matchingProduct.gst || '';
+                    pUsedIn = matchingProduct.used_in || '';
+                }
+            }
+            
+            console.log('[PO Table] Product: "' + name + '" | Vendor data: ' + hasVendorData);
+            
+            // If vendor has data → readonly fields. If no vendor data → editable fields.
+            if (hasVendorData) {
                 tr.innerHTML = `
                     <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
-                    <td><input type="text" class="form-control po-desc" value="${pName}" readonly required></td>
+                    <td><input type="text" class="form-control po-desc" value="${name}" readonly required></td>
                     <td><input type="text" class="form-control po-moq" value="${pMoq}" readonly></td>
                     <td><input type="text" class="form-control po-batch" value="${pBatch}" readonly></td>
                     <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
@@ -11607,15 +11615,28 @@ window.handleSubCategory3Selection = function() {
                     <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
                     <td><input type="text" class="form-control po-used" value="${pUsedIn}" readonly></td>
                 `;
-
-                const qtyInput = tr.querySelector('.po-qty');
-                const priceInput = tr.querySelector('.po-price');
-
-                if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
-                if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
-
-                tbody.appendChild(tr);
+            } else {
+                // No vendor data — editable row with product name pre-filled
+                tr.innerHTML = `
+                    <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
+                    <td><input type="text" class="form-control po-desc" value="${name}" required></td>
+                    <td><input type="text" class="form-control po-moq" placeholder="MOQ"></td>
+                    <td><input type="text" class="form-control po-batch" placeholder="Batch Size"></td>
+                    <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
+                    <td><input type="number" class="form-control po-price" placeholder="0.00" min="0" step="0.01" required></td>
+                    <td><input type="text" class="form-control po-gst" placeholder="GST"></td>
+                    <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
+                    <td><input type="text" class="form-control po-used" placeholder="Used In"></td>
+                `;
             }
+
+            const qtyInput = tr.querySelector('.po-qty');
+            const priceInput = tr.querySelector('.po-price');
+
+            if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+            if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+
+            tbody.appendChild(tr);
         });
     }
     

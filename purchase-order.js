@@ -72,7 +72,7 @@ window.initPurchaseOrderForm = async function() {
 
     // 5. Initial state of Multi-Select Sub Category 3
     if (window.SharedCategoryService && window.SharedCategoryService.populateMultiSelectDropdown) {
-        window.SharedCategoryService.populateMultiSelectDropdown('po-sub-category3', [], 'Select Vendor First', 'Select Vendor First');
+        window.SharedCategoryService.populateMultiSelectDropdown('po-sub-category3', [], 'Select Sub Category 2 First', 'Select Sub Category 2 First');
     }
 
     // NOTE: Category cascading onchange handlers are NOT set here.
