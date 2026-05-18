@@ -11604,6 +11604,7 @@ window.handleSubCategory3Selection = function() {
             
             // If vendor has data → readonly fields. If no vendor data → editable fields.
             if (hasVendorData) {
+                const numericGst = parseFloat(pGst) || 0;
                 tr.innerHTML = `
                     <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
                     <td><input type="text" class="form-control po-desc" value="${name}" readonly required></td>
@@ -11611,7 +11612,7 @@ window.handleSubCategory3Selection = function() {
                     <td><input type="text" class="form-control po-batch" value="${pBatch}" readonly></td>
                     <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
                     <td><input type="number" class="form-control po-price" value="${pPrice}" step="0.01" readonly required></td>
-                    <td><input type="text" class="form-control po-gst" value="${pGst}" readonly></td>
+                    <td><input type="number" class="form-control po-gst" value="${numericGst}" readonly></td>
                     <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
                     <td><input type="text" class="form-control po-used" value="${pUsedIn}" readonly></td>
                 `;
@@ -11624,7 +11625,7 @@ window.handleSubCategory3Selection = function() {
                     <td><input type="text" class="form-control po-batch" placeholder="Batch Size"></td>
                     <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
                     <td><input type="number" class="form-control po-price" placeholder="0.00" min="0" step="0.01" required></td>
-                    <td><input type="text" class="form-control po-gst" placeholder="GST"></td>
+                    <td><input type="number" class="form-control po-gst" placeholder="0" min="0" required></td>
                     <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
                     <td><input type="text" class="form-control po-used" placeholder="Used In"></td>
                 `;
@@ -11632,9 +11633,11 @@ window.handleSubCategory3Selection = function() {
 
             const qtyInput = tr.querySelector('.po-qty');
             const priceInput = tr.querySelector('.po-price');
+            const gstInput = tr.querySelector('.po-gst');
 
             if (qtyInput && typeof window.poCalculateRowTotal === 'function') qtyInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
             if (priceInput && typeof window.poCalculateRowTotal === 'function') priceInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
+            if (gstInput && typeof window.poCalculateRowTotal === 'function') gstInput.addEventListener('input', () => window.poCalculateRowTotal(tr));
 
             tbody.appendChild(tr);
         });

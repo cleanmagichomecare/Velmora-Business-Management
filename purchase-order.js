@@ -107,50 +107,67 @@ window.initPurchaseOrderForm = async function() {
     const tbody = document.getElementById('po-product-tbody');
     let rowCount = 0;
 
+    const formatIndianCurrency = (amount) => {
+        return "₹" + Number(amount).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+    window.formatIndianCurrency = formatIndianCurrency;
+
     const calculateOverallTotals = () => {
         let subTotal = 0;
+        let gstTotal = 0;
+        let grandTotal = 0;
+
         if (tbody) {
             const rows = tbody.querySelectorAll('tr');
             rows.forEach(row => {
-                const qty = parseFloat(row.querySelector('.po-qty').value) || 0;
-                const price = parseFloat(row.querySelector('.po-price').value) || 0;
-                subTotal += (qty * price);
+                const qty = parseFloat(row.querySelector('.po-qty')?.value || 0) || 0;
+                const price = parseFloat(row.querySelector('.po-price')?.value || 0) || 0;
+                const gstPercent = parseFloat(row.querySelector('.po-gst')?.value || 0) || 0;
+
+                const baseAmount = qty * price;
+                const gstAmount = (baseAmount * gstPercent) / 100;
+                const totalAmount = baseAmount + gstAmount;
+
+                subTotal += baseAmount;
+                gstTotal += gstAmount;
+                grandTotal += totalAmount;
             });
         }
-
-        const gstTotal = subTotal * 0.18;
-        const shippingInput = document.getElementById('po-shipping-charge');
-        const shipping = shippingInput ? parseFloat(shippingInput.value) || 0 : 0;
-        const grandTotal = subTotal + gstTotal + shipping;
 
         const subTotalSpan = document.getElementById('po-sub-total');
         const gstSpan = document.getElementById('po-gst-total');
         const grandTotalSpan = document.getElementById('po-grand-total');
 
-        if (subTotalSpan) subTotalSpan.textContent = `₹${subTotal.toFixed(2)}`;
-        if (gstSpan) gstSpan.textContent = `₹${gstTotal.toFixed(2)}`;
-        if (grandTotalSpan) grandTotalSpan.textContent = `₹${grandTotal.toFixed(2)}`;
+        if (subTotalSpan) subTotalSpan.textContent = formatIndianCurrency(subTotal);
+        if (gstSpan) gstSpan.textContent = formatIndianCurrency(gstTotal);
+        if (grandTotalSpan) grandTotalSpan.textContent = formatIndianCurrency(grandTotal);
     };
     window.poCalculateOverallTotals = calculateOverallTotals;
+    window.updatePurchaseOrderTotals = calculateOverallTotals;
 
     const calculateRowTotal = (row) => {
         const qtyInput = row.querySelector('.po-qty');
         const priceInput = row.querySelector('.po-price');
+        const gstInput = row.querySelector('.po-gst');
         const totalSpan = row.querySelector('.po-row-total');
 
-        const qty = parseFloat(qtyInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const total = qty * price;
+        const qty = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+        const price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+        const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
 
-        if (totalSpan) totalSpan.textContent = `₹${total.toFixed(2)}`;
+        const baseAmount = qty * price;
+        const gstAmount = (baseAmount * gstPercent) / 100;
+        const totalAmount = baseAmount + gstAmount;
+
+        if (totalSpan) {
+            totalSpan.textContent = formatIndianCurrency(totalAmount);
+        }
         calculateOverallTotals();
     };
     window.poCalculateRowTotal = calculateRowTotal;
-
-    const shippingInput = document.getElementById('po-shipping-charge');
-    if (shippingInput) {
-        shippingInput.addEventListener('input', calculateOverallTotals);
-    }
 
     const addProductRow = () => {
         rowCount++;
@@ -162,16 +179,18 @@ window.initPurchaseOrderForm = async function() {
             <td><input type="text" class="form-control po-batch" placeholder="Batch Size"></td>
             <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
             <td><input type="number" class="form-control po-price" placeholder="0.00" min="0" step="0.01" required></td>
-            <td><input type="text" class="form-control po-gst" placeholder="GST"></td>
+            <td><input type="number" class="form-control po-gst" placeholder="0" min="0" required></td>
             <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
             <td><input type="text" class="form-control po-used" placeholder="Used In"></td>
         `;
 
         const qtyInput = tr.querySelector('.po-qty');
         const priceInput = tr.querySelector('.po-price');
+        const gstInput = tr.querySelector('.po-gst');
 
         if (qtyInput) qtyInput.addEventListener('input', () => calculateRowTotal(tr));
         if (priceInput) priceInput.addEventListener('input', () => calculateRowTotal(tr));
+        if (gstInput) gstInput.addEventListener('input', () => calculateRowTotal(tr));
 
         if (tbody) tbody.appendChild(tr);
         calculateOverallTotals();
