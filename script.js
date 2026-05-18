@@ -11404,9 +11404,9 @@ window.loadVendors = async function(vendorDropdown) {
 
 /**
  * Shared helper: Refresh Sub Category 3 product multi-select
- * Filters vendor.products by matching the currently selected Sub Category 2.
- * If Sub Category 2 matches vendor's sub_sub_category → show vendor's products.
- * Otherwise → show "No matching products available".
+ * When a vendor is selected AND Sub Category 2 has a value,
+ * loads ALL vendor product names into the multi-select.
+ * Sub Category 3 options = vendor.products[].product_name
  */
 window.refreshPOProductMultiSelect = function() {
     const poSub3Id = 'po-sub-category3';
@@ -11425,25 +11425,31 @@ window.refreshPOProductMultiSelect = function() {
     const hiddenInput = document.getElementById(poSub3Id);
     if (hiddenInput) hiddenInput.value = '';
 
+    // Debug logging
+    const selectedSub2 = poSub2 ? poSub2.value : '';
+    console.log('[PO Products] Selected Vendor:', vendor ? vendor.vendor_name : 'None');
+    console.log('[PO Products] Vendor Products:', vendor ? vendor.products : 'N/A');
+    console.log('[PO Products] Selected Sub2:', selectedSub2);
+
     if (!vendor) {
         // No vendor selected
         window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Vendor First', 'Select Vendor First');
         return;
     }
 
-    // Determine if selected Sub Category 2 matches the vendor's sub_sub_category
-    const selectedSub2 = poSub2 ? poSub2.value : '';
-    const vendorSub2 = vendor.sub_sub_category || '';
-
-    let productNames = [];
-
-    if (selectedSub2 && vendorSub2 && selectedSub2 === vendorSub2) {
-        // Match → show all vendor products
-        productNames = (vendor.products && Array.isArray(vendor.products))
-            ? [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))]
-            : [];
+    if (!selectedSub2) {
+        // Sub Category 2 not yet selected
+        window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, [], 'Select Sub Category 2 First', 'Select Sub Category 2 First');
+        return;
     }
-    // else: no match → productNames stays empty
+
+    // Extract unique product names from vendor.products
+    let productNames = [];
+    if (vendor.products && Array.isArray(vendor.products)) {
+        productNames = [...new Set(vendor.products.map(p => p.product_name).filter(Boolean))];
+    }
+
+    console.log('[PO Products] Product names to load:', productNames);
 
     if (productNames.length > 0) {
         window.SharedCategoryService.populateMultiSelectDropdown(poSub3Id, productNames, 'Select Products', 'No Products Available');
