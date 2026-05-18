@@ -105,127 +105,118 @@ window.initPurchaseOrderForm = async function() {
 
     // 7. Product Table Logic
     const tbody = document.getElementById('po-product-tbody');
-    let rowCount = 0;
-
-    const formatIndianCurrency = (amount) => {
-        return "₹" + Number(amount).toLocaleString('en-IN', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    };
-    window.formatIndianCurrency = formatIndianCurrency;
-
-    // Define calculatePurchaseOrderRow
-    const calculatePurchaseOrderRow = (row) => {
-        const qtyInput = row.querySelector('.po-qty');
-        const priceInput = row.querySelector('.po-price');
-        const gstInput = row.querySelector('.po-gst');
-        const totalSpan = row.querySelector('.po-row-total');
-
-        const quantity = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
-        const unitPrice = parseFloat(priceInput ? priceInput.value : 0) || 0;
-        const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
-
-        const baseAmount = quantity * unitPrice;
-        const gstAmount = (baseAmount * gstPercent) / 100;
-        const totalAmount = baseAmount + gstAmount;
-
-        // VERY IMPORTANT DEBUG STEP
-        console.log('[PO Row Calc Debug]', {
-            quantity,
-            unitPrice,
-            gstPercent,
-            baseAmount,
-            gstAmount,
-            totalAmount
-        });
-
-        if (totalSpan) {
-            totalSpan.textContent = formatIndianCurrency(totalAmount);
-        }
-    };
-    window.calculatePurchaseOrderRow = calculatePurchaseOrderRow;
-    window.poCalculateRowTotal = calculatePurchaseOrderRow; // Alias for backward compatibility
-
-    // Define updatePurchaseOrderTotals
-    const updatePurchaseOrderTotals = () => {
-        let subTotal = 0;
-        let gstTotal = 0;
-        let grandTotal = 0;
-
-        if (tbody) {
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach(row => {
-                const qtyInput = row.querySelector('.po-qty');
-                const priceInput = row.querySelector('.po-price');
-                const gstInput = row.querySelector('.po-gst');
-
-                const quantity = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
-                const unitPrice = parseFloat(priceInput ? priceInput.value : 0) || 0;
-                const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
-
-                const baseAmount = quantity * unitPrice;
-                const gstAmount = (baseAmount * gstPercent) / 100;
-                const totalAmount = baseAmount + gstAmount;
-
-                subTotal += baseAmount;
-                gstTotal += gstAmount;
-                grandTotal += totalAmount;
-            });
-        }
-
-        const subTotalSpan = document.getElementById('po-sub-total');
-        const gstSpan = document.getElementById('po-gst-total');
-        const grandTotalSpan = document.getElementById('po-grand-total');
-
-        if (subTotalSpan) subTotalSpan.textContent = formatIndianCurrency(subTotal);
-        if (gstSpan) gstSpan.textContent = formatIndianCurrency(gstTotal);
-        if (grandTotalSpan) grandTotalSpan.textContent = formatIndianCurrency(grandTotal);
-    };
-    window.updatePurchaseOrderTotals = updatePurchaseOrderTotals;
-    window.poCalculateOverallTotals = updatePurchaseOrderTotals; // Alias for backward compatibility
-
-    // Event Delegation: Attach exactly one input listener to #po-product-tbody
-    const poTbodyInputHandler = (e) => {
-        const row = e.target.closest('tr');
-        if (!row) return;
-        console.log('[PO Table Input Event Delegated]', e.target.className);
-        calculatePurchaseOrderRow(row);
-        updatePurchaseOrderTotals();
-    };
-
-    if (tbody) {
-        // Remove existing listener to prevent duplicate registration, then attach
-        tbody.removeEventListener('input', poTbodyInputHandler);
-        tbody.addEventListener('input', poTbodyInputHandler);
-    }
-
-    const addProductRow = () => {
-        rowCount++;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
-            <td><input type="text" class="form-control po-desc" placeholder="Enter product description..." required></td>
-            <td><input type="text" class="form-control po-moq" placeholder="MOQ"></td>
-            <td><input type="text" class="form-control po-batch" placeholder="Batch Size"></td>
-            <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
-            <td><input type="number" class="form-control po-price" placeholder="0.00" min="0" step="0.01" required></td>
-            <td><input type="number" class="form-control po-gst" placeholder="0" min="0" required></td>
-            <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
-            <td><input type="text" class="form-control po-used" placeholder="Used In"></td>
-        `;
-
-        if (tbody) tbody.appendChild(tr);
-        updatePurchaseOrderTotals();
-    };
-    window.poAddProductRow = addProductRow;
 
     // Initialize with one starter row
     if (tbody) {
         tbody.innerHTML = '';
-        rowCount = 0;
-        addProductRow();
+        window.poAddProductRow();
     }
+
+};
+
+// --- GLOBAL TOP-LEVEL PO CALCULATION ENGINE ---
+
+const formatIndianCurrency = (amount) => {
+    return "₹" + Number(amount).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+};
+window.formatIndianCurrency = formatIndianCurrency;
+
+// Global Row Calculator
+const calculatePurchaseOrderRow = (row) => {
+    const qtyInput = row.querySelector('.po-qty');
+    const priceInput = row.querySelector('.po-price');
+    const gstInput = row.querySelector('.po-gst');
+    const totalSpan = row.querySelector('.po-row-total');
+
+    const quantity = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+    const unitPrice = parseFloat(priceInput ? priceInput.value : 0) || 0;
+    const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
+
+    const baseAmount = quantity * unitPrice;
+    const gstAmount = (baseAmount * gstPercent) / 100;
+    const totalAmount = baseAmount + gstAmount;
+
+    // VERY IMPORTANT DEBUG STEP
+    console.log('[PO Row Calc Debug]', {
+        quantity,
+        unitPrice,
+        gstPercent,
+        baseAmount,
+        gstAmount,
+        totalAmount
+    });
+
+    if (totalSpan) {
+        totalSpan.textContent = formatIndianCurrency(totalAmount);
+    }
+};
+window.calculatePurchaseOrderRow = calculatePurchaseOrderRow;
+window.poCalculateRowTotal = calculatePurchaseOrderRow; // Alias for backward compatibility
+
+// Global Summary Calculator
+const updatePurchaseOrderTotals = () => {
+    let subTotal = 0;
+    let gstTotal = 0;
+    let grandTotal = 0;
+
+    const tbody = document.getElementById('po-product-tbody');
+    if (tbody) {
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(row => {
+            const qtyInput = row.querySelector('.po-qty');
+            const priceInput = row.querySelector('.po-price');
+            const gstInput = row.querySelector('.po-gst');
+
+            const quantity = parseFloat(qtyInput ? qtyInput.value : 0) || 0;
+            const unitPrice = parseFloat(priceInput ? priceInput.value : 0) || 0;
+            const gstPercent = parseFloat(gstInput ? gstInput.value : 0) || 0;
+
+            const baseAmount = quantity * unitPrice;
+            const gstAmount = (baseAmount * gstPercent) / 100;
+            const totalAmount = baseAmount + gstAmount;
+
+            subTotal += baseAmount;
+            gstTotal += gstAmount;
+            grandTotal += totalAmount;
+        });
+    }
+
+    const subTotalSpan = document.getElementById('po-sub-total');
+    const gstSpan = document.getElementById('po-gst-total');
+    const grandTotalSpan = document.getElementById('po-grand-total');
+
+    if (subTotalSpan) subTotalSpan.textContent = formatIndianCurrency(subTotal);
+    if (gstSpan) gstSpan.textContent = formatIndianCurrency(gstTotal);
+    if (grandTotalSpan) grandTotalSpan.textContent = formatIndianCurrency(grandTotal);
+};
+window.updatePurchaseOrderTotals = updatePurchaseOrderTotals;
+window.poCalculateOverallTotals = updatePurchaseOrderTotals; // Alias for backward compatibility
+
+// Stateless Add Product Row Function
+const addProductRow = () => {
+    const tbody = document.getElementById('po-product-tbody');
+    if (!tbody) return;
+    const rowCount = tbody.querySelectorAll('tr').length + 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="color: var(--text-muted); font-weight: 600;">${rowCount}</td>
+        <td><input type="text" class="form-control po-desc" placeholder="Enter product description..." required></td>
+        <td><input type="text" class="form-control po-moq" placeholder="MOQ"></td>
+        <td><input type="text" class="form-control po-batch" placeholder="Batch Size"></td>
+        <td><input type="number" class="form-control po-qty" placeholder="0" min="1" required></td>
+        <td><input type="number" class="form-control po-price" placeholder="0.00" min="0" step="0.01" required></td>
+        <td><input type="number" class="form-control po-gst" placeholder="0" min="0" required></td>
+        <td style="text-align: right; font-weight: 600; color: var(--text-main);"><span class="po-row-total">₹0.00</span></td>
+        <td><input type="text" class="form-control po-used" placeholder="Used In"></td>
+    `;
+
+    tbody.appendChild(tr);
+    updatePurchaseOrderTotals();
+};
+window.poAddProductRow = addProductRow;
 
 };
 
