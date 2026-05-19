@@ -218,8 +218,6 @@ const addProductRow = () => {
 };
 window.poAddProductRow = addProductRow;
 
-};
-
 /* =====================================================================
    GLOBAL EVENT DELEGATION: PO Category Cascading
    
